@@ -13,5 +13,15 @@ namespace WebDevProject.Controllers
         {
             return View();
         }
+
+        public IActionResult Onboarding()
+        {
+            return View();
+        }
+
+        public IActionResult ForgotPassword()
+        {
+            return View();
+        }
     }
 }
