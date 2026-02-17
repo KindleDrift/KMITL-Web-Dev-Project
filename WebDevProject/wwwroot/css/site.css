@@ -1,0 +1,130 @@
+.login-container {
+    max-width: 540px;
+    margin: 20px auto;
+    padding: 0 20px;
+    box-sizing: border-box;
+}
+
+.card {
+    background-color: #f8f9fa;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    padding: 20px;
+    margin: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    max-width: 1280px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+fieldset {
+    border: none;
+    padding: 0;
+    margin: 0;
+}
+
+legend {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 10px;
+    padding: 0;
+}
+
+.form-input {
+    width: 100%;
+    border-radius: 5px;
+    box-sizing: border-box;
+    padding: 10px 0;
+    position: relative;
+}
+
+.form-input label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+.form-input input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-sizing: border-box;
+    font-family: "Inter", sans-serif;
+}
+
+.form-input input[type="password"],
+.form-input input[type="text"] {
+    padding-right: 40px;
+}
+
+.toggle-password {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    cursor: pointer;
+    color: #666;
+    font-size: 20px;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+    .toggle-password:hover {
+        color: #1f1f1f;
+    }
+
+.large-button {
+    background-color: #1f1f1f;
+    color: #ffffff;
+    padding: 10px;
+    width: 100%;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    font-family: "Inter", sans-serif;
+    font-weight: bold;
+    display: block;
+    margin: 10px auto 0 auto;
+}
+
+.form-input .gender-options {
+    display: flex;
+    gap: 5px;
+    margin-top: 10px;
+}
+
+.form-input .gender-options label {
+    font-weight: normal;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background-color: #e9ecef;
+    padding: 5px 10px;
+    border-radius: 50px;
+    position: relative;
+    border: 2px solid transparent;
+}
+
+.form-input .gender-options input[type="radio"] {
+    margin: 0;
+    opacity: 0;
+    position: absolute;
+}
+
+.form-input .gender-options .material-symbols-outlined {
+    font-size: 20px;
+    color: #666;
+}
+
+.form-input .gender-options label:has(input[type="radio"]:checked) {
+    background-color: #ffffff;
+    border-color: #1f1f1f;
+    color: #1f1f1f;
+}
+
+.form-input .gender-options label:has(input[type="radio"]:checked) .material-symbols-outlined {
+    color: #1f1f1f;
+}
