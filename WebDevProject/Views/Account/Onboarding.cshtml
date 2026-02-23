@@ -1,0 +1,43 @@
+﻿@{
+    ViewData["Title"] = "Sign-up";
+}
+
+<div class="login-container">
+    <h1 class="header-1">Onboarding</h1>
+    <div class="card" id="signin-container">
+        <form id="signin-form">
+            <fieldset>
+                <legend>Tell us about yourself</legend>
+                <div class="form-input">
+                    <label for="birthdate">Birthdate:</label>
+                    <input type="date" id="birthdate" name="birthdate" required>
+                </div>
+                <div class="form-input">
+                    <label for="gender">Gender:</label>
+                    <div class="gender-options">
+                        <label class="gender-option">
+                            <input type="radio" name="gender" value="male" required>
+                            <span class="material-symbols-outlined">male</span>
+                            <span>Male</span>
+                        </label>
+                        <label class="gender-option">
+                            <input type="radio" name="gender" value="female" required>
+                            <span class="material-symbols-outlined">female</span>
+                            <span>Female</span>
+                        </label>
+                        <label class="gender-option">
+                            <input type="radio" name="gender" value="other" required>
+                            <span class="material-symbols-outlined">transgender</span>
+                            <span>Other</span>
+                        </label>
+                    </div>
+                    <div class="form-input">
+                        <label for="profile-pic">Profile Picture:</label>
+                        <input type="file" id="profile-pic" name="profile-pic" accept="image/*">
+                    </div>
+                    <button class="large-button" type="submit">Complete Onboarding</button>
+            </fieldset>
+        </form>
+        <p>Don't want to complete onboarding? <a href="#">Skip for now</a></p>
+    </div>
+</div>

@@ -1,0 +1,34 @@
+﻿@{
+    ViewData["Title"] = "Sign-up";
+}
+
+<div class="login-container">
+    <h1 class="header-1">Sign-up</h1>
+    <div class="card" id="signin-container">
+        <form id="signin-form">
+            <fieldset>
+                <legend>Create your account</legend>
+                <div class="form-input">
+                    <label for="username">Username:</label>
+                    <input type="text" id="username" name="username" required>
+                </div>
+                <div class="form-input">
+                    <label for="username">Email:</label>
+                    <input type="email" id="email" name="email" required>
+                </div>
+                <div class="form-input">
+                    <label for="password">Password:</label>
+                    <input type="password" id="password" name="password" required>
+                    <span class="toggle-password material-symbols-outlined" id="toggle-password" role="button" tabindex="0" aria-pressed="false" data-show-icon="visibility_off" data-hide-icon="visibility">visibility_off</span>
+                </div>
+                <div class="form-input">
+                    <label for="confirm-password">Confirm Password:</label>
+                    <input type="password" id="confirm-password" name="confirm-password" required>
+                    <span class="toggle-password material-symbols-outlined" id="toggle-confirm-password" role="button" tabindex="0" aria-pressed="false" data-show-icon="visibility_off" data-hide-icon="visibility">visibility_off</span>
+                </div>
+                <button class="large-button" type="submit">Sign-Up</button>
+            </fieldset>
+        </form>
+        <p>Already have an account? <a href="#">Sign-in here</a></p>
+    </div>
+</div>

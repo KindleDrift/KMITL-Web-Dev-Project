@@ -7,7 +7,10 @@
     <script type="importmap"></script>
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/WebDevProject.styles.css" asp-append-version="true" />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=menu,menu_open" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=female,male,menu,menu_open,transgender,visibility,visibility_off">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
 </head>
 <body>
     <header>
@@ -17,20 +20,20 @@
                 <ul class="navbar-menu">
                     <li><a href="#">Board</a></li>
                     <li><a href="#">Dashboard</a></li>
-                    <li><a href="#">Sign-in</a></li>
-                    <li class="signup-btn"><a href="#">Sign-up</a></li>
+                    <li><a href="/account/signin">Sign-in</a></li>
+                    <li class="signup-btn"><a href="/account/signup">Sign-up</a></li>
                 </ul>
                 <span class="navbar-toggle material-symbols-outlined" id="mobile-menu" role="button" tabindex="0" aria-expanded="false" data-open-icon="menu_open" data-closed-icon="menu">menu</span>
             </div>
         </nav>
     </header>
     <div class="container">
-        <main role="main" class="pb-3">
+        <main role="main" class="">
             @RenderBody()
         </main>
     </div>
 
-    <footer class="border-top footer text-muted">
+    <footer class="footer">
         <div class="container">
             &copy; 2026 - WebDevProject - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
         </div>
