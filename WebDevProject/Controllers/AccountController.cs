@@ -55,9 +55,29 @@ namespace WebDevProject.Controllers
         {
             if (ModelState.IsValid)
             {
+                // Trim whitespace from DisplayName
+                model.DisplayName = model.DisplayName?.Trim() ?? string.Empty;
+
+                // Validate DisplayName is not empty after trimming
+                if (string.IsNullOrWhiteSpace(model.DisplayName))
+                {
+                    ModelState.AddModelError(nameof(model.DisplayName), "Username cannot be empty or contain only spaces.");
+                    return View(model);
+                }
+
+                var displayNameExists = await _userManager.Users
+                    .FirstOrDefaultAsync(u => u.NormalizedDisplayName == model.DisplayName.ToUpper());
+
+                if (displayNameExists != null)
+                {
+                    ModelState.AddModelError(nameof(model.DisplayName), "This username is already in use.");
+                    return View(model);
+                }
+
                 var user = new Users
                 {
                     DisplayName = model.DisplayName,
+                    NormalizedDisplayName = model.DisplayName.ToUpper(),
                     UserName = model.Email,
                     NormalizedUserName = model.Email.ToUpper(),
                     Email = model.Email,
@@ -75,13 +95,21 @@ namespace WebDevProject.Controllers
                         await _userManager.AddToRoleAsync(user, "User");
                     }
                     await _signInManager.SignInAsync(user, isPersistent: false);
-                    return RedirectToAction("SignIn");
+                    return RedirectToAction("Onboarding");
                 }
                 else
                 {
                     foreach (var error in result.Errors)
                     {
-                        ModelState.AddModelError(string.Empty, error.Description);
+                        // if the email is in use it will return both "Email '...' is already taken." and "Username '...' is already taken.", so if-else catches is needed.
+                        if (error.Code == "DuplicateUserName" && error.Description.Contains("is already taken."))
+                        {
+                            // skip
+                        }
+                        else if (error.Code != "DuplicateUserName")
+                        {
+                            ModelState.AddModelError(string.Empty, error.Description);
+                        }
                     }
                 }
             }

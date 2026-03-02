@@ -7,6 +7,8 @@ namespace WebDevProject.Models
 
         [Required(ErrorMessage = "Username is required")]
         [Display(Name = "Username")]
+        [StringLength(20, MinimumLength = 3, ErrorMessage = "Username must be between 3 and 20 characters")]
+        [RegularExpression(@"^[a-zA-Z0-9_-]+$", ErrorMessage = "Username can only contain letters, numbers, underscores, and hyphens")]
         public required string DisplayName { get; set; }
 
         [Required(ErrorMessage = "Email is required")]

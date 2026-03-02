@@ -31,13 +31,15 @@ namespace WebDevProject.Data
                 }
 
                 logger.LogInformation("Seeding admin user...");
+                var adminDisplayName = "Admin";
                 var adminEmail = "admin@tinytender.local";
                 var adminUser = await userManager.FindByEmailAsync(adminEmail);
                 if (adminUser == null)
                 {
                     adminUser = new Users
                     {
-                        DisplayName = "Admin",
+                        DisplayName = adminDisplayName,
+                        NormalizedDisplayName = adminDisplayName.ToUpper(),
                         UserName = adminEmail,
                         NormalizedUserName = adminEmail.ToUpper(),
                         Email = adminEmail,
