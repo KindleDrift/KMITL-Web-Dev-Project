@@ -1,0 +1,23 @@
+﻿@using Microsoft.AspNetCore.Identity;
+@using WebDevProject.Models;
+@inject SignInManager<Users> SignInManager
+@inject UserManager<Users> UserManager
+
+<ul class="navbar-menu">
+    <li><a href="#">Board</a></li>
+    @if (SignInManager.IsSignedIn(User))
+    {
+        var currentUser = await UserManager.GetUserAsync(User);
+        var displayName = string.IsNullOrWhiteSpace(currentUser?.DisplayName) ? User.Identity?.Name : currentUser.DisplayName;
+
+        <li><a href="#">Dashboard</a></li>
+        <li><a asp-controller="Account" asp-action="SignOut">Sign-out</a></li>
+        <li><a asp-controller="Account" asp-action="Profile">@displayName<img class="navbar-profile-pic" alt="profile-image" src="https://i.ibb.co/tMk9Wb2Y/defaulticon.png"></a></li>
+    }
+    else
+    {
+        <li><a href="#">Dashboard</a></li>
+        <li><a asp-controller="Account" asp-action="SignIn">Sign-in</a></li>
+        <li class="signup-btn"><a asp-controller="Account" asp-action="SignUp">Sign-up</a></li>
+    }
+</ul>

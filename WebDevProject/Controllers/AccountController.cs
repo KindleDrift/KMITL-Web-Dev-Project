@@ -36,7 +36,7 @@ namespace WebDevProject.Controllers
                 }
                 else
                 {
-                    ModelState.AddModelError(string.Empty, "Invalid login attempt.");
+                    ModelState.AddModelError(string.Empty, "Wrong email or password.");
                 }
             }
             return View(model);

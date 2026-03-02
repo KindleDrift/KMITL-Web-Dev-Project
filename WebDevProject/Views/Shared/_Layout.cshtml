@@ -17,12 +17,7 @@
         <nav class="navbar">
             <div class="navbar-container">
                 <a href="#" class="navbar-logo"><img src="">TinyTender</a>
-                <ul class="navbar-menu">
-                    <li><a href="#">Board</a></li>
-                    <li><a href="#">Dashboard</a></li>
-                    <li><a asp-controller="Account" asp-action="Signin">Sign-in</a></li>
-                    <li class="signup-btn"><a asp-controller="Account" asp-action="Signup">Sign-up</a></li>
-                </ul>
+                <partial name="_LoginPartial" />
                 <span class="navbar-toggle material-symbols-outlined" id="mobile-menu" role="button" tabindex="0" aria-expanded="false" data-open-icon="menu_open" data-closed-icon="menu">menu</span>
             </div>
         </nav>
