@@ -1,3 +1,6 @@
+@using WebDevProject.Models;
+@model SignInViewModel;
+
 @{
     ViewData["Title"] = "Sign-in";
 }
@@ -5,17 +8,22 @@
 <div class="login-container">
     <h1 class="header-1">Sign-in</h1>
     <div class="card" id="signin-container">
-        <form id="signin-form">
-            <fieldset>
+        <form id="signin-form" asp-action="SignIn" method="post">
+            @Html.AntiForgeryToken()
+            <fieldset asp-validation-summary="ModelOnly">
                 <legend>Sign-in to your account</legend>
                 <div class="form-input">
-                    <label for="email">Email:</label>
-                    <input type="email" id="email" name="email" required>
+                    <label asp-for="Email">Email:</label>
+                    <input type="email" id="email" name="Email" asp-for="Email" required>
                 </div>
                 <div class="form-input">
-                    <label for="password">Password:</label>
-                    <input type="password" id="password" name="password" required>
+                    <label asp-for="Password">Password:</label>
+                    <input type="password" id="password" name="Password" asp-for="Password" required>
                     <span class="toggle-password material-symbols-outlined" id="toggle-password" role="button" tabindex="0" data-target="password" aria-pressed="false" data-show-icon="visibility_off" data-hide-icon="visibility">visibility_off</span>
+                </div>
+                <div class="form-input">
+                    <input type="checkbox" id="rememberMe" name="RememberMe" asp-for="RememberMe">
+                    <label for="rememberMe">Remember me</label>
                 </div>
                 <button class="large-button" type="submit">Sign-In</button>
             </fieldset>
