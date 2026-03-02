@@ -2,10 +2,11 @@
 
 namespace WebDevProject.Models
 {
-    public class SignupViewModel
+    public class SignUpViewModel
     {
 
         [Required(ErrorMessage = "Username is required")]
+        [Display(Name = "Username")]
         public required string DisplayName { get; set; }
 
         [Required(ErrorMessage = "Email is required")]
@@ -15,11 +16,11 @@ namespace WebDevProject.Models
         [Required(ErrorMessage = "Password is required")]
         [StringLength(100, MinimumLength = 8, ErrorMessage = "Password must be at least 8 characters long")]
         [DataType(DataType.Password)]
-        [Compare("ConfirmPassword", ErrorMessage = "Passwords do not match")]
         public required string Password { get; set; }
 
         [Required(ErrorMessage = "Confirm Password is required")]
         [DataType(DataType.Password)]
+        [Compare("Password", ErrorMessage = "Passwords do not match")]
         [Display(Name = "Confirm Password")]
         public required string ConfirmPassword { get; set; }
     }

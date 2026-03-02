@@ -1,34 +1,49 @@
-﻿@{
+﻿@using WebDevProject.Models;
+@model SignUpViewModel;
+
+@{
     ViewData["Title"] = "Sign-up";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/signup.css" asp-append-version="true" />
 }
 
 <div class="login-container">
     <h1 class="header-1">Sign-up</h1>
     <div class="card" id="signin-container">
-        <form id="signin-form">
+        <form id="signin-form" asp-action="SignUp" method="post">
+            @Html.AntiForgeryToken()
             <fieldset>
                 <legend>Create your account</legend>
                 <div class="form-input">
-                    <label for="username">Username:</label>
-                    <input type="text" id="username" name="username" required>
+                    <label asp-for="DisplayName"></label>
+                    <input asp-for="DisplayName" id="signup-name" required>
+                    <span asp-validation-for="DisplayName" class="text-danger"></span>
+                    <span id="nameError" class="text-danger"></span>
                 </div>
                 <div class="form-input">
-                    <label for="username">Email:</label>
-                    <input type="email" id="email" name="email" required>
+                    <label asp-for="Email"></label>
+                    <input asp-for="Email" id="signup-email" required>
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                    <span id="emailError" class="text-danger"></span>
                 </div>
                 <div class="form-input">
-                    <label for="password">Password:</label>
-                    <input type="password" id="password" name="password" required>
+                    <label asp-for="Password"></label>
+                    <input asp-for="Password" id="password" required>
                     <span class="toggle-password material-symbols-outlined" id="toggle-password" role="button" tabindex="0" data-target="password" aria-pressed="false" data-show-icon="visibility_off" data-hide-icon="visibility">visibility_off</span>
+                    <span asp-validation-for="Password" class="text-danger"></span>
                 </div>
                 <div class="form-input">
-                    <label for="confirm-password">Confirm Password:</label>
-                    <input type="password" id="confirm-password" name="confirm-password" required>
+                    <label asp-for="ConfirmPassword"></label>
+                    <input asp-for="ConfirmPassword" id="confirm-password" required>
                     <span class="toggle-password material-symbols-outlined" id="toggle-confirm-password" role="button" tabindex="0" data-target="confirm-password" aria-pressed="false" data-show-icon="visibility_off" data-hide-icon="visibility">visibility_off</span>
+                    <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
                 </div>
                 <button class="large-button" type="submit">Sign-Up</button>
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             </fieldset>
         </form>
-        <p>Already have an account? <a href="#">Sign-in here</a></p>
+        <p>Already have an account? <a asp-controller="Account" asp-action="SignIn">Sign-in here</a></p>
     </div>
 </div>

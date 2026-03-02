@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using WebDevProject.Models;
 
 namespace WebDevProject.Controllers
@@ -48,6 +49,45 @@ namespace WebDevProject.Controllers
             return View();
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SignUp(SignUpViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                var user = new Users
+                {
+                    DisplayName = model.DisplayName,
+                    UserName = model.Email,
+                    NormalizedUserName = model.Email.ToUpper(),
+                    Email = model.Email,
+                    NormalizedEmail = model.Email.ToUpper(),
+                    EmailConfirmed = false,
+                    SecurityStamp = Guid.NewGuid().ToString()
+                };
+
+                var result = await _userManager.CreateAsync(user, model.Password);
+
+                if (result.Succeeded)
+                {
+                    var roleExists = await _roleManager.RoleExistsAsync("User");
+                    if (roleExists) {
+                        await _userManager.AddToRoleAsync(user, "User");
+                    }
+                    await _signInManager.SignInAsync(user, isPersistent: false);
+                    return RedirectToAction("SignIn");
+                }
+                else
+                {
+                    foreach (var error in result.Errors)
+                    {
+                        ModelState.AddModelError(string.Empty, error.Description);
+                    }
+                }
+            }
+            return View(model);
+        }
+
         public IActionResult Onboarding()
         {
             return View();
@@ -56,6 +96,22 @@ namespace WebDevProject.Controllers
         public IActionResult ForgotPassword()
         {
             return View();
+        }
+
+        // API endpoint to check if a display name already exists for AJAX calls
+        [HttpGet]
+        public async Task<IActionResult> CheckDisplayNameExist(string displayname)
+        {
+            var user = await _userManager.Users.FirstOrDefaultAsync(u => u.DisplayName == displayname);
+            return Json(user != null);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> CheckEmailExist(string email)
+        {
+            // Not a mistake here, because the email is also stored in username.
+            var user = await _userManager.FindByNameAsync(email);
+            return Json(user != null);
         }
     }
 }
