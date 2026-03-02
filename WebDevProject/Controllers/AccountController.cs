@@ -126,6 +126,14 @@ namespace WebDevProject.Controllers
             return View();
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public new async Task<IActionResult> SignOut()
+        {
+            await _signInManager.SignOutAsync();
+            return RedirectToAction("SignIn");
+        }
+
         // API endpoint to check if a display name already exists for AJAX calls
         [HttpGet]
         public async Task<IActionResult> CheckDisplayNameExist(string displayname)

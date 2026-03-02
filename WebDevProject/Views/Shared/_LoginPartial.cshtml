@@ -11,7 +11,11 @@
         var displayName = string.IsNullOrWhiteSpace(currentUser?.DisplayName) ? User.Identity?.Name : currentUser.DisplayName;
 
         <li><a href="#">Dashboard</a></li>
-        <li><a asp-controller="Account" asp-action="SignOut">Sign-out</a></li>
+        <li>
+            <form asp-controller="Account" asp-action="SignOut" method="post" style="display: inline;">
+                <button type="submit" class="sign-out-btn">Sign-out</button>
+            </form>
+        </li>
         <li><a asp-controller="Account" asp-action="Profile">@displayName<img class="navbar-profile-pic" alt="profile-image" src="https://i.ibb.co/tMk9Wb2Y/defaulticon.png"></a></li>
     }
     else
