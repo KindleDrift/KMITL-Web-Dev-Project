@@ -6,5 +6,21 @@ namespace WebDevProject.Models
     {
         public required string DisplayName { get; set; }
         public required string NormalizedDisplayName { get; set; }
+
+        public bool HasCompletedOnboarding { get; set; } = false;
+
+        public DateTime? DateOfBirth { get; set; }
+
+        public enum Gender
+        {
+            Male,
+            Female,
+            Other
+        }
+
+        public Gender? UserGender { get; set; }
+
+        // Profile picture URL
+        public string? ProfilePictureUrl { get; set; }
     }
 }
