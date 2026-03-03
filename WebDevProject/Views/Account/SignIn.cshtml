@@ -1,0 +1,39 @@
+@using WebDevProject.Models;
+@model SignInViewModel;
+
+@{
+    ViewData["Title"] = "Sign-in";
+}
+
+<div class="login-container">
+    <h1 class="header-1">Sign-in</h1>
+    <div class="card" id="signin-container">
+        <form id="signin-form" asp-action="SignIn" method="post">
+            @Html.AntiForgeryToken()
+            <fieldset>
+                <legend>Sign-in to your account</legend>
+                <div class="form-input">
+                    <label asp-for="Email"></label>
+                    <input type="email" id="email" name="Email" asp-for="Email" required>
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                </div>
+                <div class="form-input">
+                    <label asp-for="Password"></label>
+                    <input type="password" id="password" name="Password" asp-for="Password" required>
+                    <span class="toggle-password material-symbols-outlined" id="toggle-password" role="button" tabindex="0" data-target="password" aria-pressed="false" data-show-icon="visibility_off" data-hide-icon="visibility">visibility_off</span>
+                    <span asp-validation-for="Password" class="text-danger"></span>
+                </div>
+                <div class="single-checkbox-input">
+                    <label asp-for="RememberMe">
+                        <input type="checkbox" id="rememberMe" name="RememberMe" asp-for="RememberMe">
+                        @Html.DisplayNameFor(m => m.RememberMe)
+                    </label>
+                </div>
+                <button class="large-button" type="submit">Sign-In</button>
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            </fieldset>
+        </form>
+        <p class="forgot-password"><a href="#">Forgot password?</a></p>
+        <p>Don't have an account? <a asp-controller="Account" asp-action="SignUp">Sign-up here</a></p>
+    </div>
+</div>

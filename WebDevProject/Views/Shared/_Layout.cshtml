@@ -3,26 +3,22 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - WebDevProject</title>
+    <title>@ViewData["Title"] | TinyTender</title>
     <script type="importmap"></script>
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/WebDevProject.styles.css" asp-append-version="true" />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=female,male,menu,menu_open,transgender,visibility,visibility_off">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=female,male,menu,menu_open,transgender,visibility,visibility_off">
+    @await RenderSectionAsync("Styles", required: false)
 </head>
 <body>
     <header>
         <nav class="navbar">
             <div class="navbar-container">
                 <a href="#" class="navbar-logo"><img src="">TinyTender</a>
-                <ul class="navbar-menu">
-                    <li><a href="#">Board</a></li>
-                    <li><a href="#">Dashboard</a></li>
-                    <li><a href="/account/signin">Sign-in</a></li>
-                    <li class="signup-btn"><a href="/account/signup">Sign-up</a></li>
-                </ul>
+                <partial name="_LoginPartial" />
                 <span class="navbar-toggle material-symbols-outlined" id="mobile-menu" role="button" tabindex="0" aria-expanded="false" data-open-icon="menu_open" data-closed-icon="menu">menu</span>
             </div>
         </nav>
@@ -35,7 +31,7 @@
 
     <footer class="footer">
         <div class="container">
-            &copy; 2026 - WebDevProject - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+            &copy; 2026 - <a asp-controller="Home" asp-action="About">TinyTender</a> - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
         </div>
     </footer>
     <script src="~/js/site.js" asp-append-version="true"></script>

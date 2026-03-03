@@ -1,9 +1,188 @@
+/* Main Layout */
+
+html {
+    margin: 0;
+}
+
 body {
     font-family: "Inter", sans-serif;
     margin: 0;
     padding: 0;
     padding-top: 60px; /* Navbar height */
 }
+
+.navbar {
+    background-color: #d1ecff;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    z-index: 1000;
+    margin: 0;
+}
+
+.navbar-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    box-sizing: border-box;
+}
+
+.navbar-logo {
+    font-size: 24px;
+    font-weight: bold;
+    color: black;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+}
+
+.navbar-logo img {
+    width: 30px;
+    height: 30px;
+    margin-right: 10px;
+}
+
+.navbar-toggle {
+    display: none;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    background-color: #1f1f1f;
+    border: 1px solid black;
+    border-radius: 6px;
+    cursor: pointer;
+    color: #ffffff;
+    font-size: 24px;
+    box-sizing: border-box;
+    text-align: center;
+    font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+}
+
+.navbar-menu {
+    list-style: none;
+    display: flex;
+    margin: 0;
+    padding: 0;
+    align-items: center;
+}
+
+.navbar-menu li {
+    margin-left: 20px;
+}
+
+.navbar-menu li a {
+    text-decoration: none;
+    color: black;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+}
+
+.navbar-menu li a:hover {
+    opacity: 0.7;
+    transition: opacity 0.3s ease;
+}
+
+.navbar-menu li button.sign-out-btn {
+    background: none;
+    border: none;
+    text-decoration: none;
+    color: black;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    padding: 0;
+    cursor: pointer;
+    font-family: "Inter", sans-serif;
+    font-size: 1em;
+    transition: opacity 0.3s ease;
+}
+
+.navbar-menu li button.sign-out-btn:hover {
+    opacity: 0.7;
+    transition: opacity 0.3s ease;
+}
+
+.navbar-menu .signup-btn a {
+    background-color: #1f1f1f;
+    padding: 5px 10px;
+    border-radius: 5px;
+    border: 1px solid black;
+    color: #ffffff;
+}
+
+.navbar-profile-pic {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    margin-left: 10px;
+}
+
+.navbar-menu.show {
+    display: flex;
+}
+
+/* Desktop Force Toggler */
+@media (min-width: 769px) {
+    .navbar-toggle {
+        display: none !important;
+    }
+}
+
+/* Phone layout */
+@media (max-width: 768px) {
+    .navbar-container {
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+
+    .navbar-logo {
+        order: 1;
+    }
+
+    .navbar-toggle {
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+        order: 2;
+        margin-left: auto;
+        text-align: center;
+    }
+
+    .navbar-menu {
+        order: 3;
+        flex-direction: column;
+        width: 100%;
+        display: none;
+        align-items: flex-start;
+    }
+
+    .navbar-menu li {
+        margin-left: 0;
+        width: 100%;
+    }
+
+    .navbar-menu li a {
+        width: 100%;
+        padding: 10px 0;
+        text-align: right;
+        justify-content: flex-start;
+    }
+
+    .navbar-menu .signup-btn a {
+        width: auto;
+        align-self: flex-start;
+    }
+
+    .navbar-menu .signup-btn {
+        width: auto;
+    }
+}
+/*************************/
 
 .login-container {
     max-width: 540px;
@@ -65,6 +244,48 @@ legend {
     padding-right: 40px;
 }
 
+.form-input .single-checkbox-input {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 0px;
+}
+
+.form-input .single-checkbox-input input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    accent-color: #1f1f1f;
+    cursor: pointer;
+}
+
+.form-input .single-checkbox-input label {
+    margin: 0;
+    font-weight: normal;
+    cursor: pointer;
+}
+
+.form-input .single-checkbox-input:has(input[type="checkbox"]:focus-visible) {
+    outline: 2px solid #1f1f1f;
+    outline-offset: 2px;
+}
+
+.text-danger {
+    caption-side: bottom;
+    color: red;
+    font-size: 14px;
+}
+
+.text-danger ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.text-danger ul li {
+    display: block;
+}
+
 .toggle-password {
     position: absolute;
     right: 10px;
@@ -78,9 +299,9 @@ legend {
     justify-content: center;
 }
 
-    .toggle-password:hover {
-        color: #1f1f1f;
-    }
+.toggle-password:hover {
+    color: #1f1f1f;
+}
 
 .large-button {
     background-color: #1f1f1f;
