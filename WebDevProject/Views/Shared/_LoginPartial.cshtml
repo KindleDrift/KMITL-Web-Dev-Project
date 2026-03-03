@@ -4,19 +4,26 @@
 @inject UserManager<Users> UserManager
 
 <ul class="navbar-menu">
-    <li><a href="#">Board</a></li>
+    <li><a asp-controller="Board" asp-action="Search">Board</a></li>
     @if (SignInManager.IsSignedIn(User))
     {
         var currentUser = await UserManager.GetUserAsync(User);
         var displayName = string.IsNullOrWhiteSpace(currentUser?.DisplayName) ? User.Identity?.Name : currentUser.DisplayName;
 
-        <li><a href="#">Dashboard</a></li>
+        <li><a asp-controller="Board" asp-action="Index">Dashboard</a></li>
         <li>
             <form asp-controller="Account" asp-action="SignOut" method="post" style="display: inline;">
                 <button type="submit" class="sign-out-btn">Sign-out</button>
             </form>
         </li>
-        <li><a asp-controller="Account" asp-action="Profile">@displayName<img class="navbar-profile-pic" alt="profile-image" src="https://i.ibb.co/tMk9Wb2Y/defaulticon.png"></a></li>
+        @if (!string.IsNullOrEmpty(currentUser?.ProfilePictureUrl))
+        {
+            <li><a asp-controller="Profile" asp-action="Index">@displayName<img class="navbar-profile-pic" alt="profile-image" src="@currentUser.ProfilePictureUrl"></a></li>
+        }
+        else
+        {
+            <li><a asp-controller="Profile" asp-action="Index">@displayName<img class="navbar-profile-pic" alt="profile-image" src="~/images/default-profile.png"></a></li>
+        }
     }
     else
     {
