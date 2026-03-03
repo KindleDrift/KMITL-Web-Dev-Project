@@ -1,44 +1,68 @@
-﻿@{
-    ViewData["Title"] = "Sign-up";
+﻿@model WebDevProject.Models.OnboardingViewModel
+
+@{
+    ViewData["Title"] = "Onboarding";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/onboarding.css" asp-append-version="true" />
 }
 
 <div class="login-container">
     <h1 class="header-1">Onboarding</h1>
     <div class="card" id="signin-container">
-        <form id="signin-form">
+        <form id="signin-form" asp-controller="Account" asp-action="Onboarding" method="post" enctype="multipart/form-data">
             <fieldset>
                 <legend>Tell us about yourself</legend>
+
+                <div asp-validation-summary="ModelOnly"></div>
+
                 <div class="form-input">
-                    <label for="birthdate">Birthdate:</label>
-                    <input type="date" id="birthdate" name="birthdate" required>
+                    <label asp-for="ProfileImage">Profile Picture:</label>
+                    <img id="profile-pic-preview" src="~/images/default-profile.png" alt="Profile Picture Preview" class="profile-pic-preview" />
+                    <input asp-for="ProfileImage" type="file" id="profile-pic" accept="image/*" />
+                    <span asp-validation-for="ProfileImage"></span>
                 </div>
+
                 <div class="form-input">
-                    <label for="gender">Gender:</label>
+                    <label asp-for="DateOfBirth">Birthdate:</label>
+                    <input asp-for="DateOfBirth" type="date" id="birthdate" />
+                    <span asp-validation-for="DateOfBirth"></span>
+                </div>
+
+                <div class="form-input">
+                    <label asp-for="UserGender">Gender:</label>
                     <div class="gender-options">
                         <label class="gender-option">
-                            <input type="radio" name="gender" value="male" required>
+                            <input asp-for="UserGender" type="radio" value="0" />
                             <span class="material-symbols-outlined">male</span>
                             <span>Male</span>
                         </label>
                         <label class="gender-option">
-                            <input type="radio" name="gender" value="female" required>
+                            <input asp-for="UserGender" type="radio" value="1" />
                             <span class="material-symbols-outlined">female</span>
                             <span>Female</span>
                         </label>
                         <label class="gender-option">
-                            <input type="radio" name="gender" value="other" required>
+                            <input asp-for="UserGender" type="radio" value="2" />
                             <span class="material-symbols-outlined">transgender</span>
                             <span>Other</span>
                         </label>
                     </div>
-                    <div class="form-input">
-                        <label for="profile-pic">Profile Picture:</label>
-                        <input type="file" id="profile-pic" name="profile-pic" accept="image/*">
-                    </div>
+                    <span asp-validation-for="UserGender"></span>
+                </div>
+
+                <input asp-for="SkipOnboarding" type="hidden" value="false" />
+
+                <div class="form-actions">
                     <button class="large-button" type="submit">Complete Onboarding</button>
                 </div>
             </fieldset>
         </form>
-        <p>Don't want to complete onboarding? <a href="#">Skip for now</a></p>
+        <p>Don't want to complete onboarding? <button type="button" id="skip-onboarding-btn" class="link-button">Skip for now</button></p>
     </div>
 </div>
+
+@section Scripts {
+    <script src="~/js/onboarding.js" asp-append-version="true"></script>
+}

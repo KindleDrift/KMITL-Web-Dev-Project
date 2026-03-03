@@ -1,0 +1,24 @@
+﻿#profile-pic-preview {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin: 10px auto;
+    display: flex;
+    justify-content: center;
+    align-items: center
+}
+
+.link-button {
+    background: none;
+    border: none;
+    color: #007bff;
+    cursor: pointer;
+    text-decoration: underline;
+    padding: 0;
+    font: inherit;
+}
+
+.link-button:hover {
+    color: #0056b3;
+}
