@@ -275,3 +275,45 @@ body {
         font-size: 16px;
     }
 }
+.post_list{
+    padding: 30px;
+}
+.container {
+    display: flex;
+    flex-flow: column wrap;
+    justify-content: center;
+    
+    padding-left: 50px;
+    padding-right: 50px;
+}
+.post {
+    display: flex;
+    flex-flow: row nowrap;
+    padding: 10px;
+    background-color: lightblue;
+    
+}
+.post_title {
+    padding-left: 30px;
+    padding-right: 30px;
+}
+.status {
+    align-self: center;
+    background-color: lawngreen;
+    border-radius: 10px;
+    height: 20px;
+    width: 20px;
+    margin-left: 20px;
+
+}
+.participants{
+    justify-self: flex-end;
+}
+.post_{
+    display: flex;
+    flex-flow: row nowrap;
+    padding: 10px;
+    background-color: lightskyblue;
+}
+
+
