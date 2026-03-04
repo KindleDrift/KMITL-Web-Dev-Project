@@ -181,7 +181,8 @@ namespace WebDevProject.Controllers
                         Directory.CreateDirectory(uploadsFolder);
                     }
 
-                    var uniqueFileName = $"{user.Id}_{Guid.NewGuid()}_{model.ProfileImage.FileName}";
+                    var sanitizedFileName = Path.GetFileName(model.ProfileImage.FileName);
+                    var uniqueFileName = $"{user.Id}_{Guid.NewGuid()}_{sanitizedFileName}";
                     var filePath = Path.Combine(uploadsFolder, uniqueFileName);
 
                     using (var fileStream = new FileStream(filePath, FileMode.Create))

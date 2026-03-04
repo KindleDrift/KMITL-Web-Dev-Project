@@ -20,13 +20,13 @@
                 <div class="form-input">
                     <label asp-for="ProfileImage">Profile Picture:</label>
                     <img id="profile-pic-preview" src="~/images/default-profile.png" alt="Profile Picture Preview" class="profile-pic-preview" />
-                    <input asp-for="ProfileImage" type="file" id="profile-pic" accept="image/*" />
+                    <input asp-for="ProfileImage" type="file" accept="image/*" />
                     <span asp-validation-for="ProfileImage"></span>
                 </div>
 
                 <div class="form-input">
                     <label asp-for="DateOfBirth">Birthdate:</label>
-                    <input asp-for="DateOfBirth" type="date" id="birthdate" />
+                    <input asp-for="DateOfBirth" type="date"/>
                     <span asp-validation-for="DateOfBirth"></span>
                 </div>
 
