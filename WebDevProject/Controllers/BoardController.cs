@@ -12,5 +12,10 @@ namespace WebDevProject.Controllers
         public IActionResult Search() { 
             return View();
         }
+
+        public IActionResult Create()
+        {
+            return View();
+        }
     }
 }
