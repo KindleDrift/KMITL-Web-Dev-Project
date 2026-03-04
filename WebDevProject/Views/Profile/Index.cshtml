@@ -1,0 +1,157 @@
+@* this template is for testing only. *@
+
+@model WebDevProject.Models.Users
+
+@{
+    ViewData["Title"] = "My Profile";
+}
+
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="mb-0">My Profile</h2>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-4 text-center">
+                            @if (!string.IsNullOrEmpty(Model.ProfilePictureUrl))
+                            {
+                                <img src="@Model.ProfilePictureUrl" alt="Profile Picture" class="img-fluid rounded-circle" style="width: 200px; height: 200px; object-fit: cover;" />
+                            }
+                            else
+                            {
+                                <img src="~/images/default-profile.png" alt="Default Profile Picture" class="img-fluid rounded-circle" style="width: 200px; height: 200px; object-fit: cover;" />
+                            }
+                        </div>
+                        <div class="col-md-8">
+                            <div class="profile-details">
+                                <h3>@Model.DisplayName</h3>
+                                <hr />
+                                
+                                <div class="detail-row mb-3">
+                                    <strong>Email:</strong>
+                                    <span>@Model.Email</span>
+                                </div>
+
+                                <div class="detail-row mb-3">
+                                    <strong>Username:</strong>
+                                    <span>@Model.UserName</span>
+                                </div>
+
+                                @if (Model.DateOfBirth.HasValue)
+                                {
+                                    <div class="detail-row mb-3">
+                                        <strong>Date of Birth:</strong>
+                                        <span>@Model.DateOfBirth.Value.ToString("MMMM dd, yyyy")</span>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="detail-row mb-3">
+                                        <strong>Date of Birth:</strong>
+                                        <span class="text-muted">Not provided</span>
+                                    </div>
+                                }
+
+                                @if (Model.UserGender.HasValue)
+                                {
+                                    <div class="detail-row mb-3">
+                                        <strong>Gender:</strong>
+                                        <span>@Model.UserGender</span>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="detail-row mb-3">
+                                        <strong>Gender:</strong>
+                                        <span class="text-muted">Not provided</span>
+                                    </div>
+                                }
+
+                                <div class="detail-row mb-3">
+                                    <strong>Member Since:</strong>
+                                    <span>(@Model.CreatedAt)</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr />
+
+                    <div class="action-buttons">
+                        <a href="@Url.Action("Edit", "Profile")" class="btn btn-primary">Edit Profile</a>
+                        <a href="@Url.Action("ChangePassword", "Account")" class="btn btn-secondary">Change Password</a>
+                        <form asp-action="SignOut" asp-controller="Account" method="post" style="display: inline;">
+                            <button type="submit" class="btn btn-danger">Sign Out</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .profile-details {
+        padding: 20px 0;
+    }
+
+    .detail-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px 0;
+        border-bottom: 1px solid #e0e0e0;
+    }
+
+    .detail-row:last-child {
+        border-bottom: none;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 10px;
+        margin-top: 20px;
+    }
+
+    .btn {
+        padding: 10px 20px;
+        text-decoration: none;
+        border-radius: 4px;
+        border: none;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 500;
+    }
+
+    .btn-primary {
+        background-color: #007bff;
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background-color: #0056b3;
+        color: white;
+    }
+
+    .btn-secondary {
+        background-color: #6c757d;
+        color: white;
+    }
+
+    .btn-secondary:hover {
+        background-color: #545b62;
+        color: white;
+    }
+
+    .btn-danger {
+        background-color: #dc3545;
+        color: white;
+    }
+
+    .btn-danger:hover {
+        background-color: #c82333;
+        color: white;
+    }
+</style>
