@@ -22,5 +22,9 @@ namespace WebDevProject.Models
 
         // Profile picture URL
         public string? ProfilePictureUrl { get; set; }
+
+        public string? Bio { get; set; }
+
+        public required DateTime CreatedAt { get; set; }
     }
 }

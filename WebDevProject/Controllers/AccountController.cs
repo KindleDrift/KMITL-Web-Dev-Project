@@ -91,7 +91,8 @@ namespace WebDevProject.Controllers
                     Email = model.Email,
                     NormalizedEmail = model.Email.ToUpper(),
                     EmailConfirmed = false,
-                    SecurityStamp = Guid.NewGuid().ToString()
+                    SecurityStamp = Guid.NewGuid().ToString(),
+                    CreatedAt = DateTime.Now,
                 };
 
                 var result = await _userManager.CreateAsync(user, model.Password);
