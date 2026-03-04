@@ -24,5 +24,17 @@ namespace WebDevProject.Controllers
 
             return View(user);
         }
+
+        [HttpGet]
+        public async Task<IActionResult> Edit()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return RedirectToAction("SignIn", "Account");
+            }
+
+            return View(user);
+        }
     }
 }
