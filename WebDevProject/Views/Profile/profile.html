@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=menu,menu_open">
+    <title>Document</title>
+    <style>
+        .profile {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .profile-picture {
+            float: inline-start;
+            width: 200px;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 100%;
+            align-items: center;
+            margin-bottom: -60px;
+            z-index: 2;
+        }
+
+        .profile-data {
+            width: 95%;
+            background-color: #CADEFE;
+            padding: 20px;
+        }
+
+        .profile-link {
+            margin: 10px;
+            display: block;
+            text-align: right;
+            text-decoration: none;
+            font-size: 15px;
+            color: black;
+        }
+
+        .row {
+            display: flex;
+            gap: 10px;
+            margin: 10px;
+            padding: 10px;
+        }
+
+        .label {
+            font-weight: bold;
+            font-size: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .row {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="navbar-container">
+            <a href="#" class="navbar-logo"><img src="">TinyTender</a>
+            <ul class="navbar-menu">
+                <li><a href="#">Board</a></li>
+                <li><a href="#">Dashboard</a></li>
+                <li><a href="#">Username<img id="profile-pic" src="default_prof.png"></a></li>
+            </ul>
+            <span class="navbar-toggle material-symbols-outlined" id="mobile-menu" role="button" tabindex="0"
+                aria-expanded="false" data-open-icon="menu_open" data-closed-icon="menu">menu</span>
+        </div>
+    </nav>
+    <div class="profile">
+        <img class="profile-picture" id="picture"
+            src="https://i.pinimg.com/474x/0e/da/21/0eda21966423d2f594d483689137747d.jpg" alt="picture">
+        <div class="profile-data">
+            <a class="profile-link" href=".\edit_profile.html">edit profile</a>
+            <div class="data-menu">
+                <div class="row">
+                    <span class="label">username :</span>
+                    <span id="username">-</span>
+                </div>
+                <div class="row">
+                    <span class="label">name :</span>
+                    <span id="name">-</span>
+                </div>
+                <div class="row">
+                    <span class="label">gender :</span>
+                    <span id="gender">-</span>
+                </div>
+                <div class="row">
+                    <span class="label">birth date :</span>
+                    <span id="birth date">-</span>
+                </div>
+                <div class="row">
+                    <span class="label">email :</span>
+                    <span id="email">-</span>
+                </div>
+            </div>
+            <a class="profile-link" href=".\reset_password.html">reset password</a>
+        </div>
+    </div>
+    <script src="script.js"></script>
+    <script src="profile.js"></script>
+</body>
+
+</html>

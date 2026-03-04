@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="site.css">
+    <link rel="stylesheet" href="editprofile.css">
+    <link rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=menu,menu_open">
+    <title>Document</title>
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="navbar-container">
+            <a href="#" class="navbar-logo"><img src="">TinyTender</a>
+            <ul class="navbar-menu">
+                <li><a href="#">Board</a></li>
+                <li><a href="#">Dashboard</a></li>
+                <li><a href="#">Username<img id="profile-pic" src="default_prof.png"></a></li>
+            </ul>
+            <span class="navbar-toggle material-symbols-outlined" id="mobile-menu" role="button" tabindex="0"
+                aria-expanded="false" data-open-icon="menu_open" data-closed-icon="menu">menu</span>
+        </div>
+    </nav>
+    <form class="profile">
+        <div class="edit-picture">
+            <img class="profile-picture" id="preview"
+                src="" alt="picture">
+            <input type="file" id="imageInput" accept="image/*" hidden>
+            <button id="changePicBtn" type="button">Change Picture</button>
+        </div>
+        <div class="profile-data">
+            <div class="data-menu">
+                <div class="row">
+                    <span class="label">username :</span>
+                    <input type="text" id="usernameInput"><br>
+                </div>
+                <div class="row">
+                    <span class="label">name :</span>
+                    <input type="text" id="nameInput"><br>
+                </div>
+                <div class="row">
+                    <span class="label">gender :</span>
+                    <span>
+                        <input type="radio" id="genderInput" name="gender" value="male">
+                        <label for="male">male</label>
+                    </span>
+                    <span>
+                        <input type="radio" id="genderInput" name="gender" value="female">
+                        <label for="female">female</label>
+                    </span>
+                    <span>
+                        <input type="radio" id="genderInput" name="gender" value="other">
+                        <label for="other">other</label>
+                    </span>
+                </div>
+                <div class="row">
+                    <span class="label">birth date :</span>
+                    <input type="date" id="birthdateInput"><br>
+                </div>
+                <div class="row">
+                    <span class="label">email :</span>
+                    <input type="email" id="emailInput"><br>
+                </div>
+                <button type="button" id="save">save change</button>
+            </div>
+        </div>
+    </form>
+</body>
+
+</html>
