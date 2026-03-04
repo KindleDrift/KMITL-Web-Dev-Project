@@ -1,0 +1,38 @@
+@{
+    ViewData["Title"] = "Profile";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/profile.css" asp-append-version="true" />
+}
+
+<div class="profile">
+    <img class="profile-picture" id="picture"
+        src="https://i.pinimg.com/474x/0e/da/21/0eda21966423d2f594d483689137747d.jpg" alt="picture">
+    <div class="profile-data">
+        <a class="profile-link" href=".\edit_profile.html">edit profile</a>
+        <div class="data-menu">
+            <div class="row">
+                <span class="label">username :</span>
+                <span id="username">-</span>
+            </div>
+            <div class="row">
+                <span class="label">name :</span>
+                <span id="name">-</span>
+            </div>
+            <div class="row">
+                <span class="label">gender :</span>
+                <span id="gender">-</span>
+            </div>
+            <div class="row">
+                <span class="label">birth date :</span>
+                <span id="birth date">-</span>
+            </div>
+            <div class="row">
+                <span class="label">email :</span>
+                <span id="email">-</span>
+            </div>
+        </div>
+        <a class="profile-link" href=".\reset_password.html">reset password</a>
+    </div>
+</div>

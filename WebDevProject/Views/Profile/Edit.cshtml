@@ -1,0 +1,52 @@
+@{
+    ViewData["Title"] = "Edit Profile";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/editprofile.css" asp-append-version="true" />
+}
+
+<form class="profile">
+    <div class="edit-picture">
+        <img class="profile-picture" id="preview"
+            src="" alt="picture">
+        <input type="file" id="imageInput" accept="image/*" hidden>
+        <button id="changePicBtn" type="button">Change Picture</button>
+    </div>
+    <div class="profile-data">
+        <div class="data-menu">
+            <div class="row">
+                <span class="label">username :</span>
+                <input type="text" id="usernameInput"><br>
+            </div>
+            <div class="row">
+                <span class="label">name :</span>
+                <input type="text" id="nameInput"><br>
+            </div>
+            <div class="row">
+                <span class="label">gender :</span>
+                <span>
+                    <input type="radio" id="genderInput" name="gender" value="male">
+                    <label for="male">male</label>
+                </span>
+                <span>
+                    <input type="radio" id="genderInput" name="gender" value="female">
+                    <label for="female">female</label>
+                </span>
+                <span>
+                    <input type="radio" id="genderInput" name="gender" value="other">
+                    <label for="other">other</label>
+                </span>
+            </div>
+            <div class="row">
+                <span class="label">birth date :</span>
+                <input type="date" id="birthdateInput"><br>
+            </div>
+            <div class="row">
+                <span class="label">email :</span>
+                <input type="email" id="emailInput"><br>
+            </div>
+            <button type="button" id="save">save change</button>
+        </div>
+    </div>
+</form>
