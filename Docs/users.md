@@ -30,7 +30,7 @@ Gender is defined as a nullable enum with values:
 - `Other`
 
 #### Extra notes on `DisplayName` and `NormalizedDisplayName`
-All of these properties are easily editable by the user after signup, including `DisplayName` which is the unique user-facing handle. Users can change their `DisplayName` at any time, but the system checks for duplicates before allowing it. Then `NormalizedDisplayName` is updated to the uppercase version of `DisplayName` for consistent case-insensitive uniqueness checks.
+`DisplayName` is the unique user-facing handle. In the current implementation, it (and the related profile properties above) are set during signup, and `NormalizedDisplayName` is computed as the uppercase version of `DisplayName` so the application can enforce case-insensitive uniqueness at creation time. There is currently no user-facing profile edit endpoint/UI in this codebase, so end users cannot change their `DisplayName` or other profile fields after signup unless additional functionality is added.
 
 ## Behavior and Constraints in Current Code
 
