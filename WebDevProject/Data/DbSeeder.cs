@@ -45,7 +45,8 @@ namespace WebDevProject.Data
                         Email = adminEmail,
                         NormalizedEmail = adminEmail.ToUpper(),
                         EmailConfirmed = true,
-                        SecurityStamp = Guid.NewGuid().ToString()
+                        SecurityStamp = Guid.NewGuid().ToString(),
+                        CreatedAt = DateTime.Now,
                     };
                     var result = await userManager.CreateAsync(adminUser, "Admin123!");
                     if (result.Succeeded)

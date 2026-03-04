@@ -21,6 +21,10 @@ namespace WebDevProject.Controllers
         [HttpGet]
         public IActionResult SignIn()
         {
+            if (User.Identity?.IsAuthenticated ?? false)
+            {
+                return RedirectToAction("Index", "Profile");
+            }
             return View();
         }
 
@@ -33,7 +37,7 @@ namespace WebDevProject.Controllers
                 var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, lockoutOnFailure: false);
                 if (result.Succeeded)
                 {
-                    return RedirectToAction("Index", "Home");
+                    return RedirectToAction("Index", "Profile");
                 }
                 else
                 {
@@ -46,6 +50,10 @@ namespace WebDevProject.Controllers
         [HttpGet]
         public IActionResult SignUp()
         {
+            if (User.Identity?.IsAuthenticated ?? false)
+            {
+                return RedirectToAction("Index", "Profile");
+            }
             return View();
         }
 
@@ -83,7 +91,8 @@ namespace WebDevProject.Controllers
                     Email = model.Email,
                     NormalizedEmail = model.Email.ToUpper(),
                     EmailConfirmed = false,
-                    SecurityStamp = Guid.NewGuid().ToString()
+                    SecurityStamp = Guid.NewGuid().ToString(),
+                    CreatedAt = DateTime.Now,
                 };
 
                 var result = await _userManager.CreateAsync(user, model.Password);
@@ -116,11 +125,105 @@ namespace WebDevProject.Controllers
             return View(model);
         }
 
-        public IActionResult Onboarding()
+        [HttpGet]
+        public async Task<IActionResult> Onboarding()
         {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return RedirectToAction("SignIn");
+            }
+
+            if (user.HasCompletedOnboarding)
+            {
+                return RedirectToAction("Index", "Profile");
+            }
+
             return View();
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Onboarding(OnboardingViewModel model)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return RedirectToAction("SignIn");
+            }
+
+            if (model.SkipOnboarding)
+            {
+                user.HasCompletedOnboarding = true;
+                var result = await _userManager.UpdateAsync(user);
+                if (result.Succeeded)
+                {
+                    return RedirectToAction("Index", "Profile");
+                }
+                else
+                {
+                    foreach (var error in result.Errors)
+                    {
+                        ModelState.AddModelError(string.Empty, error.Description);
+                    }
+                }
+            }
+            else if (ModelState.IsValid)
+            {
+                user.DateOfBirth = model.DateOfBirth;
+                user.UserGender = model.UserGender;
+
+                if (model.ProfileImage != null && model.ProfileImage.Length > 0)
+                {
+                    var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "profiles");
+                    if (!Directory.Exists(uploadsFolder))
+                    {
+                        Directory.CreateDirectory(uploadsFolder);
+                    }
+
+                    var sanitizedFileName = Path.GetFileName(model.ProfileImage.FileName);
+                    var uniqueFileName = $"{user.Id}_{Guid.NewGuid()}_{sanitizedFileName}";
+                    var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                    using (var fileStream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await model.ProfileImage.CopyToAsync(fileStream);
+                    }
+
+                    user.ProfilePictureUrl = $"/uploads/profiles/{uniqueFileName}";
+                }
+
+                user.HasCompletedOnboarding = true;
+                var result = await _userManager.UpdateAsync(user);
+
+                if (result.Succeeded)
+                {
+                    return RedirectToAction("Index", "Profile");
+                }
+                else
+                {
+                    foreach (var error in result.Errors)
+                    {
+                        ModelState.AddModelError(string.Empty, error.Description);
+                    }
+                }
+            }
+            else
+            {
+                var errors = ModelState.Values.SelectMany(v => v.Errors);
+                foreach (var error in errors)
+                {
+                    if (!string.IsNullOrEmpty(error.ErrorMessage))
+                    {
+                        ModelState.AddModelError(string.Empty, error.ErrorMessage);
+                    }
+                }
+            }
+
+            return View(model);
+        }
+
+        // Placeholder for forgot password functionality, if needed in the future.
         public IActionResult ForgotPassword()
         {
             return View();

@@ -1,3 +1,5 @@
+@model WebDevProject.Models.Users
+
 @{
     ViewData["Title"] = "Profile";
 }
@@ -7,32 +9,77 @@
 }
 
 <div class="profile">
-    <img class="profile-picture" id="picture"
-        src="https://i.pinimg.com/474x/0e/da/21/0eda21966423d2f594d483689137747d.jpg" alt="picture">
+    @if (!string.IsNullOrEmpty(Model.ProfilePictureUrl))
+    {
+        <img class="profile-picture" id="picture" src="@Model.ProfilePictureUrl" alt="picture">
+    }
+    else
+    {
+        <img class="profile-picture" id="picture" src="~/images/default-profile.png" alt="picture">
+    }
+
     <div class="profile-data">
-        <a class="profile-link" href=".\edit_profile.html">edit profile</a>
+        <a class="profile-link" href="@Url.Action("Edit", "Profile")">edit profile</a>
+
         <div class="data-menu">
             <div class="row">
                 <span class="label">username :</span>
-                <span id="username">-</span>
+                @if (!string.IsNullOrWhiteSpace(Model.DisplayName))
+                {
+                    <span>@Model.DisplayName</span>
+                }
+                else
+                {
+                    <span>-</span>
+                }
             </div>
-            <div class="row">
-                <span class="label">name :</span>
-                <span id="name">-</span>
-            </div>
-            <div class="row">
-                <span class="label">gender :</span>
-                <span id="gender">-</span>
-            </div>
-            <div class="row">
-                <span class="label">birth date :</span>
-                <span id="birth date">-</span>
-            </div>
+
             <div class="row">
                 <span class="label">email :</span>
-                <span id="email">-</span>
+                @if (!string.IsNullOrWhiteSpace(Model.Email))
+                {
+                    <span>@Model.Email</span>
+                }
+                else
+                {
+                    <span class="text-muted">Not provided</span>
+                }
+            </div>
+
+            <div class="row">
+                <span class="label">birth date :</span>
+                @if (Model.DateOfBirth.HasValue)
+                {
+                    <span>@Model.DateOfBirth.Value.ToString("MMMM dd, yyyy")</span>
+                }
+                else
+                {
+                    <span class="text-muted">Not provided</span>
+                }
+            </div>
+
+            <div class="row">
+                <span class="label">gender :</span>
+                @if (Model.UserGender.HasValue)
+                {
+                    <span>@Model.UserGender</span>
+                }
+                else
+                {
+                    <span class="text-muted">Not provided</span>
+                }
+            </div>
+
+            <div class="row">
+                <span class="label">member since :</span>
+                <span>@Model.CreatedAt.ToString("MMMM dd, yyyy")</span>
             </div>
         </div>
-        <a class="profile-link" href=".\reset_password.html">reset password</a>
+
+        <a class="profile-link" href="@Url.Action("ChangePassword", "Account")">reset password</a>
+
+        <form asp-action="SignOut" asp-controller="Account" method="post" style="display: inline;">
+            <button type="submit" class="profile-link" style="border: none; background: none; padding: 0;">sign out</button>
+        </form>
     </div>
 </div>

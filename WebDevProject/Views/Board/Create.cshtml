@@ -1,0 +1,55 @@
+@{
+    ViewData["Title"] = "Sign-up";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/boardcreate.css" asp-append-version="true" />
+}
+
+<div id="postarea">
+    <h1>Posting</h1>
+    <div class="container">
+        <div id="postbox">
+            <textarea id="title" placeholder="Title..."></textarea>
+            <textarea id="textbox" placeholder="Type here..."></textarea>
+            <hr>
+            <input type="button" value="Upload img" id="imgbutton">
+        </div>
+        <div id="options">
+            <div id="participants">
+                <h2>Maximum Participants: </h2>
+                <input type="text" id="username">
+            </div>
+            <div id="deadline">
+                <h2>Deadline: </h2>
+                <input type="date" id="date" name="date">
+            </div>
+            <div id="noti">
+                <input type="checkbox" id="notify">
+                <label for="notify">Notify me when the group is full</label>
+                <p>Group management: </p>
+                <label class="selector">
+                    <input type="radio" name="type">
+                    Immediately close the request when the group is full
+                </label>
+
+                <label class="selector">
+                    <input type="radio" name="type">
+                    Increase the size of your group when it's full
+                </label>
+
+                <label class="selector">
+                    <input type="radio" name="type">
+                    Manually select participants when your group exceeds the maximum size
+                </label>
+            </div>
+            <div id="button">
+                <button id="postbutt">Post a request</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/boardcreate.js" asp-append-version="true"></script>
+}
