@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Post</title>
+        <link rel="stylesheet" href="post.css">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=menu,menu_open">
+    </head>
+    <body>
+        <!-- Default Nav (Not Logged in) -->
+        <nav class="navbar">
+            <div class="navbar-container">
+                <a href="#" class="navbar-logo"><img src="">TinyTender</a>
+                <ul class="navbar-menu">
+                    <li><a href="#">Board</a></li>
+                    <li><a href="#">Dashboard</a></li>
+                    <li><a href="#">Sign-in</a></li>
+                    <li class="signup-btn"><a href="#">Sign-up</a></li>
+                </ul>
+                <span class="navbar-toggle material-symbols-outlined" id="mobile-menu" role="button" tabindex="0" aria-expanded="false" data-open-icon="menu_open" data-closed-icon="menu">menu</span>
+            </div>
+        </nav>
+
+        <!-- Logged in Nav (logic will be handled in asp.net later)-->
+        <!-- <nav class="navbar">
+            <div class="navbar-container">
+                <a href="#" class="navbar-logo"><img src="">TinyTender</a>
+                <ul class="navbar-menu">
+                    <li><a href="#">Board</a></li>
+                    <li><a href="#">Dashboard</a></li>
+                    <li><a href="#">Username<img id="profile-pic" src="default_prof.png"></a></li>
+                </ul>
+                <span class="navbar-toggle material-symbols-outlined" id="mobile-menu" role="button" tabindex="0" aria-expanded="false" data-open-icon="menu_open" data-closed-icon="menu">menu</span>
+            </divz
+        </nav> -->
+        <div id="postarea">
+            <h1>Posting</h1>
+            <div class="container">
+                <div id="postbox">
+                    <textarea id="title" placeholder="Title..."></textarea>
+                    <textarea id="textbox" placeholder="Type here..."></textarea>
+                    <hr>
+                    <input type="button" value="Upload img" id="imgbutton">
+                </div>
+                <div id="options">
+                    <div id="participants">
+                        <h2>Maximum Participants: </h2>
+                        <input type="text" id="username">
+                    </div>
+                    <div id="deadline">
+                        <h2>Deadline: </h2>
+                        <input type="date" id="date" name="date">
+                    </div>
+                    <div id="noti">
+                        <input type="checkbox" id="notify">
+                        <label for="notify">Notify me when the group is full</label>
+                        <p>Group management: </p>
+                        <label class="selector">
+                            <input type="radio" name="type">
+                            Immediately close the request when the group is full
+                        </label>
+
+                        <label class="selector">
+                            <input type="radio" name="type">
+                            Increase the size of your group when it's full
+                        </label>
+
+                        <label class="selector">
+                            <input type="radio" name="type">
+                            Manually select participants when your group exceeds the maximum size
+                        </label>
+                    </div>
+                    <div id="button">
+                        <button id="postbutt">Post a request</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <script src="post.js"></script>
+    </body>
+</html>
