@@ -26,5 +26,9 @@ namespace WebDevProject.Models
         public string? Bio { get; set; }
 
         public required DateTime CreatedAt { get; set; }
+
+        public ICollection<Board> AuthoredBoards { get; set; } = [];
+
+        public ICollection<BoardParticipant> BoardParticipations { get; set; } = [];
     }
 }
