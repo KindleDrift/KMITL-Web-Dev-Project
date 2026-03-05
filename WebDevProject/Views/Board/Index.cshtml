@@ -1,0 +1,166 @@
+﻿@model WebDevProject.Models.BoardIndexViewModel
+
+@{
+    ViewData["Title"] = "Dashboard";
+
+    var activeBoards = Model?.ActiveBoards ?? [];
+    var participatingBoards = Model?.ParticipatingBoards ?? [];
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/board.css" asp-append-version="true" />
+}
+
+<div class="main-container">
+    <h1>Dashboard</h1>
+    <div class="card">
+        <h2>Your active boards</h2>
+        <a class="create-board-link" asp-action="Create">Create New Board</a>
+        <div class="board-list board-grid">
+            @if (activeBoards.Count > 0)
+            {
+                @foreach (var board in activeBoards)
+                {
+                    var participantCount = board.Participants.Count;
+                    var spotsLeft = Math.Max(board.MaxParticipants - participantCount, 0);
+                    var previewParticipants = board.Participants.Take(5).ToList();
+                    var statusClass = board.CurrentStatus switch
+                    {
+                        WebDevProject.Models.BoardStatus.Open => "status-open",
+                        WebDevProject.Models.BoardStatus.Full => "status-full",
+                        WebDevProject.Models.BoardStatus.Closed => "status-closed",
+                        WebDevProject.Models.BoardStatus.Archived => "status-archived",
+                        _ => "status-open"
+                    };
+
+                    <div class="board-card">
+                        <div class="board-card-layout">
+                            <div class="board-image-wrap">
+                                <img class="board-image" src="@(string.IsNullOrWhiteSpace(board.ImageUrl) ? Url.Content("~/images/default-board.png") : board.ImageUrl)" alt="@board.Title" />
+                                <div class="board-side-meta">
+                                    <div><strong>Event:</strong> @board.EventDate.ToString("dd MMM yyyy")</div>
+                                    <div><strong>Time:</strong> @board.EventDate.ToString("HH:mm")</div>
+                                    <div><strong>Location:</strong> @board.Location</div>
+                                </div>
+                            </div>
+
+                            <div class="board-card-content">
+                                <h3 class="board-title"><span class="status-dot @statusClass" title="@board.CurrentStatus"></span>@board.Title</h3>
+                                <div class="users-list">
+                                    <div class="author">
+                                        By
+                                        <img src="@(board.Author?.ProfilePictureUrl ?? Url.Content("~/images/default-profile.png"))" alt="@(board.Author?.DisplayName ?? "Author")" />
+                                        @(board.Author?.DisplayName ?? "Unknown")
+                                    </div>
+                                    <div class="participants participant-row">
+                                        <span>@participantCount / @board.MaxParticipants joined (@spotsLeft spot(s) left)</span>
+
+                                        @if (previewParticipants.Count > 0)
+                                        {
+                                            <div class="participant-bubbles">
+                                                @foreach (var participant in previewParticipants)
+                                                {
+                                                    <img src="@(participant.User?.ProfilePictureUrl ?? Url.Content("~/images/default-profile.png"))" alt="@(participant.User?.DisplayName ?? "Participant")" title="@(participant.User?.DisplayName ?? "Participant")" />
+                                                }
+                                            </div>
+
+                                            @if (participantCount > previewParticipants.Count)
+                                            {
+                                                <span class="participant-more">+@(participantCount - previewParticipants.Count)</span>
+                                            }
+                                        }
+                                    </div>
+                                </div>
+
+                                <div class="board-meta">
+                                    <div><strong>Status:</strong> @board.CurrentStatus</div>
+                                    <div><strong>Category:</strong> @(string.IsNullOrWhiteSpace(board.Category) ? "General" : board.Category)</div>
+                                    <div><strong>Join deadline:</strong> @board.Deadline.ToString("dd MMM yyyy, HH:mm")</div>
+                                </div>
+
+                                <p class="description">@board.Description</p>
+                                <a class="board-link" asp-action="Details" asp-route-id="@board.Id">Open board</a>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <p>You currently have no active boards. <a asp-action="Create">Create one now!</a></p>
+            }
+        </div>
+
+        <h2>Participating Boards</h2>
+        <div class="board-list board-grid">
+            @if (participatingBoards.Count > 0)
+            {
+                @foreach (var board in participatingBoards)
+                {
+                    var participantCount = board.Participants.Count;
+                    var spotsLeft = Math.Max(board.MaxParticipants - participantCount, 0);
+                    var previewParticipants = board.Participants.Take(5).ToList();
+                    var statusClass = board.CurrentStatus switch
+                    {
+                        WebDevProject.Models.BoardStatus.Open => "status-open",
+                        WebDevProject.Models.BoardStatus.Full => "status-full",
+                        WebDevProject.Models.BoardStatus.Closed => "status-closed",
+                        WebDevProject.Models.BoardStatus.Archived => "status-archived",
+                        _ => "status-open"
+                    };
+
+                    <div class="board-card">
+                        <div class="board-card-layout">
+                            <div class="board-image-wrap">
+                                <img class="board-image" src="@(string.IsNullOrWhiteSpace(board.ImageUrl) ? Url.Content("~/images/default-board.png") : board.ImageUrl)" alt="@board.Title" />
+                                <div class="board-side-meta">
+                                    <div><strong>Event:</strong> @board.EventDate.ToString("dd MMM yyyy")</div>
+                                    <div><strong>Time:</strong> @board.EventDate.ToString("HH:mm")</div>
+                                    <div><strong>Location:</strong> @board.Location</div>
+                                </div>
+                            </div>
+
+                            <div class="board-card-content">
+                                <h3 class="board-title"><span class="status-dot @statusClass" title="@board.CurrentStatus"></span>@board.Title</h3>
+                                <div class="users-list">
+                                    <div class="author">By @(board.Author?.DisplayName ?? "Unknown")</div>
+                                    <div class="participants participant-row">
+                                        <span>@participantCount / @board.MaxParticipants joined (@spotsLeft spot(s) left)</span>
+
+                                        @if (previewParticipants.Count > 0)
+                                        {
+                                            <div class="participant-bubbles">
+                                                @foreach (var participant in previewParticipants)
+                                                {
+                                                    <img src="@(participant.User?.ProfilePictureUrl ?? Url.Content("~/images/default-profile.png"))" alt="@(participant.User?.DisplayName ?? "Participant")" title="@(participant.User?.DisplayName ?? "Participant")" />
+                                                }
+                                            </div>
+
+                                            @if (participantCount > previewParticipants.Count)
+                                            {
+                                                <span class="participant-more">+@(participantCount - previewParticipants.Count)</span>
+                                            }
+                                        }
+                                    </div>
+                                </div>
+
+                                <div class="board-meta">
+                                    <div><strong>Status:</strong> @board.CurrentStatus</div>
+                                    <div><strong>Category:</strong> @(string.IsNullOrWhiteSpace(board.Category) ? "General" : board.Category)</div>
+                                    <div><strong>Join deadline:</strong> @board.Deadline.ToString("dd MMM yyyy, HH:mm")</div>
+                                </div>
+
+                                <p class="description">@board.Description</p>
+                                <a class="board-link" asp-action="Details" asp-route-id="@board.Id">Open board</a>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <p>You are not participating in any boards. <a asp-action="Search">Browse boards</a></p>
+            }
+        </div>
+    </div>
+</div>
