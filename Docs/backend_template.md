@@ -112,3 +112,41 @@ public DbSet<BoardPost> BoardPosts => Set<BoardPost>();
 ```
 
 Keep it simple first: start with one model, one controller, one view page.
+
+## 7. ViewModels (Simple Guide)
+ViewModels are classes made for a specific page or form.
+
+- They are **not** database entities.
+- They only contain the fields a view needs.
+- They help validation and keep controller actions clean.
+
+In this project, `SignInViewModel` is a good example:
+
+```csharp
+public class SignInViewModel
+{
+	[Required]
+	[EmailAddress]
+	public string Email { get; set; } = null!;
+
+	[Required]
+	[DataType(DataType.Password)]
+	public string Password { get; set; } = null!;
+
+	public bool RememberMe { get; set; }
+}
+```
+
+Why not use `Users` directly in sign-in?
+
+- `Users` has many fields that are unrelated to sign-in.
+- Posting full entity data is harder to maintain.
+- A small ViewModel reduces accidental over-posting.
+
+Typical flow:
+
+1. Razor form posts `SignInViewModel`.
+2. Controller checks `ModelState.IsValid`.
+3. Controller calls identity services (`SignInManager`, `UserManager`).
+
+Create a new ViewModel when a page needs its own input shape (for example sign-up, onboarding, or profile edit).
