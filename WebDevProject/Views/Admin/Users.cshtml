@@ -1,0 +1,85 @@
+@model List<Users>
+@using Microsoft.AspNetCore.Identity
+
+@inject UserManager<Users> UserManager
+
+@{
+    ViewData["Title"] = "Manage Users";
+    var currentUser = await UserManager.GetUserAsync(User);
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin.css" asp-append-version="true" />
+}
+
+<div class="main-container">
+    <h1 class="header-1">Manage Users</h1>
+    
+    <div style="overflow-x: auto;">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Display Name</th>
+                    <th>Email</th>
+                    <th>Username</th>
+                    <th>Date of Birth</th>
+                    <th>Gender</th>
+                    <th>Created At</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var user in Model)
+                {
+                    <tr>
+                        <td>@user.Id</td>
+                        <td>@user.DisplayName</td>
+                        <td>@user.Email</td>
+                        <td>@user.UserName</td>
+                        <td>@user.DateOfBirth?.ToString("yyyy-MM-dd")</td>
+                        <td>@user.UserGender?.ToString()</td>
+                        <td>@user.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
+                        <td>
+                            @if (user.LockoutEnd.HasValue && user.LockoutEnd > DateTimeOffset.UtcNow)
+                            {
+                                <span style="color: red; font-weight: bold;">Banned</span>
+                            }
+                            else
+                            {
+                                <span style="color: green; font-weight: bold;">Active</span>
+                            }
+                        </td>
+                        <td>
+                            <a asp-controller="Admin" asp-action="Edit" asp-route-id="@user.Id" class="btn btn-sm btn-primary">Edit</a>
+                            @if (user.LockoutEnd.HasValue && user.LockoutEnd > DateTimeOffset.UtcNow)
+                            {
+                                <form method="post" asp-controller="Admin" asp-action="Unban" asp-route-id="@user.Id" style="display: inline;">
+                                    <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('Unban this user?');">Unban</button>
+                                </form>
+                            }
+                            else
+                            {
+                                @if (currentUser?.Id == user.Id)
+                                {
+                                    <button type="button" class="btn btn-sm btn-danger" disabled title="You cannot ban yourself">Ban</button>
+                                }
+                                else
+                                {
+                                    <form method="post" asp-controller="Admin" asp-action="Ban" asp-route-id="@user.Id" style="display: inline;">
+                                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Ban this user?');">Ban</button>
+                                    </form>
+                                }
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    
+    <div style="margin-top: 20px;">
+        <a asp-controller="Admin" asp-action="Index" class="btn btn-secondary">Back to Dashboard</a>
+    </div>
+</div>

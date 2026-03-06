@@ -43,6 +43,10 @@
                     <span class="notification-dot option-notification-dot" aria-hidden="true"></span>
                 </a>
             </li>
+            @if (User.IsInRole("Admin"))
+            {
+                <li><a asp-controller="Admin" asp-action="Index"><span class="material-symbols-outlined">lock</span>Admin Panel</a></li>
+            }
             <li>
                 <form asp-controller="Account" asp-action="SignOut" method="post" class="profile-side-panel-signout-form">
                     <button type="submit" class="profile-side-panel-signout-btn">

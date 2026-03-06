@@ -1,0 +1,70 @@
+@model Users
+
+@{
+    ViewData["Title"] = "Edit User";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin.css" asp-append-version="true" />
+}
+
+<div class="main-container">
+    <h1 class="header-1">Edit User: @Model.DisplayName</h1>
+    
+    <form method="post" asp-controller="Admin" asp-action="Edit" asp-route-id="@Model.Id" class="admin-form">
+        <input type="hidden" asp-for="Id" />
+        
+        <div class="form-group">
+            <label asp-for="DisplayName" class="form-label">Display Name / a.k.a Username</label>
+            <input type="text" asp-for="DisplayName" class="form-control" required />
+            <span asp-validation-for="DisplayName" class="text-danger"></span>
+        </div>
+        
+        <div class="form-group">
+            <label asp-for="Email" class="form-label">Email</label>
+            <input type="email" asp-for="Email" class="form-control" disabled />
+        </div>
+        
+        <div class="form-group">
+            <label asp-for="UserName" class="form-label">Username (Internal)</label>
+            <input type="text" asp-for="UserName" class="form-control" disabled />
+        </div>
+        
+        <div class="form-group">
+            <label asp-for="DateOfBirth" class="form-label">Date of Birth</label>
+            <input type="date" asp-for="DateOfBirth" class="form-control" />
+        </div>
+        
+        <div class="form-group">
+            <label asp-for="UserGender" class="form-label">Gender</label>
+            <select asp-for="UserGender" class="form-control">
+                <option value="">-- Select Gender --</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label asp-for="Bio" class="form-label">Bio</label>
+            <textarea asp-for="Bio" class="form-control" rows="4"></textarea>
+        </div>
+        
+        <div class="form-group">
+            <label class="form-label">Created At</label>
+            <input type="text" value="@Model.CreatedAt.ToString("yyyy-MM-dd HH:mm")" class="form-control" disabled />
+        </div>
+
+        <div class="form-group checkbox-group">
+            <label class="checkbox-label">
+                <input type="checkbox" asp-for="HasCompletedOnboarding" class="form-check-input" />
+                <span>Has Completed Onboarding</span>
+            </label>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+            <a asp-controller="Admin" asp-action="Users" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
