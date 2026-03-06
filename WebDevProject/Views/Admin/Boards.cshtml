@@ -1,0 +1,71 @@
+@model List<Board>
+
+@{
+    ViewData["Title"] = "Manage Boards";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin.css" asp-append-version="true" />
+}
+
+<div class="main-container">
+    <h1 class="header-1">Manage Boards</h1>
+    
+    <div style="overflow-x: auto;">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Title</th>
+                    <th>Author</th>
+                    <th>Location</th>
+                    <th>Event Date</th>
+                    <th>Deadline</th>
+                    <th>Max Participants</th>
+                    <th>Status</th>
+                    <th>Created At</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var board in Model)
+                {
+                    <tr>
+                        <td>@board.Id</td>
+                        <td>@board.Title</td>
+                        <td>@board.Author?.DisplayName</td>
+                        <td>@board.Location</td>
+                        <td>@board.EventDate.ToString("yyyy-MM-dd HH:mm")</td>
+                        <td>@board.Deadline.ToString("yyyy-MM-dd HH:mm")</td>
+                        <td>@board.MaxParticipants</td>
+                        <td>
+                            @switch (board.CurrentStatus)
+                            {
+                                case BoardStatus.Open:
+                                    <span style="color: green; font-weight: bold;">Open</span>
+                                    break;
+                                case BoardStatus.Full:
+                                    <span style="color: orange; font-weight: bold;">Full</span>
+                                    break;
+                                case BoardStatus.Closed:
+                                    <span style="color: red; font-weight: bold;">Closed</span>
+                                    break;
+                                case BoardStatus.Archived:
+                                    <span style="color: gray; font-weight: bold;">Archived</span>
+                                    break;
+                            }
+                        </td>
+                        <td>@board.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
+                        <td>
+                            <a asp-controller="Admin" asp-action="EditBoard" asp-route-id="@board.Id" class="btn btn-sm btn-primary">Edit</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    
+    <div style="margin-top: 20px;">
+        <a asp-controller="Admin" asp-action="Index" class="btn btn-secondary">Back to Dashboard</a>
+    </div>
+</div>

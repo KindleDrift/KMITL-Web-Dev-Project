@@ -1,6 +1,54 @@
 document.addEventListener('DOMContentLoaded', function () {
     const tags = [];
 
+    // Tag validation and formatting functions
+    function isValidTag(tag) {
+        // Check if tag starts or ends with hyphen
+        if (tag.startsWith('-') || tag.endsWith('-')) {
+            return false;
+        }
+
+        // Check if tag contains numbers
+        if (/\d/.test(tag)) {
+            return false;
+        }
+
+        // Check if tag contains only letters and single hyphens
+        for (let i = 0; i < tag.length; i++) {
+            const c = tag[i];
+            
+            // Allow letters
+            if (/[a-zA-Z]/.test(c)) {
+                continue;
+            }
+
+            // Allow single hyphen (not consecutive)
+            if (c === '-') {
+                if (i > 0 && tag[i - 1] === '-') {
+                    return false; // Consecutive hyphens not allowed
+                }
+                continue;
+            }
+
+            // Any other character is invalid
+            return false;
+        }
+
+        return true;
+    }
+
+    function formatTag(tag) {
+        // Convert to lowercase first
+        tag = tag.toLowerCase();
+
+        // Capitalize first letter
+        if (tag.length > 0) {
+            tag = tag.charAt(0).toUpperCase() + tag.slice(1);
+        }
+
+        return tag;
+    }
+
     function createTagElement(tagText) {
         const tag = document.createElement('span');
         tag.className = 'tag';
@@ -32,6 +80,33 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    function addTag(tagText) {
+        tagText = tagText.trim();
+        
+        if (!tagText) {
+            return;
+        }
+
+        // Validate tag
+        if (!isValidTag(tagText)) {
+            alert('Invalid tag! Tags must contain only letters and single hyphens (not at start or end, no numbers).');
+            return;
+        }
+
+        // Format tag
+        const formattedTag = formatTag(tagText);
+
+        // Check if tag already exists (case-insensitive)
+        if (tags.some(t => t.toLowerCase() === formattedTag.toLowerCase())) {
+            alert('Tag already added!');
+            return;
+        }
+
+        tags.push(formattedTag);
+        tagContainer.appendChild(createTagElement(formattedTag));
+        updateTagsInput();
+    }
+
     const tagInput = document.getElementById('tagInput');
     const addTagButton = document.getElementById('addTagButton');
     const tagContainer = document.getElementById('tagContainer');
@@ -40,26 +115,18 @@ document.addEventListener('DOMContentLoaded', function () {
         // Add tag on button click
         addTagButton.addEventListener('click', function (e) {
             e.preventDefault();
-            const tagText = tagInput.value.trim();
-            if (tagText && !tags.includes(tagText)) {
-                tags.push(tagText);
-                tagContainer.appendChild(createTagElement(tagText));
-                tagInput.value = '';
-                updateTagsInput();
-            }
+            const tagText = tagInput.value;
+            addTag(tagText);
+            tagInput.value = '';
         });
 
         // Add tag on Enter key
         tagInput.addEventListener('keypress', function (e) {
             if (e.key === 'Enter') {
                 e.preventDefault();
-                const tagText = this.value.trim();
-                if (tagText && !tags.includes(tagText)) {
-                    tags.push(tagText);
-                    tagContainer.appendChild(createTagElement(tagText));
-                    this.value = '';
-                    updateTagsInput();
-                }
+                const tagText = this.value;
+                addTag(tagText);
+                this.value = '';
             }
         });
     }

@@ -1,0 +1,347 @@
+@model Board
+
+@{
+    ViewData["Title"] = "Edit Board";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin.css" asp-append-version="true" />
+}
+
+<div class="main-container">
+    <h1 class="header-1">Edit Board: @Model.Title</h1>
+    
+    <form method="post" asp-controller="Admin" asp-action="EditBoard" asp-route-id="@Model.Id" class="admin-form" enctype="multipart/form-data" id="editBoardForm">
+        <input type="hidden" asp-for="Id" />
+        
+        <div class="form-group">
+            <label asp-for="Title" class="form-label">Title</label>
+            <input type="text" asp-for="Title" class="form-control" required />
+            <span asp-validation-for="Title" class="text-danger"></span>
+        </div>
+        
+        <div class="form-group">
+            <label asp-for="Description" class="form-label">Description</label>
+            <textarea asp-for="Description" class="form-control" rows="4" required></textarea>
+            <span asp-validation-for="Description" class="text-danger"></span>
+        </div>
+        
+        <div class="form-group">
+            <label class="form-label">Board Image</label>
+            @if (!string.IsNullOrEmpty(Model.ImageUrl))
+            {
+                <div style="margin-bottom: 10px;">
+                    <img src="@Model.ImageUrl" alt="Current Board Image" style="max-width: 300px; max-height: 200px; border-radius: 8px;" />
+                </div>
+            }
+            <input type="file" name="BoardImage" class="form-control" accept="image/*" />
+            <small class="form-text text-muted">Upload a new board image (Max 5MB, .jpg, .jpeg, .png, .gif, .webp)</small>
+        </div>
+        
+        <div class="form-group">
+            <label class="form-label">Tags</label>
+            <div class="tag-input-group">
+                <input type="text" id="tagInput" placeholder="Enter a tag..." />
+                <button type="button" id="addTagButton" class="btn btn-sm btn-secondary">Add Tag</button>
+            </div>
+            <div id="tagContainer" style="margin-top: 10px;">
+                @foreach (var tag in Model.Tags)
+                {
+                    <span class="tag" data-tag="@tag.Name">@tag.Name <button type="button" class="btn-remove">×</button></span>
+                }
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label asp-for="Location" class="form-label">Location</label>
+            <input type="text" asp-for="Location" class="form-control" required />
+            <span asp-validation-for="Location" class="text-danger"></span>
+        </div>
+        
+        <div class="form-group">
+            <label asp-for="MaxParticipants" class="form-label">Max Participants</label>
+            <input type="number" asp-for="MaxParticipants" class="form-control" min="1" max="1000" required />
+            <span asp-validation-for="MaxParticipants" class="text-danger"></span>
+        </div>
+        
+        <div class="form-group">
+            <label asp-for="EventDate" class="form-label">Event Date</label>
+            <input type="datetime-local" asp-for="EventDate" class="form-control" required />
+            <span asp-validation-for="EventDate" class="text-danger"></span>
+        </div>
+        
+        <div class="form-group">
+            <label asp-for="Deadline" class="form-label">Registration Deadline</label>
+            <input type="datetime-local" asp-for="Deadline" class="form-control" required />
+            <span asp-validation-for="Deadline" class="text-danger"></span>
+        </div>
+        
+        <div class="form-group">
+            <label asp-for="CurrentStatus" class="form-label">Status</label>
+            <select asp-for="CurrentStatus" class="form-control">
+                <option value="Open">Open</option>
+                <option value="Full">Full</option>
+                <option value="Closed">Closed</option>
+                <option value="Archived">Archived</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label class="form-label">Author</label>
+            <input type="text" value="@Model.Author?.DisplayName" class="form-control" disabled />
+        </div>
+        
+        <div class="form-group">
+            <label class="form-label">Created At</label>
+            <input type="text" value="@Model.CreatedAt.ToString("yyyy-MM-dd HH:mm")" class="form-control" disabled />
+        </div>
+
+        <div class="form-group checkbox-group">
+            <label class="checkbox-label">
+                <input type="checkbox" asp-for="NotifyAuthorOnFull" class="form-check-input" />
+                <span>Notify Author When Full</span>
+            </label>
+        </div>
+
+        <div class="form-group checkbox-group">
+            <label class="checkbox-label">
+                <input type="checkbox" asp-for="CloseOnFull" class="form-check-input" />
+                <span>Close When Full</span>
+            </label>
+        </div>
+
+        <div class="form-group checkbox-group">
+            <label class="checkbox-label">
+                <input type="checkbox" asp-for="IncreaseMaxParticipantsOnFull" class="form-check-input" />
+                <span>Auto-Increase Max Participants When Full</span>
+            </label>
+        </div>
+
+        <div class="form-group checkbox-group">
+            <label class="checkbox-label">
+                <input type="checkbox" asp-for="ManualIncreaseMaxParticipants" class="form-check-input" />
+                <span>Allow Manual Increase of Max Participants</span>
+            </label>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+            <a asp-controller="Admin" asp-action="Boards" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const tags = [];
+            
+            // Tag validation and formatting functions
+            function isValidTag(tag) {
+                // Check if tag starts or ends with hyphen
+                if (tag.startsWith('-') || tag.endsWith('-')) {
+                    return false;
+                }
+
+                // Check if tag contains numbers
+                if (/\d/.test(tag)) {
+                    return false;
+                }
+
+                // Check if tag contains only letters and single hyphens
+                for (let i = 0; i < tag.length; i++) {
+                    const c = tag[i];
+                    
+                    // Allow letters
+                    if (/[a-zA-Z]/.test(c)) {
+                        continue;
+                    }
+
+                    // Allow single hyphen (not consecutive)
+                    if (c === '-') {
+                        if (i > 0 && tag[i - 1] === '-') {
+                            return false; // Consecutive hyphens not allowed
+                        }
+                        continue;
+                    }
+
+                    // Any other character is invalid
+                    return false;
+                }
+
+                return true;
+            }
+
+            function formatTag(tag) {
+                // Convert to lowercase first
+                tag = tag.toLowerCase();
+
+                // Capitalize first letter
+                if (tag.length > 0) {
+                    tag = tag.charAt(0).toUpperCase() + tag.slice(1);
+                }
+
+                return tag;
+            }
+            
+            // Initialize tags from existing data and format them
+            document.querySelectorAll('#tagContainer .tag').forEach(tagElement => {
+                const tagName = tagElement.getAttribute('data-tag');
+                const formattedTag = formatTag(tagName);
+                tags.push(formattedTag);
+                // Update the displayed tag text
+                tagElement.innerHTML = `${formattedTag} <button type="button" class="btn-remove">×</button>`;
+                tagElement.setAttribute('data-tag', formattedTag);
+            });
+
+            function createTagElement(tagText) {
+                const tag = document.createElement('span');
+                tag.className = 'tag';
+                tag.setAttribute('data-tag', tagText);
+                tag.innerHTML = `${tagText} <button type="button" class="btn-remove">×</button>`;
+                
+                const removeBtn = tag.querySelector('button');
+                removeBtn.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const index = tags.indexOf(tagText);
+                    if (index > -1) {
+                        tags.splice(index, 1);
+                    }
+                    tag.remove();
+                    updateTagsInput();
+                });
+                
+                return tag;
+            }
+
+            function updateTagsInput() {
+                // Remove existing hidden inputs
+                const existingInputs = document.querySelectorAll('input[name="Tags"]');
+                existingInputs.forEach(input => input.remove());
+                
+                // Create new hidden inputs for each tag
+                const form = document.getElementById('editBoardForm');
+                tags.forEach(tag => {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'Tags';
+                    input.value = tag;
+                    form.appendChild(input);
+                });
+            }
+
+            function addTag(tagText) {
+                tagText = tagText.trim();
+                
+                if (!tagText) {
+                    return;
+                }
+
+                // Validate tag
+                if (!isValidTag(tagText)) {
+                    alert('Invalid tag! Tags must contain only letters and single hyphens (not at start or end, no numbers).');
+                    return;
+                }
+
+                // Format tag
+                const formattedTag = formatTag(tagText);
+
+                // Check if tag already exists (case-insensitive)
+                if (tags.some(t => t.toLowerCase() === formattedTag.toLowerCase())) {
+                    alert('Tag already added!');
+                    return;
+                }
+
+                tags.push(formattedTag);
+                tagContainer.appendChild(createTagElement(formattedTag));
+                updateTagsInput();
+            }
+
+            // Initialize hidden inputs for existing tags
+            updateTagsInput();
+
+            // Set up remove buttons for existing tags
+            document.querySelectorAll('#tagContainer .tag .btn-remove').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const tagElement = this.closest('.tag');
+                    const tagName = tagElement.getAttribute('data-tag');
+                    const index = tags.indexOf(tagName);
+                    if (index > -1) {
+                        tags.splice(index, 1);
+                    }
+                    tagElement.remove();
+                    updateTagsInput();
+                });
+            });
+
+            const tagInput = document.getElementById('tagInput');
+            const addTagButton = document.getElementById('addTagButton');
+            const tagContainer = document.getElementById('tagContainer');
+
+            if (tagInput && addTagButton) {
+                // Add tag on button click
+                addTagButton.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const tagText = tagInput.value;
+                    addTag(tagText);
+                    tagInput.value = '';
+                });
+
+                // Add tag on Enter key
+                tagInput.addEventListener('keypress', function (e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        const tagText = this.value;
+                        addTag(tagText);
+                        this.value = '';
+                    }
+                });
+            }
+        });
+    </script>
+    <style>
+        .tag-input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .tag-input-group input {
+            flex: 1;
+        }
+
+        #tagContainer {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background-color: #007bff;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.9rem;
+        }
+
+        .tag .btn-remove {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 0;
+            line-height: 1;
+            margin-left: 3px;
+        }
+
+        .tag .btn-remove:hover {
+            color: #ffcccc;
+        }
+    </style>
+}

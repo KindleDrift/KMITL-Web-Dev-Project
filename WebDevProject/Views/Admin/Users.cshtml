@@ -52,7 +52,7 @@
                             }
                         </td>
                         <td>
-                            <a asp-controller="Admin" asp-action="Edit" asp-route-id="@user.Id" class="btn btn-sm btn-primary">Edit</a>
+                            <a asp-controller="Admin" asp-action="EditUser" asp-route-id="@user.Id" class="btn btn-sm btn-primary">Edit</a>
                             @if (user.LockoutEnd.HasValue && user.LockoutEnd > DateTimeOffset.UtcNow)
                             {
                                 <form method="post" asp-controller="Admin" asp-action="Unban" asp-route-id="@user.Id" style="display: inline;">

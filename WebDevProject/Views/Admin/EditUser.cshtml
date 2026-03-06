@@ -11,7 +11,7 @@
 <div class="main-container">
     <h1 class="header-1">Edit User: @Model.DisplayName</h1>
     
-    <form method="post" asp-controller="Admin" asp-action="Edit" asp-route-id="@Model.Id" class="admin-form">
+    <form method="post" asp-controller="Admin" asp-action="EditUser" asp-route-id="@Model.Id" class="admin-form" enctype="multipart/form-data">
         <input type="hidden" asp-for="Id" />
         
         <div class="form-group">
@@ -28,6 +28,18 @@
         <div class="form-group">
             <label asp-for="UserName" class="form-label">Username (Internal)</label>
             <input type="text" asp-for="UserName" class="form-control" disabled />
+        </div>
+        
+        <div class="form-group">
+            <label class="form-label">Profile Picture</label>
+            @if (!string.IsNullOrEmpty(Model.ProfilePictureUrl))
+            {
+                <div style="margin-bottom: 10px;">
+                    <img src="@Model.ProfilePictureUrl" alt="Current Profile Picture" style="max-width: 150px; max-height: 150px; border-radius: 8px;" />
+                </div>
+            }
+            <input type="file" name="ProfileImage" class="form-control" accept="image/*" />
+            <small class="form-text text-muted">Upload a new profile picture (Max 5MB, .jpg, .jpeg, .png, .gif, .webp)</small>
         </div>
         
         <div class="form-group">
@@ -68,3 +80,7 @@
         </div>
     </form>
 </div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -161,35 +161,54 @@ namespace WebDevProject.Controllers
             // Handle tags
             if (model.Tags != null && model.Tags.Any())
             {
-                var tagNames = model.Tags
-                    .Select(t => t?.Trim())
-                    .Where(t => !string.IsNullOrWhiteSpace(t))
-                    .Distinct(StringComparer.OrdinalIgnoreCase)
-                    .ToList();
-
-                var existingTags = await _context.Tags
-                    .Where(t => tagNames.Contains(t.Name))
-                    .ToListAsync();
-
-                var existingNames = new HashSet<string>(existingTags.Select(t => t.Name), StringComparer.OrdinalIgnoreCase);
-
-                // Add new tags
-                foreach (var name in tagNames)
+                var validatedTags = new List<string>();
+                
+                foreach (var tag in model.Tags)
                 {
-                    if (!existingNames.Contains(name))
+                    var trimmedTag = tag?.Trim();
+                    if (string.IsNullOrWhiteSpace(trimmedTag))
+                        continue;
+
+                    // Validate and format tag
+                    if (!IsValidTag(trimmedTag))
                     {
-                        var newTag = new Tag { Name = name };
-                        _context.Tags.Add(newTag);
-                        existingTags.Add(newTag);
+                        ModelState.AddModelError(nameof(model.Tags), $"Invalid tag '{trimmedTag}'. Tags must contain only letters and single hyphens (not at start or end).");
+                        return View(model);
+                    }
+
+                    var formattedTag = FormatTag(trimmedTag);
+                    if (!validatedTags.Contains(formattedTag, StringComparer.OrdinalIgnoreCase))
+                    {
+                        validatedTags.Add(formattedTag);
                     }
                 }
 
-                await _context.SaveChangesAsync();
-
-                // Link tags to board
-                foreach (var tag in existingTags)
+                if (validatedTags.Any())
                 {
-                    board.Tags.Add(tag);
+                    var existingTags = await _context.Tags
+                        .Where(t => validatedTags.Contains(t.Name))
+                        .ToListAsync();
+
+                    var existingNames = new HashSet<string>(existingTags.Select(t => t.Name), StringComparer.OrdinalIgnoreCase);
+
+                    // Add new tags
+                    foreach (var name in validatedTags)
+                    {
+                        if (!existingNames.Contains(name))
+                        {
+                            var newTag = new Tag { Name = name };
+                            _context.Tags.Add(newTag);
+                            existingTags.Add(newTag);
+                        }
+                    }
+
+                    await _context.SaveChangesAsync();
+
+                    // Link tags to board
+                    foreach (var tag in existingTags)
+                    {
+                        board.Tags.Add(tag);
+                    }
                 }
             }
 
@@ -197,6 +216,55 @@ namespace WebDevProject.Controllers
             await _context.SaveChangesAsync();
 
             return RedirectToAction(nameof(Index));
+        }
+
+        // Tag validation
+        private static bool IsValidTag(string tag)
+        {
+            // Check if tag starts or ends with hyphen
+            if (tag.StartsWith('-') || tag.EndsWith('-'))
+                return false;
+
+            // Check if tag contains numbers
+            if (tag.Any(char.IsDigit))
+                return false;
+
+            // Check if tag contains only letters and single hyphens
+            for (int i = 0; i < tag.Length; i++)
+            {
+                char c = tag[i];
+                
+                // Allow letters
+                if (char.IsLetter(c))
+                    continue;
+
+                // Allow single hyphen (not consecutive)
+                if (c == '-')
+                {
+                    if (i > 0 && tag[i - 1] == '-')
+                        return false; // Consecutive hyphens not allowed
+                    continue;
+                }
+
+                // Any other character is invalid
+                return false;
+            }
+
+            return true;
+        }
+
+        private static string FormatTag(string tag)
+        {
+            // Convert to lowercase first
+            tag = tag.ToLowerInvariant();
+
+            // Capitalize first letter
+            if (tag.Length > 0)
+            {
+                tag = char.ToUpperInvariant(tag[0]) + tag.Substring(1);
+            }
+
+            return tag;
         }
     }
 }
