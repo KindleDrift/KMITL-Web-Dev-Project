@@ -3,31 +3,64 @@
 @inject SignInManager<Users> SignInManager
 @inject UserManager<Users> UserManager
 
-<ul class="navbar-menu">
-    <li><a asp-controller="Board" asp-action="Search">Board</a></li>
-    @if (SignInManager.IsSignedIn(User))
-    {
-        var currentUser = await UserManager.GetUserAsync(User);
-        var displayName = string.IsNullOrWhiteSpace(currentUser?.DisplayName) ? User.Identity?.Name : currentUser.DisplayName;
+@if (SignInManager.IsSignedIn(User))
+{
+    var currentUser = await UserManager.GetUserAsync(User);
+    var displayName = string.IsNullOrWhiteSpace(currentUser?.DisplayName) ? User.Identity?.Name : currentUser.DisplayName;
+    var profileImageUrl = !string.IsNullOrEmpty(currentUser?.ProfilePictureUrl) ? currentUser.ProfilePictureUrl : Url.Content("~/images/default-profile.png");
 
-        <li><a asp-controller="Board" asp-action="Index">Dashboard</a></li>
-        <li>
-            <form asp-controller="Account" asp-action="SignOut" method="post" style="display: inline;">
-                <button type="submit" class="sign-out-btn">Sign-out</button>
-            </form>
+    <ul class="navbar-menu navbar-menu-primary is-auth">
+        <li class="navbar-item navbar-item-desktop"><a asp-controller="Board" asp-action="Search">Board</a></li>
+        <li class="navbar-item navbar-item-desktop"><a asp-controller="Board" asp-action="Index">Dashboard</a></li>
+        <li class="navbar-item navbar-profile-trigger-item">
+            <button type="button" id="profile-panel-toggle" class="navbar-profile-trigger" aria-expanded="false" aria-controls="profile-side-panel" aria-label="Open profile menu">
+                <span class="navbar-profile-name">@displayName</span>
+                <img class="navbar-profile-pic" alt="profile-image" src="@profileImageUrl">
+                <span class="notification-dot profile-notification-dot" aria-hidden="true"></span>
+            </button>
         </li>
-        @if (!string.IsNullOrEmpty(currentUser?.ProfilePictureUrl))
-        {
-            <li><a asp-controller="Profile" asp-action="Index">@displayName<img class="navbar-profile-pic" alt="profile-image" src="@currentUser.ProfilePictureUrl"></a></li>
-        }
-        else
-        {
-            <li><a asp-controller="Profile" asp-action="Index">@displayName<img class="navbar-profile-pic" alt="profile-image" src="~/images/default-profile.png"></a></li>
-        }
-    }
-    else
-    {
-        <li><a asp-controller="Account" asp-action="SignIn">Sign-in</a></li>
-        <li class="signup-btn"><a asp-controller="Account" asp-action="SignUp">Sign-up</a></li>
-    }
-</ul>
+    </ul>
+
+    <div class="profile-side-overlay" id="profile-side-overlay" aria-hidden="true"></div>
+    <aside class="profile-side-panel" id="profile-side-panel" aria-hidden="true">
+        <div class="profile-side-panel-header">
+            <div class="profile-side-panel-user">
+                <img class="navbar-profile-pic" alt="profile-image" src="@profileImageUrl">
+                <span>@displayName</span>
+            </div>
+            <button type="button" class="profile-side-panel-close material-symbols-outlined" id="profile-side-panel-close" aria-label="Close profile menu">close</button>
+        </div>
+
+        <ul class="profile-side-panel-menu">
+            <li><a asp-controller="Profile" asp-action="Index"><span class="material-symbols-outlined">account_circle</span>Profile</a></li>
+            <li><a asp-controller="Board" asp-action="Create"><span class="material-symbols-outlined">add</span>Create Board</a></li>
+            <li><a asp-controller="Board" asp-action="Search"><span class="material-symbols-outlined">grid_view</span>Board</a></li>
+            <li><a asp-controller="Board" asp-action="Index"><span class="material-symbols-outlined">space_dashboard</span>Dashboard</a></li>
+            <li>
+                <a asp-controller="Profile" asp-action="Notifications" class="profile-notifications-link">
+                    <span class="material-symbols-outlined">notifications</span>
+                    <span class="profile-notifications-label">Notifications</span>
+                    <span class="notification-dot option-notification-dot" aria-hidden="true"></span>
+                </a>
+            </li>
+            <li>
+                <form asp-controller="Account" asp-action="SignOut" method="post" class="profile-side-panel-signout-form">
+                    <button type="submit" class="profile-side-panel-signout-btn">
+                        <span class="material-symbols-outlined">logout</span>
+                        Sign-out
+                    </button>
+                </form>
+            </li>
+        </ul>
+    </aside>
+}
+else
+{
+    <button type="button" id="guest-menu-toggle" class="navbar-toggle guest-navbar-toggle material-symbols-outlined" aria-expanded="false" aria-controls="guest-navbar-menu" data-open-icon="menu_open" data-closed-icon="menu" aria-label="Toggle navigation menu">menu</button>
+
+    <ul class="navbar-menu navbar-menu-primary is-guest" id="guest-navbar-menu">
+        <li class="navbar-item"><a asp-controller="Board" asp-action="Search">Board</a></li>
+        <li class="navbar-item"><a asp-controller="Account" asp-action="SignIn">Sign-in</a></li>
+        <li class="navbar-item signup-btn"><a asp-controller="Account" asp-action="SignUp">Sign-up</a></li>
+    </ul>
+}

@@ -10,7 +10,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=female,male,menu,menu_open,transgender,visibility,visibility_off">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=account_circle,add,close,code,deployed_code,female,forum,grid_view,groups,info,language,lock,logout,male,menu,menu_open,notifications,open_in_new,person,rocket_launch,school,space_dashboard,terminal,transgender,visibility,visibility_off">
     @await RenderSectionAsync("Styles", required: false)
 </head>
 <body>
@@ -19,7 +19,6 @@
             <div class="navbar-container">
                 <a asp-controller="Home" asp-action="Index" class="navbar-logo"><img src="">TinyTender</a>
                 <partial name="_LoginPartial" />
-                <span class="navbar-toggle material-symbols-outlined" id="mobile-menu" role="button" tabindex="0" aria-expanded="false" data-open-icon="menu_open" data-closed-icon="menu">menu</span>
             </div>
         </nav>
     </header>
