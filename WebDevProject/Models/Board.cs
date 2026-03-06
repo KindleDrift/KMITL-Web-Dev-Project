@@ -69,6 +69,7 @@ namespace WebDevProject.Models
         Open,
         Full,
         Closed,
+        Cancelled,
         Archived
     }
 

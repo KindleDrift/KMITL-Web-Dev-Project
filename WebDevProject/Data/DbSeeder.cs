@@ -139,23 +139,27 @@ namespace WebDevProject.Data
 
                 var sportsTag = await context.Tags.FirstOrDefaultAsync(t => t.Name == "Sports");
                 var studyTag = await context.Tags.FirstOrDefaultAsync(t => t.Name == "Study");
+                var musicTag = await context.Tags.FirstOrDefaultAsync(t => t.Name == "Music");
+                var foodTag = await context.Tags.FirstOrDefaultAsync(t => t.Name == "Food");
+                var travelTag = await context.Tags.FirstOrDefaultAsync(t => t.Name == "Travel");
                 var outsideTag = await context.Tags.FirstOrDefaultAsync(t => t.Name == "Outside");
 
-                logger.LogInformation("Seeding sample board...");
-                const string seededBoardTitle = "Saturday Football Match";
-                var existingBoard = await context.Boards
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync(b => b.Title == seededBoardTitle);
+                logger.LogInformation("Seeding sample boards...");
+                
+                // Helper to check if board exists
+                async Task<bool> BoardExists(string title) => 
+                    await context.Boards.AsNoTracking().AnyAsync(b => b.Title == title);
 
-                if (existingBoard == null
+                // Scenario 1: Open board with some participants (sports event)
+                if (!await BoardExists("Saturday Football Match")
                     && regularUsersByEmail.TryGetValue("alice@example.com", out var alice)
                     && regularUsersByEmail.TryGetValue("bob@example.com", out var bob)
                     && regularUsersByEmail.TryGetValue("eve@example.com", out var eve)
-                    && sportsTag != null)
+                    && sportsTag != null && outsideTag != null)
                 {
                     var board = new Board
                     {
-                        Title = seededBoardTitle,
+                        Title = "Saturday Football Match",
                         Tags = new List<Tag> { sportsTag, outsideTag },
                         Description = "Friendly 7-a-side football session for all skill levels.",
                         AuthorId = alice.Id,
@@ -168,44 +172,31 @@ namespace WebDevProject.Data
                         CloseOnFull = false,
                         IncreaseMaxParticipantsOnFull = false,
                         ManualIncreaseMaxParticipants = true,
-                        CreatedAt = DateTime.UtcNow
+                        CreatedAt = DateTime.UtcNow.AddDays(-2)
                     };
-
                     context.Boards.Add(board);
                     await context.SaveChangesAsync();
 
-                    context.BoardParticipants.Add(new BoardParticipant
-                    {
-                        BoardId = board.Id,
-                        UserId = bob.Id,
-                        JoinedAt = DateTime.UtcNow
-                    });
-
-                    context.BoardParticipants.Add(new BoardParticipant
-                    {
-                        BoardId = board.Id,
-                        UserId = eve.Id,
-                        JoinedAt = DateTime.UtcNow
-                    });
-
+                    context.BoardParticipants.AddRange(
+                        new BoardParticipant { BoardId = board.Id, UserId = bob.Id, JoinedAt = DateTime.UtcNow.AddDays(-1) },
+                        new BoardParticipant { BoardId = board.Id, UserId = eve.Id, JoinedAt = DateTime.UtcNow.AddHours(-12) }
+                    );
                     await context.SaveChangesAsync();
                 }
 
-                const string seededBoardTitle2 = "Sunday Study Group";
-                var existingBoard2 = await context.Boards
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync(b => b.Title == seededBoardTitle2);
-
-                if (existingBoard2 == null
-                    && regularUsersByEmail.TryGetValue("alice@example.com", out var alice2)
+                // Scenario 2: Study group with moderate participation
+                if (!await BoardExists("Sunday Study Group")
+                    && regularUsersByEmail.TryGetValue("charlie@example.com", out var charlie)
+                    && regularUsersByEmail.TryGetValue("david@example.com", out var david)
+                    && regularUsersByEmail.TryGetValue("frank@example.com", out var frank)
                     && studyTag != null)
                 {
-                    var board2 = new Board
+                    var board = new Board
                     {
-                        Title = seededBoardTitle2,
+                        Title = "Sunday Study Group",
                         Tags = new List<Tag> { studyTag },
                         Description = "Group study session for upcoming exams.",
-                        AuthorId = alice2.Id,
+                        AuthorId = charlie.Id,
                         MaxParticipants = 8,
                         Location = "Engineering Library Room 2",
                         EventDate = DateTime.UtcNow.Date.AddDays(10).AddHours(14),
@@ -215,12 +206,364 @@ namespace WebDevProject.Data
                         CloseOnFull = false,
                         IncreaseMaxParticipantsOnFull = false,
                         ManualIncreaseMaxParticipants = true,
-                        CreatedAt = DateTime.UtcNow
+                        CreatedAt = DateTime.UtcNow.AddDays(-3)
                     };
+                    context.Boards.Add(board);
+                    await context.SaveChangesAsync();
 
-                    context.Boards.Add(board2);
+                    context.BoardParticipants.AddRange(
+                        new BoardParticipant { BoardId = board.Id, UserId = david.Id, JoinedAt = DateTime.UtcNow.AddDays(-2) },
+                        new BoardParticipant { BoardId = board.Id, UserId = frank.Id, JoinedAt = DateTime.UtcNow.AddDays(-1) }
+                    );
                     await context.SaveChangesAsync();
                 }
+
+                // Scenario 3: Full board (music concert)
+                if (!await BoardExists("Live Jazz Night")
+                    && regularUsersByEmail.TryGetValue("grace@example.com", out var grace)
+                    && regularUsersByEmail.TryGetValue("heidi@example.com", out var heidi)
+                    && regularUsersByEmail.TryGetValue("ivan@example.com", out var ivan)
+                    && regularUsersByEmail.TryGetValue("judy@example.com", out var judy)
+                    && regularUsersByEmail.TryGetValue("karl@example.com", out var karl)
+                    && musicTag != null)
+                {
+                    var board = new Board
+                    {
+                        Title = "Live Jazz Night",
+                        Tags = new List<Tag> { musicTag },
+                        Description = "Evening jazz performance at campus cafe. Limited seating!",
+                        AuthorId = grace.Id,
+                        MaxParticipants = 5,
+                        Location = "Campus Cafe",
+                        EventDate = DateTime.UtcNow.Date.AddDays(3).AddHours(19),
+                        Deadline = DateTime.UtcNow.Date.AddDays(2).AddHours(18),
+                        CurrentStatus = BoardStatus.Full,
+                        NotifyAuthorOnFull = true,
+                        CloseOnFull = true,
+                        IncreaseMaxParticipantsOnFull = false,
+                        ManualIncreaseMaxParticipants = false,
+                        CreatedAt = DateTime.UtcNow.AddDays(-5)
+                    };
+                    context.Boards.Add(board);
+                    await context.SaveChangesAsync();
+
+                    context.BoardParticipants.AddRange(
+                        new BoardParticipant { BoardId = board.Id, UserId = heidi.Id, JoinedAt = DateTime.UtcNow.AddDays(-4) },
+                        new BoardParticipant { BoardId = board.Id, UserId = ivan.Id, JoinedAt = DateTime.UtcNow.AddDays(-4) },
+                        new BoardParticipant { BoardId = board.Id, UserId = judy.Id, JoinedAt = DateTime.UtcNow.AddDays(-3) },
+                        new BoardParticipant { BoardId = board.Id, UserId = karl.Id, JoinedAt = DateTime.UtcNow.AddDays(-2) }
+                    );
+                    await context.SaveChangesAsync();
+                }
+
+                // Scenario 4: Closed board
+                if (!await BoardExists("Weekend Hiking Trip")
+                    && regularUsersByEmail.TryGetValue("leo@example.com", out var leo)
+                    && regularUsersByEmail.TryGetValue("mallory@example.com", out var mallory)
+                    && travelTag != null && outsideTag != null)
+                {
+                    var board = new Board
+                    {
+                        Title = "Weekend Hiking Trip",
+                        Tags = new List<Tag> { travelTag, outsideTag },
+                        Description = "Two-day hiking trip to nearby national park. Registration closed.",
+                        AuthorId = leo.Id,
+                        MaxParticipants = 12,
+                        Location = "National Park Trailhead",
+                        EventDate = DateTime.UtcNow.Date.AddDays(6).AddHours(8),
+                        Deadline = DateTime.UtcNow.Date.AddDays(4).AddHours(23),
+                        CurrentStatus = BoardStatus.Closed,
+                        NotifyAuthorOnFull = false,
+                        CloseOnFull = false,
+                        IncreaseMaxParticipantsOnFull = false,
+                        ManualIncreaseMaxParticipants = true,
+                        CreatedAt = DateTime.UtcNow.AddDays(-10)
+                    };
+                    context.Boards.Add(board);
+                    await context.SaveChangesAsync();
+
+                    context.BoardParticipants.Add(
+                        new BoardParticipant { BoardId = board.Id, UserId = mallory.Id, JoinedAt = DateTime.UtcNow.AddDays(-8) }
+                    );
+                    await context.SaveChangesAsync();
+                }
+
+                // Scenario 5: Empty board (no participants yet)
+                if (!await BoardExists("Thursday Food Tour")
+                    && regularUsersByEmail.TryGetValue("nina@example.com", out var nina)
+                    && foodTag != null)
+                {
+                    var board = new Board
+                    {
+                        Title = "Thursday Food Tour",
+                        Tags = new List<Tag> { foodTag },
+                        Description = "Exploring local street food vendors around campus area.",
+                        AuthorId = nina.Id,
+                        MaxParticipants = 10,
+                        Location = "Campus Main Gate",
+                        EventDate = DateTime.UtcNow.Date.AddDays(4).AddHours(18),
+                        Deadline = DateTime.UtcNow.Date.AddDays(3).AddHours(12),
+                        CurrentStatus = BoardStatus.Open,
+                        NotifyAuthorOnFull = true,
+                        CloseOnFull = false,
+                        IncreaseMaxParticipantsOnFull = true,
+                        ManualIncreaseMaxParticipants = false,
+                        CreatedAt = DateTime.UtcNow.AddHours(-6)
+                    };
+                    context.Boards.Add(board);
+                    await context.SaveChangesAsync();
+                }
+
+                // Scenario 6: Board with past deadline but still open
+                if (!await BoardExists("Monday Basketball Practice")
+                    && regularUsersByEmail.TryGetValue("oscar@example.com", out var oscar)
+                    && regularUsersByEmail.TryGetValue("peggy@example.com", out var peggy)
+                    && regularUsersByEmail.TryGetValue("quentin@example.com", out var quentin)
+                    && sportsTag != null && outsideTag != null)
+                {
+                    var board = new Board
+                    {
+                        Title = "Monday Basketball Practice",
+                        Tags = new List<Tag> { sportsTag, outsideTag },
+                        Description = "Weekly basketball practice session. All levels welcome!",
+                        AuthorId = oscar.Id,
+                        MaxParticipants = 10,
+                        Location = "Sports Complex Court 1",
+                        EventDate = DateTime.UtcNow.Date.AddDays(8).AddHours(16),
+                        Deadline = DateTime.UtcNow.Date.AddDays(-1).AddHours(23),
+                        CurrentStatus = BoardStatus.Open,
+                        NotifyAuthorOnFull = false,
+                        CloseOnFull = false,
+                        IncreaseMaxParticipantsOnFull = false,
+                        ManualIncreaseMaxParticipants = true,
+                        CreatedAt = DateTime.UtcNow.AddDays(-15)
+                    };
+                    context.Boards.Add(board);
+                    await context.SaveChangesAsync();
+
+                    context.BoardParticipants.AddRange(
+                        new BoardParticipant { BoardId = board.Id, UserId = peggy.Id, JoinedAt = DateTime.UtcNow.AddDays(-10) },
+                        new BoardParticipant { BoardId = board.Id, UserId = quentin.Id, JoinedAt = DateTime.UtcNow.AddDays(-5) }
+                    );
+                    await context.SaveChangesAsync();
+                }
+
+                // Scenario 7: Board with past event date (should be completed or cancelled)
+                if (!await BoardExists("Last Week Movie Night")
+                    && regularUsersByEmail.TryGetValue("rupert@example.com", out var rupert)
+                    && regularUsersByEmail.TryGetValue("sybil@example.com", out var sybil)
+                    && regularUsersByEmail.TryGetValue("trent@example.com", out var trent)
+                    && regularUsersByEmail.TryGetValue("uma@example.com", out var uma))
+                {
+                    var board = new Board
+                    {
+                        Title = "Last Week Movie Night",
+                        Tags = new List<Tag>(),
+                        Description = "Movie screening at student center (past event).",
+                        AuthorId = rupert.Id,
+                        MaxParticipants = 20,
+                        Location = "Student Center Auditorium",
+                        EventDate = DateTime.UtcNow.Date.AddDays(-3).AddHours(19),
+                        Deadline = DateTime.UtcNow.Date.AddDays(-5).AddHours(23),
+                        CurrentStatus = BoardStatus.Closed,
+                        NotifyAuthorOnFull = false,
+                        CloseOnFull = false,
+                        IncreaseMaxParticipantsOnFull = false,
+                        ManualIncreaseMaxParticipants = false,
+                        CreatedAt = DateTime.UtcNow.AddDays(-20)
+                    };
+                    context.Boards.Add(board);
+                    await context.SaveChangesAsync();
+
+                    context.BoardParticipants.AddRange(
+                        new BoardParticipant { BoardId = board.Id, UserId = sybil.Id, JoinedAt = DateTime.UtcNow.AddDays(-15) },
+                        new BoardParticipant { BoardId = board.Id, UserId = trent.Id, JoinedAt = DateTime.UtcNow.AddDays(-12) },
+                        new BoardParticipant { BoardId = board.Id, UserId = uma.Id, JoinedAt = DateTime.UtcNow.AddDays(-10) }
+                    );
+                    await context.SaveChangesAsync();
+                }
+
+                // Scenario 8: Large capacity event with many participants
+                if (!await BoardExists("Friday Night Campus Party")
+                    && regularUsersByEmail.TryGetValue("victor@example.com", out var victor)
+                    && regularUsersByEmail.TryGetValue("wendy@example.com", out var wendy)
+                    && regularUsersByEmail.TryGetValue("xavier@example.com", out var xavier)
+                    && regularUsersByEmail.TryGetValue("yvonne@example.com", out var yvonne)
+                    && regularUsersByEmail.TryGetValue("zara@example.com", out var zara)
+                    && regularUsersByEmail.TryGetValue("alice@example.com", out var alice2)
+                    && regularUsersByEmail.TryGetValue("bob@example.com", out var bob2)
+                    && regularUsersByEmail.TryGetValue("charlie@example.com", out var charlie2)
+                    && regularUsersByEmail.TryGetValue("david@example.com", out var david2)
+                    && regularUsersByEmail.TryGetValue("eve@example.com", out var eve2)
+                    && musicTag != null && foodTag != null)
+                {
+                    var board = new Board
+                    {
+                        Title = "Friday Night Campus Party",
+                        Tags = new List<Tag> { musicTag, foodTag },
+                        Description = "End of semester celebration with music, food, and games!",
+                        AuthorId = victor.Id,
+                        MaxParticipants = 50,
+                        Location = "Student Union Hall",
+                        EventDate = DateTime.UtcNow.Date.AddDays(14).AddHours(20),
+                        Deadline = DateTime.UtcNow.Date.AddDays(12).AddHours(23),
+                        CurrentStatus = BoardStatus.Open,
+                        NotifyAuthorOnFull = true,
+                        CloseOnFull = false,
+                        IncreaseMaxParticipantsOnFull = true,
+                        ManualIncreaseMaxParticipants = true,
+                        CreatedAt = DateTime.UtcNow.AddDays(-1)
+                    };
+                    context.Boards.Add(board);
+                    await context.SaveChangesAsync();
+
+                    context.BoardParticipants.AddRange(
+                        new BoardParticipant { BoardId = board.Id, UserId = wendy.Id, JoinedAt = DateTime.UtcNow.AddHours(-20) },
+                        new BoardParticipant { BoardId = board.Id, UserId = xavier.Id, JoinedAt = DateTime.UtcNow.AddHours(-18) },
+                        new BoardParticipant { BoardId = board.Id, UserId = yvonne.Id, JoinedAt = DateTime.UtcNow.AddHours(-15) },
+                        new BoardParticipant { BoardId = board.Id, UserId = zara.Id, JoinedAt = DateTime.UtcNow.AddHours(-12) },
+                        new BoardParticipant { BoardId = board.Id, UserId = alice2.Id, JoinedAt = DateTime.UtcNow.AddHours(-10) },
+                        new BoardParticipant { BoardId = board.Id, UserId = bob2.Id, JoinedAt = DateTime.UtcNow.AddHours(-8) },
+                        new BoardParticipant { BoardId = board.Id, UserId = charlie2.Id, JoinedAt = DateTime.UtcNow.AddHours(-6) },
+                        new BoardParticipant { BoardId = board.Id, UserId = david2.Id, JoinedAt = DateTime.UtcNow.AddHours(-4) },
+                        new BoardParticipant { BoardId = board.Id, UserId = eve2.Id, JoinedAt = DateTime.UtcNow.AddHours(-2) }
+                    );
+                    await context.SaveChangesAsync();
+                }
+
+                // Scenario 9: Small study session with specific configuration
+                if (!await BoardExists("Calculus Study Session")
+                    && regularUsersByEmail.TryGetValue("frank@example.com", out var frank2)
+                    && regularUsersByEmail.TryGetValue("grace@example.com", out var grace2)
+                    && studyTag != null)
+                {
+                    var board = new Board
+                    {
+                        Title = "Calculus Study Session",
+                        Tags = new List<Tag> { studyTag },
+                        Description = "Focused study group for Calculus II final exam preparation.",
+                        AuthorId = frank2.Id,
+                        MaxParticipants = 4,
+                        Location = "Library Study Room 305",
+                        EventDate = DateTime.UtcNow.Date.AddDays(2).AddHours(15),
+                        Deadline = DateTime.UtcNow.Date.AddDays(1).AddHours(23),
+                        CurrentStatus = BoardStatus.Open,
+                        NotifyAuthorOnFull = true,
+                        CloseOnFull = true,
+                        IncreaseMaxParticipantsOnFull = false,
+                        ManualIncreaseMaxParticipants = false,
+                        CreatedAt = DateTime.UtcNow.AddDays(-1)
+                    };
+                    context.Boards.Add(board);
+                    await context.SaveChangesAsync();
+
+                    context.BoardParticipants.Add(
+                        new BoardParticipant { BoardId = board.Id, UserId = grace2.Id, JoinedAt = DateTime.UtcNow.AddHours(-10) }
+                    );
+                    await context.SaveChangesAsync();
+                }
+
+                // Scenario 10: Travel event with multiple tags
+                if (!await BoardExists("Beach Trip Next Month")
+                    && regularUsersByEmail.TryGetValue("heidi@example.com", out var heidi2)
+                    && regularUsersByEmail.TryGetValue("ivan@example.com", out var ivan2)
+                    && regularUsersByEmail.TryGetValue("judy@example.com", out var judy2)
+                    && regularUsersByEmail.TryGetValue("karl@example.com", out var karl2)
+                    && regularUsersByEmail.TryGetValue("leo@example.com", out var leo2)
+                    && travelTag != null && outsideTag != null && foodTag != null)
+                {
+                    var board = new Board
+                    {
+                        Title = "Beach Trip Next Month",
+                        Tags = new List<Tag> { travelTag, outsideTag, foodTag },
+                        Description = "Day trip to the beach with seafood lunch. Transport provided.",
+                        AuthorId = heidi2.Id,
+                        MaxParticipants = 15,
+                        Location = "Campus Parking Lot (Departure)",
+                        EventDate = DateTime.UtcNow.Date.AddDays(30).AddHours(7),
+                        Deadline = DateTime.UtcNow.Date.AddDays(25).AddHours(23),
+                        CurrentStatus = BoardStatus.Open,
+                        NotifyAuthorOnFull = true,
+                        CloseOnFull = false,
+                        IncreaseMaxParticipantsOnFull = true,
+                        ManualIncreaseMaxParticipants = true,
+                        CreatedAt = DateTime.UtcNow.AddDays(-7)
+                    };
+                    context.Boards.Add(board);
+                    await context.SaveChangesAsync();
+
+                    context.BoardParticipants.AddRange(
+                        new BoardParticipant { BoardId = board.Id, UserId = ivan2.Id, JoinedAt = DateTime.UtcNow.AddDays(-6) },
+                        new BoardParticipant { BoardId = board.Id, UserId = judy2.Id, JoinedAt = DateTime.UtcNow.AddDays(-5) },
+                        new BoardParticipant { BoardId = board.Id, UserId = karl2.Id, JoinedAt = DateTime.UtcNow.AddDays(-4) },
+                        new BoardParticipant { BoardId = board.Id, UserId = leo2.Id, JoinedAt = DateTime.UtcNow.AddDays(-3) }
+                    );
+                    await context.SaveChangesAsync();
+                }
+
+                // Scenario 11: Cancelled event
+                if (!await BoardExists("Postponed Workshop")
+                    && regularUsersByEmail.TryGetValue("mallory@example.com", out var mallory2)
+                    && studyTag != null)
+                {
+                    var board = new Board
+                    {
+                        Title = "Postponed Workshop",
+                        Tags = new List<Tag> { studyTag },
+                        Description = "Python programming workshop (cancelled due to venue issues).",
+                        AuthorId = mallory2.Id,
+                        MaxParticipants = 25,
+                        Location = "Computer Lab B",
+                        EventDate = DateTime.UtcNow.Date.AddDays(5).AddHours(13),
+                        Deadline = DateTime.UtcNow.Date.AddDays(4).AddHours(12),
+                        CurrentStatus = BoardStatus.Cancelled,
+                        NotifyAuthorOnFull = false,
+                        CloseOnFull = false,
+                        IncreaseMaxParticipantsOnFull = false,
+                        ManualIncreaseMaxParticipants = false,
+                        CreatedAt = DateTime.UtcNow.AddDays(-8)
+                    };
+                    context.Boards.Add(board);
+                    await context.SaveChangesAsync();
+                }
+
+                // Scenario 12: Board near capacity
+                if (!await BoardExists("Wednesday Badminton")
+                    && regularUsersByEmail.TryGetValue("nina@example.com", out var nina2)
+                    && regularUsersByEmail.TryGetValue("oscar@example.com", out var oscar2)
+                    && regularUsersByEmail.TryGetValue("peggy@example.com", out var peggy2)
+                    && regularUsersByEmail.TryGetValue("quentin@example.com", out var quentin2)
+                    && sportsTag != null)
+                {
+                    var board = new Board
+                    {
+                        Title = "Wednesday Badminton",
+                        Tags = new List<Tag> { sportsTag },
+                        Description = "Doubles badminton matches. Only 2 spots left!",
+                        AuthorId = nina2.Id,
+                        MaxParticipants = 6,
+                        Location = "Sports Complex Badminton Courts",
+                        EventDate = DateTime.UtcNow.Date.AddDays(9).AddHours(18),
+                        Deadline = DateTime.UtcNow.Date.AddDays(8).AddHours(12),
+                        CurrentStatus = BoardStatus.Open,
+                        NotifyAuthorOnFull = true,
+                        CloseOnFull = true,
+                        IncreaseMaxParticipantsOnFull = false,
+                        ManualIncreaseMaxParticipants = false,
+                        CreatedAt = DateTime.UtcNow.AddDays(-4)
+                    };
+                    context.Boards.Add(board);
+                    await context.SaveChangesAsync();
+
+                    context.BoardParticipants.AddRange(
+                        new BoardParticipant { BoardId = board.Id, UserId = oscar2.Id, JoinedAt = DateTime.UtcNow.AddDays(-3) },
+                        new BoardParticipant { BoardId = board.Id, UserId = peggy2.Id, JoinedAt = DateTime.UtcNow.AddDays(-2) },
+                        new BoardParticipant { BoardId = board.Id, UserId = quentin2.Id, JoinedAt = DateTime.UtcNow.AddDays(-1) }
+                    );
+                    await context.SaveChangesAsync();
+                }
+
+                logger.LogInformation("Board seeding completed successfully.");
             }
             catch (Exception ex)
             {
