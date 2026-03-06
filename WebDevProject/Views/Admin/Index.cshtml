@@ -1,0 +1,37 @@
+﻿@{
+    ViewData["Title"] = "Admin Dashboard";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin.css" asp-append-version="true" />
+}
+
+<div class="main-container">
+    <h1 class="header-1">Admin Dashboard</h1>
+    
+    <div class="admin-dashboard">
+        <div class="admin-card">
+            <h3>👥 User Management</h3>
+            <p>Manage user accounts, view user details, and control access.</p>
+            <a asp-controller="Admin" asp-action="Users" class="btn btn-primary btn-sm card-link">View Users</a>
+        </div>
+        
+        <div class="admin-card">
+            <h3>📋 Board Management</h3>
+            <p>Oversee all boards, content moderation, and board settings.</p>
+            <a asp-controller="Admin" asp-action="Boards" class="btn btn-primary btn-sm card-link">View Boards</a>
+        </div>
+        
+        <div class="admin-card">
+            <h3>⚙️ System Settings</h3>
+            <p>Configure system-wide settings and preferences.</p>
+            <a href="#" class="btn btn-secondary btn-sm card-link">Coming Soon</a>
+        </div>
+        
+        <div class="admin-card">
+            <h3>📊 Analytics</h3>
+            <p>View system statistics and usage analytics.</p>
+            <a href="#" class="btn btn-secondary btn-sm card-link">Coming Soon</a>
+        </div>
+    </div>
+</div>
