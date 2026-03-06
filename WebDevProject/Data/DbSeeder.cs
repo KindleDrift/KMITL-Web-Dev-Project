@@ -125,9 +125,7 @@ namespace WebDevProject.Data
                         Deadline = DateTime.UtcNow.Date.AddDays(5).AddHours(23),
                         CurrentStatus = BoardStatus.Open,
                         NotifyAuthorOnFull = true,
-                        CloseOnFull = false,
-                        IncreaseMaxParticipantsOnFull = false,
-                        ManualIncreaseMaxParticipants = true,
+                        GroupManagementOption = GroupManagement.ManualIncreaseMaxParticipants,
                         CreatedAt = DateTime.UtcNow
                     };
 
@@ -164,9 +162,7 @@ namespace WebDevProject.Data
                         Deadline = DateTime.UtcNow.Date.AddDays(9).AddHours(20),
                         CurrentStatus = BoardStatus.Open,
                         NotifyAuthorOnFull = true,
-                        CloseOnFull = false,
-                        IncreaseMaxParticipantsOnFull = false,
-                        ManualIncreaseMaxParticipants = true,
+                        GroupManagementOption = GroupManagement.ManualIncreaseMaxParticipants,
                         CreatedAt = DateTime.UtcNow
                     };
 

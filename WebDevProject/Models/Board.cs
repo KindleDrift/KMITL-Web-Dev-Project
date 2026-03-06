@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
+using System.ComponentModel.DataAnnotations;
 
 namespace WebDevProject.Models
 {
@@ -21,6 +22,7 @@ namespace WebDevProject.Models
         public string Description { get; set; } = string.Empty;
 
         [Required]
+        [ValidateNever]
         public string AuthorId { get; set; } = string.Empty;
 
         public Users? Author { get; set; }
@@ -34,21 +36,18 @@ namespace WebDevProject.Models
         [StringLength(200)]
         public string Location { get; set; } = string.Empty;
 
+        [Required]
         public DateTime EventDate { get; set; }
-
+        [Required]
         public DateTime Deadline { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         public bool NotifyAuthorOnFull { get; set; }
 
-        public bool CloseOnFull { get; set; }
-
-        public bool IncreaseMaxParticipantsOnFull { get; set; }
-
-        public bool ManualIncreaseMaxParticipants { get; set; }
-
         public BoardStatus CurrentStatus { get; set; } = BoardStatus.Open;
+
+        public GroupManagement GroupManagementOption { get; set; } = GroupManagement.CloseOnFull;
     }
 
     public class BoardParticipant
@@ -70,5 +69,12 @@ namespace WebDevProject.Models
         Full,
         Closed,
         Archived
+    }
+
+    public enum GroupManagement
+    {
+        CloseOnFull,
+        IncreaseMaxParticipantsOnFull,
+        ManualIncreaseMaxParticipants
     }
 }

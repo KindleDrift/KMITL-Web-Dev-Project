@@ -1,3 +1,4 @@
+@model WebDevProject.Models.Board
 @{
     ViewData["Title"] = "Sign-up";
 }
@@ -6,49 +7,69 @@
     <link rel="stylesheet" href="~/css/boardcreate.css" asp-append-version="true" />
 }
 
-<div id="postarea">
-    <h1>Posting</h1>
-    <div class="container">
-        <div id="postbox">
-            <textarea id="title" placeholder="Title..."></textarea>
-            <textarea id="textbox" placeholder="Type here..."></textarea>
-            <hr>
-            <input type="button" value="Upload img" id="imgbutton">
-        </div>
-        <div id="options">
-            <div id="participants">
-                <h2>Maximum Participants: </h2>
-                <input type="text" id="username">
+<form asp-action="Create" method="post">
+    @Html.AntiForgeryToken()
+    <div asp-validation-summary="All"></div>
+    <div id="postarea">
+        <h1>Posting</h1>
+        <div class="container">
+            <div id="postbox">
+                <textarea id="title" asp-for="Title" placeholder="Title..."></textarea>
+                <textarea id="textbox" asp-for="Description" placeholder="Type here..."></textarea>
+                <hr>
+                <input type="text" id="imgbutton" asp-for="ImageUrl">
             </div>
-            <div id="deadline">
-                <h2>Deadline: </h2>
-                <input type="date" id="date" name="date">
-            </div>
-            <div id="noti">
-                <input type="checkbox" id="notify">
-                <label for="notify">Notify me when the group is full</label>
-                <p>Group management: </p>
-                <label class="selector">
-                    <input type="radio" name="type">
-                    Immediately close the request when the group is full
-                </label>
 
-                <label class="selector">
-                    <input type="radio" name="type">
-                    Increase the size of your group when it's full
-                </label>
+            <div id="options">
+                <div id="participants">
+                    <h2>Maximum Participants:</h2>
+                    <input type="number" id="participants" asp-for="MaxParticipants">
+                </div>
 
-                <label class="selector">
-                    <input type="radio" name="type">
-                    Manually select participants when your group exceeds the maximum size
-                </label>
-            </div>
-            <div id="button">
-                <button id="postbutt">Post a request</button>
+                <div id="deadline">
+                    <h2>Deadline:</h2>
+                    <input type="date" id="date" asp-for="Deadline">
+                </div>
+
+                <div id="location">
+                    <h2>Location:</h2>
+                    <input type="text" id="loc" asp-for="Location" placeholder="Enter location...">
+                </div>
+                    
+                <div id="eventdate">
+                    <h2>Event Date:</h2>
+                    <input type="date" id="event-date" asp-for="EventDate" placeholder="Enter location...">
+                </div>
+
+                <div id="noti">
+                    <input type="checkbox" id="notify" asp-for="NotifyAuthorOnFull">
+                    <label for="notify">Notify me when the group is full</label>
+
+                    <p>Group management:</p>
+
+                    <label class="selector">
+                        <input type="radio" asp-for="GroupManagementOption" value="CloseOnFull">
+                        Immediately close the request when the group is full
+                    </label>
+
+                    <label class="selector">
+                        <input type="radio" asp-for="GroupManagementOption" value="IncreaseMaxParticipantsOnFull">
+                        Increase the size of your group when it's full
+                    </label>
+
+                    <label class="selector">
+                        <input type="radio" asp-for="GroupManagementOption" value="ManualIncreaseMaxParticipants">
+                        Manually select participants when your group exceeds the maximum size
+                    </label>
+                </div>
+
+                <div id="button">
+                    <button type="submit" id="postbutt">Post a request</button>
+                </div>
             </div>
         </div>
     </div>
-</div>
+</form>
 
 @section Scripts {
     <script src="~/js/boardcreate.js" asp-append-version="true"></script>
