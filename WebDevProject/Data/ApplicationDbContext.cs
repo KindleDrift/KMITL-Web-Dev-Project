@@ -11,7 +11,7 @@ namespace WebDevProject.Data
         {
         }
 
-        public DbSet<Board> Boards => Set<Board>();
+        public DbSet<Board> Boards { get; set; }
 
         public DbSet<BoardParticipant> BoardParticipants => Set<BoardParticipant>();
 

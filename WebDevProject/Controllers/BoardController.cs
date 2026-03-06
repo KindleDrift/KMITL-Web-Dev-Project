@@ -60,5 +60,31 @@ namespace WebDevProject.Controllers
         {
             return View();
         }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create(Board board)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(board);
+            }
+
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (userId == null)
+            {
+                return Unauthorized();
+            }
+
+            board.AuthorId = userId;
+            board.CreatedAt = DateTime.UtcNow;
+            board.CurrentStatus = BoardStatus.Open;
+
+            _context.Boards.Add(board);
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Index));
+        }
     }
 }
