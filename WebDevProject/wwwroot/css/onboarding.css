@@ -22,3 +22,42 @@
 .link-button:hover {
     color: #0056b3;
 }
+
+.form-input .gender-options {
+    display: flex;
+    gap: 5px;
+    margin-top: 10px;
+}
+
+.form-input .gender-options label {
+    font-weight: normal;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background-color: #e9ecef;
+    padding: 5px 10px;
+    border-radius: 50px;
+    position: relative;
+    border: 2px solid transparent;
+}
+
+.form-input .gender-options input[type="radio"] {
+    margin: 0;
+    opacity: 0;
+    position: absolute;
+}
+
+.form-input .gender-options .material-symbols-outlined {
+    font-size: 20px;
+    color: #666;
+}
+
+.form-input .gender-options label:has(input[type="radio"]:checked) {
+    background-color: #ffffff;
+    border-color: #1f1f1f;
+    color: #1f1f1f;
+}
+
+.form-input .gender-options label:has(input[type="radio"]:checked) .material-symbols-outlined {
+    color: #1f1f1f;
+}

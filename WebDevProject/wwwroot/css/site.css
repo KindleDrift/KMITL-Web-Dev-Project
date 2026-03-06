@@ -14,6 +14,10 @@ body {
     flex-direction: column;
 }
 
+body.profile-panel-open {
+    overflow: hidden;
+}
+
 .navbar {
     background-color: #d1ecff;
     position: fixed;
@@ -56,12 +60,14 @@ body {
     background-color: #1f1f1f;
     border: 1px solid black;
     border-radius: 6px;
-    cursor: pointer;
     color: #ffffff;
-    font-size: 24px;
-    box-sizing: border-box;
-    text-align: center;
-    font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+}
+
+.guest-navbar-toggle {
+    display: none !important;
 }
 
 .navbar-menu {
@@ -82,29 +88,10 @@ body {
     font-weight: bold;
     display: flex;
     align-items: center;
+    gap: 8px;
 }
 
 .navbar-menu li a:hover {
-    opacity: 0.7;
-    transition: opacity 0.3s ease;
-}
-
-.navbar-menu li button.sign-out-btn {
-    background: none;
-    border: none;
-    text-decoration: none;
-    color: black;
-    font-weight: bold;
-    display: flex;
-    align-items: center;
-    padding: 0;
-    cursor: pointer;
-    font-family: "Inter", sans-serif;
-    font-size: 1em;
-    transition: opacity 0.3s ease;
-}
-
-.navbar-menu li button.sign-out-btn:hover {
     opacity: 0.7;
     transition: opacity 0.3s ease;
 }
@@ -117,15 +104,156 @@ body {
     color: #ffffff;
 }
 
+.navbar-profile-trigger {
+    border: none;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-family: "Inter", sans-serif;
+    font-size: 1em;
+    font-weight: bold;
+    color: black;
+    padding: 0;
+    position: relative;
+}
+
+.navbar-profile-name {
+    max-width: 140px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .navbar-profile-pic {
     width: 30px;
     height: 30px;
     border-radius: 50%;
-    margin-left: 10px;
+    border: 1px solid #1f1f1f;
 }
 
-.navbar-menu.show {
+.notification-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #e02424;
+    display: inline-block;
+}
+
+.profile-notification-dot {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+}
+
+.profile-side-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.35);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    z-index: 1200;
+}
+
+.profile-side-overlay.show {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.profile-side-panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: min(340px, 88vw);
+    height: 100vh;
+    background-color: #ffffff;
+    box-shadow: -4px 0 12px rgba(0, 0, 0, 0.15);
+    transform: translateX(100%);
+    transition: transform 0.25s ease;
+    z-index: 1300;
     display: flex;
+    flex-direction: column;
+}
+
+.profile-side-panel.open {
+    transform: translateX(0);
+}
+
+.profile-side-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px;
+    border-bottom: 1px solid #ebebeb;
+}
+
+.profile-side-panel-user {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 600;
+}
+
+.profile-side-panel-close {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-size: 22px;
+}
+
+.profile-side-panel-menu {
+    list-style: none;
+    margin: 0;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.profile-side-panel-menu li {
+    margin: 0;
+}
+
+.profile-side-panel-menu a,
+.profile-side-panel-signout-btn {
+    width: 100%;
+    border: none;
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 10px 12px;
+    text-decoration: none;
+    color: black;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: "Inter", sans-serif;
+    cursor: pointer;
+    box-sizing: border-box;
+}
+
+.profile-side-panel-signout-form {
+    margin: 0;
+}
+
+.profile-side-panel-menu a:hover,
+.profile-side-panel-signout-btn:hover {
+    background: #eceff1;
+}
+
+.profile-notifications-link {
+    width: 100%;
+}
+
+.profile-notifications-label {
+    flex: 1;
+    text-align: left;
+}
+
+.option-notification-dot {
+    margin-left: 8px;
 }
 
 footer {
@@ -142,61 +270,63 @@ body > .container {
     width: 100%;
 }
 
-/* Desktop Force Toggler */
-@media (min-width: 769px) {
-    .navbar-toggle {
-        display: none !important;
-    }
-}
-
-/* Phone layout */
 @media (max-width: 768px) {
     .navbar-container {
-        flex-direction: row;
         flex-wrap: wrap;
-        align-items: center;
     }
 
-    .navbar-logo {
-        order: 1;
-    }
-
-    .navbar-toggle {
-        display: flex !important;
-        align-items: center;
-        justify-content: center;
-        order: 2;
-        margin-left: auto;
-        text-align: center;
+    .navbar-menu.navbar-menu-primary.is-auth .navbar-item-desktop {
+        display: none;
     }
 
     .navbar-menu {
-        order: 3;
-        flex-direction: column;
-        width: 100%;
-        display: none;
-        align-items: flex-start;
+        gap: 10px;
     }
 
     .navbar-menu li {
         margin-left: 0;
+    }
+
+    .navbar-profile-name {
+        display: none;
+    }
+
+    .guest-navbar-toggle {
+        display: inline-flex !important;
+        margin-left: auto;
+        order: 2;
+    }
+
+    .navbar-menu.navbar-menu-primary.is-guest {
+        width: 100%;
+        order: 3;
+        display: none;
+        flex-direction: column;
+        align-items: flex-start;
+        margin-top: 10px;
+        gap: 4px;
+    }
+
+    .navbar-menu.navbar-menu-primary.is-guest.show {
+        display: flex;
+    }
+
+    .navbar-menu.navbar-menu-primary.is-guest .navbar-item {
         width: 100%;
     }
 
-    .navbar-menu li a {
+    .navbar-menu.navbar-menu-primary.is-guest .navbar-item a {
         width: 100%;
-        padding: 10px 0;
-        text-align: right;
-        justify-content: flex-start;
+        padding: 8px 0;
     }
 
-    .navbar-menu .signup-btn a {
+    .navbar-menu.navbar-menu-primary.is-guest .navbar-item.signup-btn {
         width: auto;
-        align-self: flex-start;
     }
 
-    .navbar-menu .signup-btn {
+    .navbar-menu.navbar-menu-primary.is-guest .navbar-item.signup-btn a {
         width: auto;
+        padding: 5px 10px;
     }
 }
 /*************************/
@@ -342,41 +472,3 @@ legend {
     margin: 10px auto 0 auto;
 }
 
-.form-input .gender-options {
-    display: flex;
-    gap: 5px;
-    margin-top: 10px;
-}
-
-.form-input .gender-options label {
-    font-weight: normal;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    background-color: #e9ecef;
-    padding: 5px 10px;
-    border-radius: 50px;
-    position: relative;
-    border: 2px solid transparent;
-}
-
-.form-input .gender-options input[type="radio"] {
-    margin: 0;
-    opacity: 0;
-    position: absolute;
-}
-
-.form-input .gender-options .material-symbols-outlined {
-    font-size: 20px;
-    color: #666;
-}
-
-.form-input .gender-options label:has(input[type="radio"]:checked) {
-    background-color: #ffffff;
-    border-color: #1f1f1f;
-    color: #1f1f1f;
-}
-
-.form-input .gender-options label:has(input[type="radio"]:checked) .material-symbols-outlined {
-    color: #1f1f1f;
-}

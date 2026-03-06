@@ -1,32 +1,93 @@
-﻿// Please see documentation at https://learn.microsoft.com/aspnet/core/client-side/bundling-and-minification
-// for details on configuring this project to bundle and minify static web assets.
-
-// Write your JavaScript code.
-// Navbar toggle (the hamburger menu for mobile)
+﻿// Guest navbar toggle
 document.addEventListener('DOMContentLoaded', function() {
-    const toggleButton = document.getElementById('mobile-menu');
-    const navbarMenu = document.querySelector('.navbar-menu');
+    const guestMenuToggleButton = document.getElementById('guest-menu-toggle');
+    const guestNavbarMenu = document.getElementById('guest-navbar-menu');
 
-    if (!toggleButton || !navbarMenu) {
+    if (!guestMenuToggleButton || !guestNavbarMenu) {
         return;
     }
 
-    const openIcon = toggleButton.getAttribute('data-open-icon') || 'menu_open';
-    const closedIcon = toggleButton.getAttribute('data-closed-icon') || 'menu';
+    const openIcon = guestMenuToggleButton.getAttribute('data-open-icon') || 'menu_open';
+    const closedIcon = guestMenuToggleButton.getAttribute('data-closed-icon') || 'menu';
 
-    const toggleMenu = function() {
-        const isOpen = navbarMenu.classList.toggle('show');
-        toggleButton.setAttribute('aria-expanded', String(isOpen));
-        toggleButton.textContent = isOpen ? openIcon : closedIcon;
+    const toggleGuestMenu = function() {
+        const isOpen = guestNavbarMenu.classList.toggle('show');
+        guestMenuToggleButton.setAttribute('aria-expanded', String(isOpen));
+        guestMenuToggleButton.textContent = isOpen ? openIcon : closedIcon;
     };
 
-    toggleButton.addEventListener('click', toggleMenu);
+    guestMenuToggleButton.addEventListener('click', toggleGuestMenu);
 
-    toggleButton.addEventListener('keydown', function (event) {
+    guestMenuToggleButton.addEventListener('keydown', function(event) {
         if (event.key === 'Enter' || event.key === ' ') {
             event.preventDefault();
-            toggleMenu();
+            toggleGuestMenu();
         }
+    });
+});
+
+// Profile side panel toggle
+document.addEventListener('DOMContentLoaded', function() {
+    const profileToggleButton = document.getElementById('profile-panel-toggle');
+    const profileSidePanel = document.getElementById('profile-side-panel');
+    const profileSideOverlay = document.getElementById('profile-side-overlay');
+    const closeProfilePanelButton = document.getElementById('profile-side-panel-close');
+
+    if (!profileToggleButton || !profileSidePanel || !profileSideOverlay) {
+        return;
+    }
+
+    const openProfilePanel = function() {
+        profileSidePanel.classList.add('open');
+        profileSideOverlay.classList.add('show');
+        profileToggleButton.setAttribute('aria-expanded', 'true');
+        profileSidePanel.setAttribute('aria-hidden', 'false');
+        profileSideOverlay.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('profile-panel-open');
+    };
+
+    const closeProfilePanel = function() {
+        profileSidePanel.classList.remove('open');
+        profileSideOverlay.classList.remove('show');
+        profileToggleButton.setAttribute('aria-expanded', 'false');
+        profileSidePanel.setAttribute('aria-hidden', 'true');
+        profileSideOverlay.setAttribute('aria-hidden', 'true');
+        document.body.classList.remove('profile-panel-open');
+    };
+
+    const toggleProfilePanel = function() {
+        if (profileSidePanel.classList.contains('open')) {
+            closeProfilePanel();
+            return;
+        }
+
+        openProfilePanel();
+    };
+
+    profileToggleButton.addEventListener('click', toggleProfilePanel);
+
+    profileToggleButton.addEventListener('keydown', function(event) {
+        if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            toggleProfilePanel();
+        }
+    });
+
+    if (closeProfilePanelButton) {
+        closeProfilePanelButton.addEventListener('click', closeProfilePanel);
+    }
+
+    profileSideOverlay.addEventListener('click', closeProfilePanel);
+
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape' && profileSidePanel.classList.contains('open')) {
+            closeProfilePanel();
+        }
+    });
+
+    const panelLinks = profileSidePanel.querySelectorAll('a');
+    panelLinks.forEach(function(link) {
+        link.addEventListener('click', closeProfilePanel);
     });
 });
 
