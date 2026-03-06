@@ -15,7 +15,7 @@
 <div class="main-container">
     <h1 class="header-1">Manage Users</h1>
     
-    <div style="overflow-x: auto;">
+    <div class="table-container">
         <table class="admin-table">
             <thead>
                 <tr>
@@ -44,18 +44,18 @@
                         <td>
                             @if (user.LockoutEnd.HasValue && user.LockoutEnd > DateTimeOffset.UtcNow)
                             {
-                                <span style="color: red; font-weight: bold;">Banned</span>
+                                <span class="status-banned">Banned</span>
                             }
                             else
                             {
-                                <span style="color: green; font-weight: bold;">Active</span>
+                                <span class="status-active">Active</span>
                             }
                         </td>
                         <td>
                             <a asp-controller="Admin" asp-action="EditUser" asp-route-id="@user.Id" class="btn btn-sm btn-primary">Edit</a>
                             @if (user.LockoutEnd.HasValue && user.LockoutEnd > DateTimeOffset.UtcNow)
                             {
-                                <form method="post" asp-controller="Admin" asp-action="Unban" asp-route-id="@user.Id" style="display: inline;">
+                                <form method="post" asp-controller="Admin" asp-action="Unban" asp-route-id="@user.Id" class="inline-form">
                                     <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('Unban this user?');">Unban</button>
                                 </form>
                             }
@@ -67,7 +67,7 @@
                                 }
                                 else
                                 {
-                                    <form method="post" asp-controller="Admin" asp-action="Ban" asp-route-id="@user.Id" style="display: inline;">
+                                    <form method="post" asp-controller="Admin" asp-action="Ban" asp-route-id="@user.Id" class="inline-form">
                                         <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Ban this user?');">Ban</button>
                                     </form>
                                 }
@@ -79,7 +79,7 @@
         </table>
     </div>
     
-    <div style="margin-top: 20px;">
+    <div class="action-buttons">
         <a asp-controller="Admin" asp-action="Index" class="btn btn-secondary">Back to Dashboard</a>
     </div>
 </div>

@@ -15,6 +15,10 @@ namespace WebDevProject.Data
 
         public DbSet<BoardParticipant> BoardParticipants => Set<BoardParticipant>();
 
+        public DbSet<BoardApplicant> BoardApplicants => Set<BoardApplicant>();
+
+        public DbSet<BoardDenied> BoardDenied => Set<BoardDenied>();
+
         public DbSet<Tag> Tags => Set<Tag>();
 
         protected override void OnModelCreating(ModelBuilder builder)
@@ -40,6 +44,36 @@ namespace WebDevProject.Data
                 .HasOne(bp => bp.User)
                 .WithMany(u => u.BoardParticipations)
                 .HasForeignKey(bp => bp.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<BoardApplicant>()
+                .HasKey(ba => new { ba.BoardId, ba.UserId });
+
+            builder.Entity<BoardApplicant>()
+                .HasOne(ba => ba.Board)
+                .WithMany(b => b.Applicants)
+                .HasForeignKey(ba => ba.BoardId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<BoardApplicant>()
+                .HasOne(ba => ba.User)
+                .WithMany(u => u.BoardApplications)
+                .HasForeignKey(ba => ba.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<BoardDenied>()
+                .HasKey(bd => new { bd.BoardId, bd.UserId });
+
+            builder.Entity<BoardDenied>()
+                .HasOne(bd => bd.Board)
+                .WithMany(b => b.DeniedUsers)
+                .HasForeignKey(bd => bd.BoardId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<BoardDenied>()
+                .HasOne(bd => bd.User)
+                .WithMany(u => u.BoardDenials)
+                .HasForeignKey(bd => bd.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             builder.Entity<Board>()

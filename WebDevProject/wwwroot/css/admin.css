@@ -23,6 +23,55 @@
     background-color: #f5f5f5;
 }
 
+/* Status Badges */
+.status-active {
+    color: green;
+    font-weight: bold;
+}
+
+.status-banned {
+    color: red;
+    font-weight: bold;
+}
+
+.status-open {
+    color: green;
+    font-weight: bold;
+}
+
+.status-full {
+    color: orange;
+    font-weight: bold;
+}
+
+.status-closed {
+    color: red;
+    font-weight: bold;
+}
+
+.status-cancelled {
+    color: darkred;
+    font-weight: bold;
+}
+
+.status-archived {
+    color: gray;
+    font-weight: bold;
+}
+
+/* Utility Classes */
+.table-container {
+    overflow-x: auto;
+}
+
+.inline-form {
+    display: inline;
+}
+
+.action-buttons {
+    margin-top: 20px;
+}
+
 /* Admin Form Styles */
 .admin-form {
     max-width: 500px;

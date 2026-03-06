@@ -1,0 +1,209 @@
+@model WebDevProject.Models.BoardDetailsViewModel
+
+@{
+    ViewData["Title"] = Model.Board.Title;
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/board.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/boarddetails.css" asp-append-version="true" />
+}
+
+<div class="main-container">
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-error">@TempData["Error"]</div>
+    }
+
+    <div class="card">
+        <div class="board-details-header">
+            <h1>@Model.Board.Title</h1>
+            @if (Model.IsAuthor)
+            {
+                <a class="button" asp-action="Edit" asp-route-id="@Model.Board.Id">Edit Board</a>
+            }
+        </div>
+
+        @{
+            var statusClass = Model.Board.CurrentStatus switch
+            {
+                WebDevProject.Models.BoardStatus.Open => "status-open",
+                WebDevProject.Models.BoardStatus.Full => "status-full",
+                WebDevProject.Models.BoardStatus.Closed => "status-closed",
+                WebDevProject.Models.BoardStatus.Cancelled => "status-cancelled",
+                WebDevProject.Models.BoardStatus.Archived => "status-archived",
+                _ => "status-open"
+            };
+        }
+
+        <div class="board-details-content">
+            @if (!string.IsNullOrWhiteSpace(Model.Board.ImageUrl))
+            {
+                <div class="board-details-image">
+                    <img src="@Model.Board.ImageUrl" alt="@Model.Board.Title" />
+                </div>
+            }
+
+            <div class="board-info-section">
+                <h3>Board Information</h3>
+                <div class="board-meta-grid">
+                    <div><strong>Status:</strong> <span class="status-badge @statusClass">@Model.Board.CurrentStatus</span></div>
+                    <div><strong>Event Date:</strong> @Model.Board.EventDate.ToString("dd MMM yyyy, HH:mm")</div>
+                    <div><strong>Location:</strong> @Model.Board.Location</div>
+                    <div><strong>Join Deadline:</strong> @Model.Board.Deadline.ToString("dd MMM yyyy, HH:mm")</div>
+                    <div><strong>Participants:</strong> @Model.Participants.Count / @Model.Board.MaxParticipants</div>
+                    <div><strong>Author:</strong> 
+                        <img src="@(Model.Board.Author?.ProfilePictureUrl ?? Url.Content("~/images/default-profile.png"))" alt="@(Model.Board.Author?.DisplayName ?? "Author")" class="small-avatar" />
+                        @(Model.Board.Author?.DisplayName ?? "Unknown")
+                    </div>
+                </div>
+
+                @if (Model.Board.Tags.Any())
+                {
+                    <div class="tags-section">
+                        <strong>Tags:</strong>
+                        @foreach (var tag in Model.Board.Tags)
+                        {
+                            <span class="tag">@tag.Name</span>
+                        }
+                    </div>
+                }
+
+                <div class="description-section">
+                    <h3>Description</h3>
+                    <p>@Model.Board.Description</p>
+                </div>
+            </div>
+
+            @if (!Model.IsAuthor && User.Identity?.IsAuthenticated == true)
+            {
+                <div class="application-section">
+                    @if (Model.UserApplicationStatus == WebDevProject.Models.ApplicationStatus.NotApplied)
+                    {
+                        @if (Model.Board.CurrentStatus == WebDevProject.Models.BoardStatus.Open && Model.Board.Deadline > DateTime.UtcNow)
+                        {
+                            <form asp-action="Apply" asp-route-id="@Model.Board.Id" method="post">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="button button-primary">Apply to Join</button>
+                            </form>
+                        }
+                        else
+                        {
+                            <p class="status-message">Applications are currently closed.</p>
+                        }
+                    }
+                    else if (Model.UserApplicationStatus == WebDevProject.Models.ApplicationStatus.Pending)
+                    {
+                        <p class="status-message status-pending">Your application is pending approval.</p>
+                    }
+                    else if (Model.UserApplicationStatus == WebDevProject.Models.ApplicationStatus.Approved)
+                    {
+                        <p class="status-message status-approved">You are a participant in this board.</p>
+                    }
+                    else if (Model.UserApplicationStatus == WebDevProject.Models.ApplicationStatus.Denied)
+                    {
+                        <p class="status-message status-denied">Your application was denied. You cannot apply to this board again.</p>
+                    }
+                </div>
+            }
+
+            <div class="status-sections-container">
+                <div class="participants-section status-section-column">
+                    <h3>Participants (@Model.Participants.Count / @Model.Board.MaxParticipants)</h3>
+                    @if (Model.Participants.Any())
+                    {
+                        <div class="user-list">
+                            @foreach (var participant in Model.Participants)
+                            {
+                                <div class="user-item">
+                                    <img src="@(participant.User?.ProfilePictureUrl ?? Url.Content("~/images/default-profile.png"))" alt="@(participant.User?.DisplayName ?? "Participant")" class="user-avatar" />
+                                    <div class="user-info">
+                                        <div class="user-name">@(participant.User?.DisplayName ?? "Unknown")</div>
+                                        <div class="user-meta">Joined: @participant.JoinedAt.ToString("dd MMM yyyy")</div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <p>No participants yet.</p>
+                    }
+                </div>
+
+                @if (Model.IsAuthor)
+                {
+                    <div class="applicants-section status-section-column">
+                        <h3>Pending Applications (@Model.Applicants.Count)</h3>
+                        @if (Model.Applicants.Any())
+                        {
+                            <div class="user-list">
+                                @foreach (var applicant in Model.Applicants)
+                                {
+                                    <div class="user-item">
+                                        <img src="@(applicant.User?.ProfilePictureUrl ?? Url.Content("~/images/default-profile.png"))" alt="@(applicant.User?.DisplayName ?? "Applicant")" class="user-avatar" />
+                                        <div class="user-info">
+                                            <div class="user-name">@(applicant.User?.DisplayName ?? "Unknown")</div>
+                                            <div class="user-meta">Applied: @applicant.AppliedAt.ToString("dd MMM yyyy")</div>
+                                        </div>
+                                        <div class="user-actions">
+                                            <form asp-action="ApproveApplicant" asp-route-boardId="@Model.Board.Id" asp-route-applicantId="@applicant.UserId" method="post" style="display: inline;">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="button button-success">Approve</button>
+                                            </form>
+                                            <form asp-action="DenyApplicant" asp-route-boardId="@Model.Board.Id" asp-route-applicantId="@applicant.UserId" method="post" style="display: inline;">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="button button-danger">Deny</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <p>No pending applications.</p>
+                        }
+                    </div>
+
+                    <div class="denied-section status-section-column">
+                        <h3>Denied Users (@Model.DeniedUsers.Count)</h3>
+                        @if (Model.DeniedUsers.Any())
+                        {
+                            <div class="user-list">
+                                @foreach (var denied in Model.DeniedUsers)
+                                {
+                                    <div class="user-item">
+                                        <img src="@(denied.User?.ProfilePictureUrl ?? Url.Content("~/images/default-profile.png"))" alt="@(denied.User?.DisplayName ?? "Denied User")" class="user-avatar" />
+                                        <div class="user-info">
+                                            <div class="user-name">@(denied.User?.DisplayName ?? "Unknown")</div>
+                                            <div class="user-meta">Denied: @denied.DeniedAt.ToString("dd MMM yyyy")</div>
+                                        </div>
+                                        <div class="user-actions">
+                                            <form asp-action="RemoveDenial" asp-route-boardId="@Model.Board.Id" asp-route-deniedUserId="@denied.UserId" method="post" style="display: inline;">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="button button-secondary">Remove from Deny List</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <p>No denied users.</p>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="back-link">
+            <a asp-action="Index">← Back to Dashboard</a>
+        </div>
+    </div>
+</div>

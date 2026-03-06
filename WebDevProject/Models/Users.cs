@@ -30,5 +30,9 @@ namespace WebDevProject.Models
         public ICollection<Board> AuthoredBoards { get; set; } = [];
 
         public ICollection<BoardParticipant> BoardParticipations { get; set; } = [];
+
+        public ICollection<BoardApplicant> BoardApplications { get; set; } = [];
+
+        public ICollection<BoardDenied> BoardDenials { get; set; } = [];
     }
 }

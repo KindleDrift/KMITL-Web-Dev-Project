@@ -30,6 +30,10 @@ namespace WebDevProject.Models
 
         public ICollection<BoardParticipant> Participants { get; set; } = [];
 
+        public ICollection<BoardApplicant> Applicants { get; set; } = [];
+
+        public ICollection<BoardDenied> DeniedUsers { get; set; } = [];
+
         [Required]
         [StringLength(200)]
         public string Location { get; set; } = string.Empty;
@@ -62,6 +66,32 @@ namespace WebDevProject.Models
         public Users? User { get; set; }
 
         public DateTime JoinedAt { get; set; } = DateTime.UtcNow;
+    }
+
+    public class BoardApplicant
+    {
+        public int BoardId { get; set; }
+
+        public Board? Board { get; set; }
+
+        public string UserId { get; set; } = string.Empty;
+
+        public Users? User { get; set; }
+
+        public DateTime AppliedAt { get; set; } = DateTime.UtcNow;
+    }
+
+    public class BoardDenied
+    {
+        public int BoardId { get; set; }
+
+        public Board? Board { get; set; }
+
+        public string UserId { get; set; } = string.Empty;
+
+        public Users? User { get; set; }
+
+        public DateTime DeniedAt { get; set; } = DateTime.UtcNow;
     }
 
     public enum BoardStatus

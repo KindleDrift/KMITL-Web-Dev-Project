@@ -563,6 +563,132 @@ namespace WebDevProject.Data
                     await context.SaveChangesAsync();
                 }
 
+                // Add sample applicants and denied users to demonstrate the new application system
+                logger.LogInformation("Seeding board applicants and denied users...");
+                
+                // Add applicants to "Saturday Football Match"
+                var footballBoard = await context.Boards.FirstOrDefaultAsync(b => b.Title == "Saturday Football Match");
+                if (footballBoard != null 
+                    && regularUsersByEmail.TryGetValue("charlie@example.com", out var charlieApplicant)
+                    && regularUsersByEmail.TryGetValue("david@example.com", out var davidApplicant)
+                    && regularUsersByEmail.TryGetValue("frank@example.com", out var frankApplicant))
+                {
+                    // Add pending applicants
+                    if (!await context.BoardApplicants.AnyAsync(ba => ba.BoardId == footballBoard.Id && ba.UserId == charlieApplicant.Id))
+                    {
+                        context.BoardApplicants.Add(new BoardApplicant 
+                        { 
+                            BoardId = footballBoard.Id, 
+                            UserId = charlieApplicant.Id, 
+                            AppliedAt = DateTime.UtcNow.AddHours(-6) 
+                        });
+                    }
+                    
+                    if (!await context.BoardApplicants.AnyAsync(ba => ba.BoardId == footballBoard.Id && ba.UserId == davidApplicant.Id))
+                    {
+                        context.BoardApplicants.Add(new BoardApplicant 
+                        { 
+                            BoardId = footballBoard.Id, 
+                            UserId = davidApplicant.Id, 
+                            AppliedAt = DateTime.UtcNow.AddHours(-3) 
+                        });
+                    }
+                    
+                    // Add denied user
+                    if (!await context.BoardDenied.AnyAsync(bd => bd.BoardId == footballBoard.Id && bd.UserId == frankApplicant.Id))
+                    {
+                        context.BoardDenied.Add(new BoardDenied 
+                        { 
+                            BoardId = footballBoard.Id, 
+                            UserId = frankApplicant.Id, 
+                            DeniedAt = DateTime.UtcNow.AddDays(-1) 
+                        });
+                    }
+                    
+                    await context.SaveChangesAsync();
+                }
+
+                // Add applicants to "Sunday Study Group"
+                var studyBoard = await context.Boards.FirstOrDefaultAsync(b => b.Title == "Sunday Study Group");
+                if (studyBoard != null 
+                    && regularUsersByEmail.TryGetValue("grace@example.com", out var graceApplicant)
+                    && regularUsersByEmail.TryGetValue("heidi@example.com", out var heidiApplicant))
+                {
+                    if (!await context.BoardApplicants.AnyAsync(ba => ba.BoardId == studyBoard.Id && ba.UserId == graceApplicant.Id))
+                    {
+                        context.BoardApplicants.Add(new BoardApplicant 
+                        { 
+                            BoardId = studyBoard.Id, 
+                            UserId = graceApplicant.Id, 
+                            AppliedAt = DateTime.UtcNow.AddHours(-8) 
+                        });
+                    }
+                    
+                    if (!await context.BoardApplicants.AnyAsync(ba => ba.BoardId == studyBoard.Id && ba.UserId == heidiApplicant.Id))
+                    {
+                        context.BoardApplicants.Add(new BoardApplicant 
+                        { 
+                            BoardId = studyBoard.Id, 
+                            UserId = heidiApplicant.Id, 
+                            AppliedAt = DateTime.UtcNow.AddHours(-2) 
+                        });
+                    }
+                    
+                    await context.SaveChangesAsync();
+                }
+
+                // Add applicants to "Thursday Food Tour"
+                var foodBoard = await context.Boards.FirstOrDefaultAsync(b => b.Title == "Thursday Food Tour");
+                if (foodBoard != null 
+                    && regularUsersByEmail.TryGetValue("ivan@example.com", out var ivanApplicant)
+                    && regularUsersByEmail.TryGetValue("judy@example.com", out var judyApplicant)
+                    && regularUsersByEmail.TryGetValue("karl@example.com", out var karlApplicant)
+                    && regularUsersByEmail.TryGetValue("leo@example.com", out var leoApplicant))
+                {
+                    if (!await context.BoardApplicants.AnyAsync(ba => ba.BoardId == foodBoard.Id && ba.UserId == ivanApplicant.Id))
+                    {
+                        context.BoardApplicants.Add(new BoardApplicant 
+                        { 
+                            BoardId = foodBoard.Id, 
+                            UserId = ivanApplicant.Id, 
+                            AppliedAt = DateTime.UtcNow.AddHours(-4) 
+                        });
+                    }
+                    
+                    if (!await context.BoardApplicants.AnyAsync(ba => ba.BoardId == foodBoard.Id && ba.UserId == judyApplicant.Id))
+                    {
+                        context.BoardApplicants.Add(new BoardApplicant 
+                        { 
+                            BoardId = foodBoard.Id, 
+                            UserId = judyApplicant.Id, 
+                            AppliedAt = DateTime.UtcNow.AddHours(-1) 
+                        });
+                    }
+                    
+                    // Add denied users
+                    if (!await context.BoardDenied.AnyAsync(bd => bd.BoardId == foodBoard.Id && bd.UserId == karlApplicant.Id))
+                    {
+                        context.BoardDenied.Add(new BoardDenied 
+                        { 
+                            BoardId = foodBoard.Id, 
+                            UserId = karlApplicant.Id, 
+                            DeniedAt = DateTime.UtcNow.AddDays(-2) 
+                        });
+                    }
+                    
+                    if (!await context.BoardDenied.AnyAsync(bd => bd.BoardId == foodBoard.Id && bd.UserId == leoApplicant.Id))
+                    {
+                        context.BoardDenied.Add(new BoardDenied 
+                        { 
+                            BoardId = foodBoard.Id, 
+                            UserId = leoApplicant.Id, 
+                            DeniedAt = DateTime.UtcNow.AddDays(-1) 
+                        });
+                    }
+                    
+                    await context.SaveChangesAsync();
+                }
+
                 logger.LogInformation("Board seeding completed successfully.");
             }
             catch (Exception ex)

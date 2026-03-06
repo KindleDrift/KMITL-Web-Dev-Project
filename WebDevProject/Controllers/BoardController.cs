@@ -24,6 +24,7 @@ namespace WebDevProject.Controllers
                 .Include(b => b.Author)
                 .Include(b => b.Participants)
                     .ThenInclude(bp => bp.User)
+                .Include(b => b.Applicants)
                 .Include(b => b.Tags);
 
             var activeBoards = string.IsNullOrWhiteSpace(userId)
@@ -265,6 +266,288 @@ namespace WebDevProject.Controllers
             }
 
             return tag;
+        }
+
+        public async Task<IActionResult> Details(int id)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            var board = await _context.Boards
+                .Include(b => b.Author)
+                .Include(b => b.Tags)
+                .Include(b => b.Participants)
+                    .ThenInclude(p => p.User)
+                .Include(b => b.Applicants)
+                    .ThenInclude(a => a.User)
+                .Include(b => b.DeniedUsers)
+                    .ThenInclude(d => d.User)
+                .FirstOrDefaultAsync(b => b.Id == id);
+
+            if (board == null)
+            {
+                return NotFound();
+            }
+
+            var isAuthor = !string.IsNullOrWhiteSpace(userId) && board.AuthorId == userId;
+            var applicationStatus = ApplicationStatus.NotApplied;
+
+            if (!string.IsNullOrWhiteSpace(userId))
+            {
+                if (board.Participants.Any(p => p.UserId == userId))
+                {
+                    applicationStatus = ApplicationStatus.Approved;
+                }
+                else if (board.Applicants.Any(a => a.UserId == userId))
+                {
+                    applicationStatus = ApplicationStatus.Pending;
+                }
+                else if (board.DeniedUsers.Any(d => d.UserId == userId))
+                {
+                    applicationStatus = ApplicationStatus.Denied;
+                }
+            }
+
+            var model = new BoardDetailsViewModel
+            {
+                Board = board,
+                IsAuthor = isAuthor,
+                UserApplicationStatus = applicationStatus,
+                Participants = board.Participants.OrderBy(p => p.JoinedAt).ToList(),
+                Applicants = board.Applicants.OrderBy(a => a.AppliedAt).ToList(),
+                DeniedUsers = board.DeniedUsers.OrderBy(d => d.DeniedAt).ToList()
+            };
+
+            return View(model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Apply(int id)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                return Unauthorized();
+            }
+
+            var board = await _context.Boards
+                .Include(b => b.Participants)
+                .Include(b => b.Applicants)
+                .Include(b => b.DeniedUsers)
+                .FirstOrDefaultAsync(b => b.Id == id);
+
+            if (board == null)
+            {
+                return NotFound();
+            }
+
+            // Check if user is the author
+            if (board.AuthorId == userId)
+            {
+                TempData["Error"] = "You cannot apply to your own board.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
+            // Check if user is already a participant
+            if (board.Participants.Any(p => p.UserId == userId))
+            {
+                TempData["Error"] = "You are already a participant.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
+            // Check if user is already an applicant
+            if (board.Applicants.Any(a => a.UserId == userId))
+            {
+                TempData["Error"] = "You have already applied.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
+            // Check if user is denied
+            if (board.DeniedUsers.Any(d => d.UserId == userId))
+            {
+                TempData["Error"] = "You have been denied access to this board.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
+            // Check if board is open
+            if (board.CurrentStatus != BoardStatus.Open)
+            {
+                TempData["Error"] = "This board is not accepting applications.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
+            // Add application
+            var applicant = new BoardApplicant
+            {
+                BoardId = id,
+                UserId = userId,
+                AppliedAt = DateTime.UtcNow
+            };
+
+            _context.BoardApplicants.Add(applicant);
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = "Your application has been submitted successfully.";
+            return RedirectToAction(nameof(Details), new { id });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ApproveApplicant(int boardId, string applicantId)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                return Unauthorized();
+            }
+
+            var board = await _context.Boards
+                .Include(b => b.Participants)
+                .Include(b => b.Applicants)
+                .FirstOrDefaultAsync(b => b.Id == boardId);
+
+            if (board == null)
+            {
+                return NotFound();
+            }
+
+            // Check if user is the author
+            if (board.AuthorId != userId)
+            {
+                return Forbid();
+            }
+
+            // Find the applicant
+            var applicant = board.Applicants.FirstOrDefault(a => a.UserId == applicantId);
+            if (applicant == null)
+            {
+                TempData["Error"] = "Applicant not found.";
+                return RedirectToAction(nameof(Details), new { id = boardId });
+            }
+
+            // Check if board is full
+            if (board.Participants.Count >= board.MaxParticipants)
+            {
+                TempData["Error"] = "Board is full. Cannot approve more participants.";
+                return RedirectToAction(nameof(Details), new { id = boardId });
+            }
+
+            // Remove from applicants and add to participants
+            _context.BoardApplicants.Remove(applicant);
+            
+            var participant = new BoardParticipant
+            {
+                BoardId = boardId,
+                UserId = applicantId,
+                JoinedAt = DateTime.UtcNow
+            };
+
+            _context.BoardParticipants.Add(participant);
+
+            // Update board status if now full
+            if (board.Participants.Count + 1 >= board.MaxParticipants)
+            {
+                if (board.CloseOnFull)
+                {
+                    board.CurrentStatus = BoardStatus.Full;
+                }
+            }
+
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = "Applicant approved successfully.";
+            return RedirectToAction(nameof(Details), new { id = boardId });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DenyApplicant(int boardId, string applicantId)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                return Unauthorized();
+            }
+
+            var board = await _context.Boards
+                .Include(b => b.Applicants)
+                .Include(b => b.DeniedUsers)
+                .FirstOrDefaultAsync(b => b.Id == boardId);
+
+            if (board == null)
+            {
+                return NotFound();
+            }
+
+            // Check if user is the author
+            if (board.AuthorId != userId)
+            {
+                return Forbid();
+            }
+
+            // Find the applicant
+            var applicant = board.Applicants.FirstOrDefault(a => a.UserId == applicantId);
+            if (applicant == null)
+            {
+                TempData["Error"] = "Applicant not found.";
+                return RedirectToAction(nameof(Details), new { id = boardId });
+            }
+
+            // Remove from applicants and add to denied list
+            _context.BoardApplicants.Remove(applicant);
+            
+            var denied = new BoardDenied
+            {
+                BoardId = boardId,
+                UserId = applicantId,
+                DeniedAt = DateTime.UtcNow
+            };
+
+            _context.BoardDenied.Add(denied);
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = "Applicant denied.";
+            return RedirectToAction(nameof(Details), new { id = boardId });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RemoveDenial(int boardId, string deniedUserId)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                return Unauthorized();
+            }
+
+            var board = await _context.Boards
+                .Include(b => b.DeniedUsers)
+                .FirstOrDefaultAsync(b => b.Id == boardId);
+
+            if (board == null)
+            {
+                return NotFound();
+            }
+
+            // Check if user is the author
+            if (board.AuthorId != userId)
+            {
+                return Forbid();
+            }
+
+            // Find the denied user
+            var deniedUser = board.DeniedUsers.FirstOrDefault(d => d.UserId == deniedUserId);
+            if (deniedUser == null)
+            {
+                TempData["Error"] = "Denied user not found.";
+                return RedirectToAction(nameof(Details), new { id = boardId });
+            }
+
+            _context.BoardDenied.Remove(deniedUser);
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = "User removed from deny list.";
+            return RedirectToAction(nameof(Details), new { id = boardId });
         }
     }
 }

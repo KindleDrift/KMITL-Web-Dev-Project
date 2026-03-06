@@ -11,7 +11,7 @@
 <div class="main-container">
     <h1 class="header-1">Manage Boards</h1>
     
-    <div style="overflow-x: auto;">
+    <div class="table-container">
         <table class="admin-table">
             <thead>
                 <tr>
@@ -42,19 +42,19 @@
                             @switch (board.CurrentStatus)
                             {
                                 case BoardStatus.Open:
-                                    <span style="color: green; font-weight: bold;">Open</span>
+                                    <span class="status-open">Open</span>
                                     break;
                                 case BoardStatus.Full:
-                                    <span style="color: orange; font-weight: bold;">Full</span>
+                                    <span class="status-full">Full</span>
                                     break;
                                 case BoardStatus.Closed:
-                                    <span style="color: red; font-weight: bold;">Closed</span>
+                                    <span class="status-closed">Closed</span>
                                     break;
                                 case BoardStatus.Cancelled:
-                                    <span style="color: darkred; font-weight: bold;">Cancelled</span>
+                                    <span class="status-cancelled">Cancelled</span>
                                     break;
                                 case BoardStatus.Archived:
-                                    <span style="color: gray; font-weight: bold;">Archived</span>
+                                    <span class="status-archived">Archived</span>
                                     break;
                             }
                         </td>
@@ -68,7 +68,7 @@
         </table>
     </div>
     
-    <div style="margin-top: 20px;">
+    <div class="action-buttons">
         <a asp-controller="Admin" asp-action="Index" class="btn btn-secondary">Back to Dashboard</a>
     </div>
 </div>
