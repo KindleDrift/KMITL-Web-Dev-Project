@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace WebDevProject.Models
 {
@@ -13,8 +14,7 @@ namespace WebDevProject.Models
         [StringLength(2048)]
         public string? ImageUrl { get; set; }
 
-        [StringLength(60)]
-        public string? Category { get; set; }
+        public ICollection<Tag> Tags { get; set; } = [];
 
         [Required]
         [StringLength(2000)]
@@ -70,5 +70,14 @@ namespace WebDevProject.Models
         Full,
         Closed,
         Archived
+    }
+
+    public class Tag
+    {
+        public int Id { get; set; }
+        [Required]
+        [StringLength(50)]
+        public string Name { get; set; } = string.Empty;
+        public ICollection<Board> Boards { get; set; } = [];
     }
 }

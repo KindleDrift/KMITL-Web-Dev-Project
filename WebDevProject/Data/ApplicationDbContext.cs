@@ -15,6 +15,8 @@ namespace WebDevProject.Data
 
         public DbSet<BoardParticipant> BoardParticipants => Set<BoardParticipant>();
 
+        public DbSet<Tag> Tags => Set<Tag>();
+
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
@@ -39,6 +41,14 @@ namespace WebDevProject.Data
                 .WithMany(u => u.BoardParticipations)
                 .HasForeignKey(bp => bp.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<Board>()
+                .HasMany(b => b.Tags)
+                .WithMany(t => t.Boards);
+
+            builder.Entity<Tag>()
+                .HasIndex(t => t.Name)
+                .IsUnique();
         }
     }
 }

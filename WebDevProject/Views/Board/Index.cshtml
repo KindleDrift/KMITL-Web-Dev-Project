@@ -74,7 +74,19 @@
 
                                 <div class="board-meta">
                                     <div><strong>Status:</strong> @board.CurrentStatus</div>
-                                    <div><strong>Category:</strong> @(string.IsNullOrWhiteSpace(board.Category) ? "General" : board.Category)</div>
+                                    <div><strong>Tags:</strong>
+                                        @if (board.Tags == null || !board.Tags.Any())
+                                        {
+                                            <span>None</span>
+                                        }
+                                        else
+                                        {
+                                            @foreach (var tag in board.Tags)
+                                            {
+                                                <span class="tag">@tag.Name</span>
+                                            }
+                                        }
+                                    </div>
                                     <div><strong>Join deadline:</strong> @board.Deadline.ToString("dd MMM yyyy, HH:mm")</div>
                                 </div>
 
@@ -146,7 +158,19 @@
 
                                 <div class="board-meta">
                                     <div><strong>Status:</strong> @board.CurrentStatus</div>
-                                    <div><strong>Category:</strong> @(string.IsNullOrWhiteSpace(board.Category) ? "General" : board.Category)</div>
+                                    <div><strong>Tag:</strong>
+                                        @if (board.Tags == null || !board.Tags.Any())
+                                        {
+                                            <span>None</span>
+                                        }
+                                        else
+                                        {
+                                            @foreach (var tag in board.Tags)
+                                            {
+                                                <span class="tag">@tag.Name</span>
+                                            }
+                                        }
+                                    </div>
                                     <div><strong>Join deadline:</strong> @board.Deadline.ToString("dd MMM yyyy, HH:mm")</div>
                                 </div>
 

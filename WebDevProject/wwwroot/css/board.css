@@ -120,6 +120,15 @@
     font-size: 0.95rem;
 }
 
+.tag {
+    background-color: #e0e0e0;
+    border-radius: 999px;
+    padding: 4px 10px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: inline-block;
+}
+
 .participant-row {
     display: flex;
     align-items: center;

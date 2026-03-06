@@ -1,27 +1,79 @@
-// Navbar toggle (the hamburger menu for mobile)
-document.addEventListener('DOMContentLoaded', function() {
-    const toggleButton = document.getElementById('mobile-menu');
-    const navbarMenu = document.querySelector('.navbar-menu');
+document.addEventListener('DOMContentLoaded', function () {
+    const tags = [];
 
-    if (!toggleButton || !navbarMenu) {
-        return;
+    function createTagElement(tagText) {
+        const tag = document.createElement('span');
+        tag.className = 'tag';
+        tag.innerHTML = `${tagText} <button type="button" class="btn-remove" style="font-size: 0.75rem;"></button>`;
+        
+        const removeBtn = tag.querySelector('button');
+        removeBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            tags.splice(tags.indexOf(tagText), 1);
+            tag.remove();
+            updateTagsInput();
+        });
+        
+        return tag;
     }
 
-    const openIcon = toggleButton.getAttribute('data-open-icon') || 'menu_open';
-    const closedIcon = toggleButton.getAttribute('data-closed-icon') || 'menu';
+    function updateTagsInput() {
+        // Create individual hidden inputs for each tag
+        const existingInputs = document.querySelectorAll('input[name="Tags"]');
+        existingInputs.forEach(input => input.remove());
+        
+        const boardForm = document.getElementById('boardForm');
+        tags.forEach(tag => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'Tags';
+            input.value = tag;
+            boardForm.appendChild(input);
+        });
+    }
 
-    const toggleMenu = function() {
-        const isOpen = navbarMenu.classList.toggle('show');
-        toggleButton.setAttribute('aria-expanded', String(isOpen));
-        toggleButton.textContent = isOpen ? openIcon : closedIcon;
-    };
+    const tagInput = document.getElementById('tagInput');
+    const addTagButton = document.getElementById('addTagButton');
+    const tagContainer = document.getElementById('tagContainer');
 
-    toggleButton.addEventListener('click', toggleMenu);
+    if (tagInput && addTagButton) {
+        // Add tag on button click
+        addTagButton.addEventListener('click', function (e) {
+            e.preventDefault();
+            const tagText = tagInput.value.trim();
+            if (tagText && !tags.includes(tagText)) {
+                tags.push(tagText);
+                tagContainer.appendChild(createTagElement(tagText));
+                tagInput.value = '';
+                updateTagsInput();
+            }
+        });
 
-    toggleButton.addEventListener('keydown', function(event) {
-        if (event.key === 'Enter' || event.key === ' ') {
-            event.preventDefault();
-            toggleMenu();
-        }
-    });
+        // Add tag on Enter key
+        tagInput.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const tagText = this.value.trim();
+                if (tagText && !tags.includes(tagText)) {
+                    tags.push(tagText);
+                    tagContainer.appendChild(createTagElement(tagText));
+                    this.value = '';
+                    updateTagsInput();
+                }
+            }
+        });
+    }
+
+    // Form submission validation
+    const boardForm = document.getElementById('boardForm');
+    if (boardForm) {
+        boardForm.addEventListener('submit', function (e) {
+            // Ensure group management option is selected
+            const groupOption = document.querySelector('input[name="GroupManagementOption"]:checked');
+            if (!groupOption) {
+                e.preventDefault();
+                alert('Please select a group management option');
+            }
+        });
+    }
 });
