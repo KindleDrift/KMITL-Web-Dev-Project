@@ -11,26 +11,27 @@ namespace WebDevProject.Controllers
     {
         private readonly UserManager<Users> _userManager = userManager;
 
-        [HttpGet]
+        [HttpGet("/Profile")]
         public async Task<IActionResult> Index()
         {
-            var user = await _userManager.GetUserAsync(User);
-            if (user == null)
+            var signedInUser = await _userManager.GetUserAsync(User);
+            if (signedInUser == null)
             {
                 return RedirectToAction("SignIn", "Account");
             }
 
-            // Redirect to View action with own user ID
-            return RedirectToAction("View", new { userId = user.Id });
+            return RedirectToAction(nameof(Details), new { displayName = signedInUser.DisplayName });
         }
 
-        [HttpGet]
-        public async Task<IActionResult> View(string userId)
+        [HttpGet("/Profile/u/{displayName}")]
+        public async Task<IActionResult> Details(string displayName)
         {
+            var normalizedDisplayName = displayName.Trim().ToUpperInvariant();
+
             var userToView = await _userManager.Users
                 .Include(u => u.AuthoredBoards)
                 .Include(u => u.BoardParticipations)
-                .FirstOrDefaultAsync(u => u.Id == userId);
+                .FirstOrDefaultAsync(u => u.NormalizedDisplayName == normalizedDisplayName);
 
             if (userToView == null)
             {
@@ -38,7 +39,7 @@ namespace WebDevProject.Controllers
             }
 
             var currentUser = await _userManager.GetUserAsync(User);
-            bool isOwnProfile = (currentUser != null && currentUser.Id == userId);
+            bool isOwnProfile = currentUser != null && currentUser.Id == userToView.Id;
 
             var model = new UserProfileViewModel
             {
@@ -50,14 +51,12 @@ namespace WebDevProject.Controllers
                 IsOwnProfile = isOwnProfile,
                 BoardsCreatedCount = userToView.AuthoredBoards?.Count ?? 0,
                 BoardParticipationsCount = userToView.BoardParticipations?.Count ?? 0,
-                UserGender = userToView.UserGender
-
-                // Only include sensitive data if viewing own profile
+                UserGender = userToView.UserGender,
                 Email = isOwnProfile ? userToView.Email : null,
                 DateOfBirth = isOwnProfile ? userToView.DateOfBirth : null,
             };
 
-            return View(model);
+            return View("Index", model);
         }
 
         [HttpGet]

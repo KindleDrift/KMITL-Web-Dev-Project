@@ -1,7 +1,7 @@
-@model WebDevProject.Models.Users
+@model WebDevProject.Models.UserProfileViewModel
 
 @{
-    ViewData["Title"] = "Profile";
+    ViewData["Title"] = Model.DisplayName + "'s Profile";
 }
 
 @section Styles {
@@ -11,7 +11,10 @@
 <div class="profile">
     <img class="profile-picture" id="picture" src="@(Model.ProfilePictureUrl ?? "/images/default-profile.png")" alt="Profile Picture">
     <div class="profile-data">
-        <a class="profile-link" href="@Url.Action("Edit", "Profile")">Edit Profile</a>
+        @if (Model.IsOwnProfile)
+        {
+            <a class="profile-link" href="@Url.Action("Edit", "Profile")">Edit Profile</a>
+        }
 
         <div class="data-menu">
             <div class="row">
@@ -19,22 +22,25 @@
                 <span>@Model.DisplayName</span>
             </div>
 
-            <div class="row">
-                <span class="label">Email :</span>
-                <span>@Model.Email</span>
-            </div>
+            @if (Model.IsOwnProfile)
+            {
+                <div class="row">
+                    <span class="label">Email :</span>
+                    <span>@Model.Email</span>
+                </div>
 
-            <div class="row">
-                <span class="label">Birth Date :</span>
-                @if (Model.DateOfBirth.HasValue)
-                {
-                    <span>@Model.DateOfBirth.Value.ToString("MMMM dd, yyyy")</span>
-                }
-                else
-                {
-                    <span class="text-muted">Not provided</span>
-                }
-            </div>
+                <div class="row">
+                    <span class="label">Birth Date :</span>
+                    @if (Model.DateOfBirth.HasValue)
+                    {
+                        <span>@Model.DateOfBirth.Value.ToString("MMMM dd, yyyy")</span>
+                    }
+                    else
+                    {
+                        <span class="text-muted">Not provided</span>
+                    }
+                </div>
+            }
 
             <div class="row">
                 <span class="label">Gender :</span>
@@ -64,12 +70,25 @@
                 <span class="label">Member Since :</span>
                 <span>@Model.CreatedAt.ToString("MMMM dd, yyyy")</span>
             </div>
+
+            <div class="row">
+                <span class="label">Boards Created :</span>
+                <span>@Model.BoardsCreatedCount</span>
+            </div>
+
+            <div class="row">
+                <span class="label">Board Participations :</span>
+                <span>@Model.BoardParticipationsCount</span>
+            </div>
         </div>
 
-        <a class="profile-link" href="@Url.Action("ChangePassword", "Account")">Reset Password</a>
+        @if (Model.IsOwnProfile)
+        {
+            <a class="profile-link" href="@Url.Action("ChangePassword", "Account")">Reset Password</a>
 
-        <form asp-action="SignOut" asp-controller="Account" method="post" style="display: inline;">
-            <button type="submit" class="profile-link" style="border: none; background: none; padding: 0;">Sign Out</button>
-        </form>
+            <form asp-action="SignOut" asp-controller="Account" method="post" style="display: inline;">
+                <button type="submit" class="profile-link" style="border: none; background: none; padding: 0;">Sign Out</button>
+            </form>
+        }
     </div>
 </div>

@@ -6,7 +6,7 @@ namespace WebDevProject.Models
         public required string DisplayName { get; set; }
         public string? Bio { get; set; }
         public string? ProfilePictureUrl { get; set; }
-        public DateTime CreatedAt { get; set;
+        public DateTime CreatedAt { get; set; }
         public Users.Gender? UserGender { get; set; }
 
         public int BoardsCreatedCount { get; set; }
