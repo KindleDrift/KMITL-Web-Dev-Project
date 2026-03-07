@@ -11,16 +11,52 @@ namespace WebDevProject.Controllers
     {
         private readonly UserManager<Users> _userManager = userManager;
 
-        [HttpGet]
+        [HttpGet("/Profile")]
         public async Task<IActionResult> Index()
         {
-            var user = await _userManager.GetUserAsync(User);
-            if (user == null)
+            var signedInUser = await _userManager.GetUserAsync(User);
+            if (signedInUser == null)
             {
                 return RedirectToAction("SignIn", "Account");
             }
 
-            return View(user);
+            return RedirectToAction(nameof(Details), new { displayName = signedInUser.DisplayName });
+        }
+
+        [HttpGet("/Profile/u/{displayName}")]
+        public async Task<IActionResult> Details(string displayName)
+        {
+            var normalizedDisplayName = displayName.Trim().ToUpperInvariant();
+
+            var userToView = await _userManager.Users
+                .Include(u => u.AuthoredBoards)
+                .Include(u => u.BoardParticipations)
+                .FirstOrDefaultAsync(u => u.NormalizedDisplayName == normalizedDisplayName);
+
+            if (userToView == null)
+            {
+                return NotFound();
+            }
+
+            var currentUser = await _userManager.GetUserAsync(User);
+            bool isOwnProfile = currentUser != null && currentUser.Id == userToView.Id;
+
+            var model = new UserProfileViewModel
+            {
+                UserId = userToView.Id,
+                DisplayName = userToView.DisplayName,
+                Bio = userToView.Bio,
+                ProfilePictureUrl = userToView.ProfilePictureUrl,
+                CreatedAt = userToView.CreatedAt,
+                IsOwnProfile = isOwnProfile,
+                BoardsCreatedCount = userToView.AuthoredBoards?.Count ?? 0,
+                BoardParticipationsCount = userToView.BoardParticipations?.Count ?? 0,
+                UserGender = userToView.UserGender,
+                Email = isOwnProfile ? userToView.Email : null,
+                DateOfBirth = isOwnProfile ? userToView.DateOfBirth : null,
+            };
+
+            return View("Index", model);
         }
 
         [HttpGet]
