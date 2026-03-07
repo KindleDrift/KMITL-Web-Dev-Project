@@ -42,18 +42,31 @@ namespace WebDevProject.Controllers
                     .OrderBy(b => b.EventDate)
                     .ToListAsync();
 
+            
+
             var model = new BoardIndexViewModel
             {
                 ActiveBoards = activeBoards,
                 ParticipatingBoards = participatingBoards
             };
+            
 
             return View(model);
         }
-
+        
         public IActionResult Search()
         {
-            return View();
+            var boardQuery = _context.Boards
+                .AsNoTracking()
+                .Include(b => b.Author)
+                .Include(b => b.Participants);
+                
+            var existingBoards = boardQuery
+                .Where(b => b.CurrentStatus != BoardStatus.Archived)
+                .OrderByDescending(b => b.CreatedAt)
+                .ToList();
+
+            return View(existingBoards);
         }
 
         public IActionResult Create()
@@ -85,6 +98,11 @@ namespace WebDevProject.Controllers
             await _context.SaveChangesAsync();
 
             return RedirectToAction(nameof(Index));
+        }
+        
+        public IActionResult BoardInfo()
+        {
+            return View();
         }
     }
 }
