@@ -21,7 +21,7 @@
             {
                 @foreach (var board in activeBoards)
                 {
-                    var participantCount = board.Participants.Count;
+                    var participantCount = board.Participants.Count + board.ExternalParticipants.Count;
                     var spotsLeft = Math.Max(board.MaxParticipants - participantCount, 0);
                     var previewParticipants = board.Participants.Take(5).ToList();
                     var statusClass = board.CurrentStatus switch
@@ -110,7 +110,7 @@
             {
                 @foreach (var board in participatingBoards)
                 {
-                    var participantCount = board.Participants.Count;
+                    var participantCount = board.Participants.Count + board.ExternalParticipants.Count;
                     var spotsLeft = Math.Max(board.MaxParticipants - participantCount, 0);
                     var previewParticipants = board.Participants.Take(5).ToList();
                     var statusClass = board.CurrentStatus switch

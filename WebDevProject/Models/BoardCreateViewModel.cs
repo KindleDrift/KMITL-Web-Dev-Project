@@ -35,6 +35,9 @@ namespace WebDevProject.Models
         [Required]
         public string GroupManagementOption { get; set; } = string.Empty;
 
+        [Required]
+        public string JoinPolicyOption { get; set; } = string.Empty;
+
         public List<string> Tags { get; set; } = [];
     }
 }

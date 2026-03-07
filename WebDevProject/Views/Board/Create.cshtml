@@ -68,6 +68,21 @@
         </div>
 
         <div class="form-group">
+            <label>Join System *</label>
+            <div class="radio-group">
+                <div class="radio-option">
+                    <input type="radio" id="joinPolicyApplication" name="JoinPolicyOption" value="application" required>
+                    <label for="joinPolicyApplication">Application System (owner approves applicants)</label>
+                </div>
+                <div class="radio-option">
+                    <input type="radio" id="joinPolicyFcfs" name="JoinPolicyOption" value="fcfs">
+                    <label for="joinPolicyFcfs">First-Come-First-Serve (instant join while slots are available)</label>
+                </div>
+            </div>
+            <span asp-validation-for="JoinPolicyOption" class="error-message"></span>
+        </div>
+
+        <div class="form-group">
             <label>Group Management *</label>
             <div class="radio-group">
                 <div class="radio-option">

@@ -32,6 +32,8 @@ namespace WebDevProject.Models
 
         public ICollection<BoardParticipant> Participants { get; set; } = [];
 
+        public ICollection<BoardExternalParticipant> ExternalParticipants { get; set; } = [];
+
         public ICollection<BoardApplicant> Applicants { get; set; } = [];
 
         public ICollection<BoardDenied> DeniedUsers { get; set; } = [];
@@ -52,6 +54,8 @@ namespace WebDevProject.Models
         public BoardStatus CurrentStatus { get; set; } = BoardStatus.Open;
 
         public GroupManagement GroupManagementOption { get; set; } = GroupManagement.CloseOnFull;
+
+        public BoardJoinPolicy JoinPolicy { get; set; } = BoardJoinPolicy.Application;
     }
 
     public class BoardParticipant
@@ -65,6 +69,24 @@ namespace WebDevProject.Models
         public Users? User { get; set; }
 
         public DateTime JoinedAt { get; set; } = DateTime.UtcNow;
+    }
+
+    public class BoardExternalParticipant
+    {
+        public int Id { get; set; }
+
+        public int BoardId { get; set; }
+
+        public Board? Board { get; set; }
+
+        [Required]
+        [StringLength(120)]
+        public string Name { get; set; } = string.Empty;
+
+        [StringLength(200)]
+        public string? Note { get; set; }
+
+        public DateTime AddedAt { get; set; } = DateTime.UtcNow;
     }
 
     public class BoardApplicant
@@ -107,6 +129,12 @@ namespace WebDevProject.Models
         CloseOnFull,
         IncreaseMaxParticipantsOnFull,
         ManualIncreaseMaxParticipants
+    }
+
+    public enum BoardJoinPolicy
+    {
+        Application,
+        FirstComeFirstServe
     }
 
     public class Tag
