@@ -135,8 +135,17 @@
                                     <img src="@(participant.User?.ProfilePictureUrl ?? Url.Content("~/images/default-profile.png"))" alt="@(participant.User?.DisplayName ?? "Participant")" class="user-avatar" />
                                     <div class="user-info">
                                         <div class="user-name">@(participant.User?.DisplayName ?? "Unknown")</div>
-                                        <div class="user-meta">Joined: @participant.JoinedAt.ToString("dd MMM yyyy")</div>
+                                        <div class="user-meta">Joined: @participant.JoinedAt.ToString("dd MMM yyyy, HH:mm")</div>
                                     </div>
+                                    @if (Model.IsAuthor)
+                                    {
+                                        <div class="user-actions">
+                                            <form asp-action="DenyParticipant" asp-route-boardId="@Model.Board.Id" asp-route-participantId="@participant.UserId" method="post" style="display: inline;">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="button button-danger">Deny</button>
+                                            </form>
+                                        </div>
+                                    }
                                 </div>
                             }
                         </div>
@@ -201,11 +210,11 @@
                                 <div class="user-list">
                                     @foreach (var applicant in Model.Applicants)
                                     {
-                                        <div class="user-item">
+                                        <div class="user-item applicant-item">
                                             <img src="@(applicant.User?.ProfilePictureUrl ?? Url.Content("~/images/default-profile.png"))" alt="@(applicant.User?.DisplayName ?? "Applicant")" class="user-avatar" />
                                             <div class="user-info">
                                                 <div class="user-name">@(applicant.User?.DisplayName ?? "Unknown")</div>
-                                                <div class="user-meta">Applied: @applicant.AppliedAt.ToString("dd MMM yyyy")</div>
+                                                <div class="user-meta">Applied: @applicant.AppliedAt.ToString("dd MMM yyyy, HH:mm")</div>
                                             </div>
                                             <div class="user-actions">
                                                 <form asp-action="ApproveApplicant" asp-route-boardId="@Model.Board.Id" asp-route-applicantId="@applicant.UserId" method="post" style="display: inline;">
@@ -239,7 +248,7 @@
                                         <img src="@(denied.User?.ProfilePictureUrl ?? Url.Content("~/images/default-profile.png"))" alt="@(denied.User?.DisplayName ?? "Denied User")" class="user-avatar" />
                                         <div class="user-info">
                                             <div class="user-name">@(denied.User?.DisplayName ?? "Unknown")</div>
-                                            <div class="user-meta">Denied: @denied.DeniedAt.ToString("dd MMM yyyy")</div>
+                                            <div class="user-meta">Denied: @denied.DeniedAt.ToString("dd MMM yyyy, HH:mm")</div>
                                         </div>
                                         <div class="user-actions">
                                             <form asp-action="RemoveDenial" asp-route-boardId="@Model.Board.Id" asp-route-deniedUserId="@denied.UserId" method="post" style="display: inline;">

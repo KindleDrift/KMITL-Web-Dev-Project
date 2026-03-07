@@ -581,6 +581,63 @@ namespace WebDevProject.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DenyParticipant(int boardId, string participantId)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                return Unauthorized();
+            }
+
+            var board = await _context.Boards
+                .Include(b => b.Participants)
+                .Include(b => b.ExternalParticipants)
+                .Include(b => b.DeniedUsers)
+                .FirstOrDefaultAsync(b => b.Id == boardId);
+
+            if (board == null)
+            {
+                return NotFound();
+            }
+
+            if (board.AuthorId != userId)
+            {
+                return Forbid();
+            }
+
+            var participant = board.Participants.FirstOrDefault(p => p.UserId == participantId);
+            if (participant == null)
+            {
+                TempData["Error"] = "Participant not found.";
+                return RedirectToAction(nameof(Details), new { id = boardId });
+            }
+
+            _context.BoardParticipants.Remove(participant);
+
+            if (!board.DeniedUsers.Any(d => d.UserId == participantId))
+            {
+                _context.BoardDenied.Add(new BoardDenied
+                {
+                    BoardId = boardId,
+                    UserId = participantId,
+                    DeniedAt = DateTime.UtcNow
+                });
+            }
+
+            var occupiedAfterRemoval = Math.Max(GetOccupiedSeatCount(board) - 1, 0);
+            if (board.CurrentStatus == BoardStatus.Full && board.GroupManagementOption == GroupManagement.CloseOnFull && occupiedAfterRemoval < board.MaxParticipants)
+            {
+                board.CurrentStatus = BoardStatus.Open;
+            }
+
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = "Participant removed and denied.";
+            return RedirectToAction(nameof(Details), new { id = boardId });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> AddExternalParticipant(int boardId, string externalName, string? externalNote)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
