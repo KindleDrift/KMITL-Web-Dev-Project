@@ -26,7 +26,9 @@ namespace WebDevProject.Controllers
                 .AsNoTracking()
                 .Include(b => b.Author)
                 .Include(b => b.Participants)
-                    .ThenInclude(bp => bp.User);
+                    .ThenInclude(bp => bp.User)
+                .Include(b => b.Applicants)
+                .Include(b => b.Tags);
 
             var activeBoards = string.IsNullOrWhiteSpace(userId)
                 ? await boardQuery
@@ -39,7 +41,7 @@ namespace WebDevProject.Controllers
                     .ToListAsync();
 
             var participatingBoards = string.IsNullOrWhiteSpace(userId)
-                ? []
+                ? new List<Board>()
                 : await boardQuery
                     .Where(b => b.AuthorId != userId && b.Participants.Any(p => p.UserId == userId))
                     .OrderBy(b => b.EventDate)
@@ -79,6 +81,7 @@ namespace WebDevProject.Controllers
             return View(existingBoards);
         }
 
+        [HttpGet]
         public IActionResult Create()
         {
             return View();
@@ -86,40 +89,491 @@ namespace WebDevProject.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Board board)
+        public async Task<IActionResult> Create(BoardCreateViewModel model)
         {
             if (!ModelState.IsValid)
             {
-                return View(board);
+                return View(model);
             }
 
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-            if (userId == null)
+            if (string.IsNullOrWhiteSpace(userId))
             {
-                return Unauthorized();
+                ModelState.AddModelError(string.Empty, "You must be logged in to create a board.");
+                return View(model);
             }
 
-            board.AuthorId = userId;
-            board.CreatedAt = DateTime.UtcNow;
-            board.CurrentStatus = BoardStatus.Open;
+            // Validate dates
+            if (model.Deadline > model.EventDate)
+            {
+                ModelState.AddModelError(nameof(model.Deadline), "Deadline must be before the event date.");
+                return View(model);
+            }
+
+            if (model.Deadline < DateTime.UtcNow)
+            {
+                ModelState.AddModelError(nameof(model.Deadline), "Deadline must be in the future.");
+                return View(model);
+            }
+
+            // Handle image upload
+            string? imageUrl = null;
+            if (model.BoardImage != null && model.BoardImage.Length > 0)
+            {
+                var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
+                var fileExtension = Path.GetExtension(model.BoardImage.FileName).ToLowerInvariant();
+                
+                if (!allowedExtensions.Contains(fileExtension))
+                {
+                    ModelState.AddModelError(nameof(model.BoardImage), "Only image files are allowed (.jpg, .jpeg, .png, .gif, .webp).");
+                    return View(model);
+                }
+
+                if (model.BoardImage.Length > 5 * 1024 * 1024) // 5MB limit
+                {
+                    ModelState.AddModelError(nameof(model.BoardImage), "Image file size must not exceed 5MB.");
+                    return View(model);
+                }
+
+                var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "boards");
+                if (!Directory.Exists(uploadsFolder))
+                {
+                    Directory.CreateDirectory(uploadsFolder);
+                }
+
+                var uniqueFileName = $"{userId}_{Guid.NewGuid()}{fileExtension}";
+                var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                using (var fileStream = new FileStream(filePath, FileMode.Create))
+                {
+                    await model.BoardImage.CopyToAsync(fileStream);
+                }
+
+                imageUrl = $"/uploads/boards/{uniqueFileName}";
+            }
+
+            // Create the board
+            var board = new Board
+            {
+                Title = model.Title,
+                Description = model.Description,
+                ImageUrl = imageUrl,
+                Location = model.Location,
+                EventDate = model.EventDate,
+                Deadline = model.Deadline,
+                MaxParticipants = model.MaxParticipants,
+                AuthorId = userId,
+                NotifyAuthorOnFull = model.NotifyAuthorOnFull,
+                CurrentStatus = BoardStatus.Open,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            // Set group management options
+            switch (model.GroupManagementOption)
+            {
+                case "closeOnFull":
+                    board.GroupManagementOption = GroupManagement.CloseOnFull;
+                    break;
+                case "increaseMax":
+                    board.GroupManagementOption = GroupManagement.IncreaseMaxParticipantsOnFull;
+                    break;
+                case "manualIncrease":
+                    board.GroupManagementOption = GroupManagement.ManualIncreaseMaxParticipants;
+                    break;
+                default:
+                    board.GroupManagementOption = GroupManagement.CloseOnFull;
+                    break;
+            }
+
+            // Handle tags
+            if (model.Tags != null && model.Tags.Any())
+            {
+                var validatedTags = new List<string>();
+                
+                foreach (var tag in model.Tags)
+                {
+                    var trimmedTag = tag?.Trim();
+                    if (string.IsNullOrWhiteSpace(trimmedTag))
+                        continue;
+
+                    // Validate and format tag
+                    if (!IsValidTag(trimmedTag))
+                    {
+                        ModelState.AddModelError(nameof(model.Tags), $"Invalid tag '{trimmedTag}'. Tags must contain only letters and single hyphens (not at start or end).");
+                        return View(model);
+                    }
+
+                    var formattedTag = FormatTag(trimmedTag);
+                    if (!validatedTags.Contains(formattedTag, StringComparer.OrdinalIgnoreCase))
+                    {
+                        validatedTags.Add(formattedTag);
+                    }
+                }
+
+                if (validatedTags.Any())
+                {
+                    var existingTags = await _context.Tags
+                        .Where(t => validatedTags.Contains(t.Name))
+                        .ToListAsync();
+
+                    var existingNames = new HashSet<string>(existingTags.Select(t => t.Name), StringComparer.OrdinalIgnoreCase);
+
+                    // Add new tags
+                    foreach (var name in validatedTags)
+                    {
+                        if (!existingNames.Contains(name))
+                        {
+                            var newTag = new Tag { Name = name };
+                            _context.Tags.Add(newTag);
+                            existingTags.Add(newTag);
+                        }
+                    }
+
+                    await _context.SaveChangesAsync();
+
+                    // Link tags to board
+                    foreach (var tag in existingTags)
+                    {
+                        board.Tags.Add(tag);
+                    }
+                }
+            }
 
             _context.Boards.Add(board);
             await _context.SaveChangesAsync();
 
             return RedirectToAction(nameof(Index));
         }
-        
-        public IActionResult Details(int id)
+
+        // Tag validation
+        private static bool IsValidTag(string tag)
         {
-            var board = _context.Boards.Find(id);
-            
+            // Check if tag starts or ends with hyphen
+            if (tag.StartsWith('-') || tag.EndsWith('-'))
+                return false;
+
+            // Check if tag contains numbers
+            if (tag.Any(char.IsDigit))
+                return false;
+
+            // Check if tag contains only letters and single hyphens
+            for (int i = 0; i < tag.Length; i++)
+            {
+                char c = tag[i];
+                
+                // Allow letters
+                if (char.IsLetter(c))
+                    continue;
+
+                // Allow single hyphen (not consecutive)
+                if (c == '-')
+                {
+                    if (i > 0 && tag[i - 1] == '-')
+                        return false;
+                    continue;
+                }
+
+                // Any other character is invalid
+                return false;
+            }
+
+            return true;
+        }
+
+        private static string FormatTag(string tag)
+        {
+            // Convert to lowercase first
+            tag = tag.ToLowerInvariant();
+
+            // Capitalize first letter
+            if (tag.Length > 0)
+            {
+                tag = char.ToUpperInvariant(tag[0]) + tag.Substring(1);
+            }
+
+            return tag;
+        }
+
+        public async Task<IActionResult> Details(int id)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            var board = await _context.Boards
+                .Include(b => b.Author)
+                .Include(b => b.Tags)
+                .Include(b => b.Participants)
+                    .ThenInclude(p => p.User)
+                .Include(b => b.Applicants)
+                    .ThenInclude(a => a.User)
+                .Include(b => b.DeniedUsers)
+                    .ThenInclude(d => d.User)
+                .FirstOrDefaultAsync(b => b.Id == id);
+
             if (board == null)
             {
                 return NotFound();
             }
-                
-            return View(board);
+
+            var isAuthor = !string.IsNullOrWhiteSpace(userId) && board.AuthorId == userId;
+            var applicationStatus = ApplicationStatus.NotApplied;
+
+            if (!string.IsNullOrWhiteSpace(userId))
+            {
+                if (board.Participants.Any(p => p.UserId == userId))
+                {
+                    applicationStatus = ApplicationStatus.Approved;
+                }
+                else if (board.Applicants.Any(a => a.UserId == userId))
+                {
+                    applicationStatus = ApplicationStatus.Pending;
+                }
+                else if (board.DeniedUsers.Any(d => d.UserId == userId))
+                {
+                    applicationStatus = ApplicationStatus.Denied;
+                }
+            }
+
+            var model = new BoardDetailsViewModel
+            {
+                Board = board,
+                IsAuthor = isAuthor,
+                UserApplicationStatus = applicationStatus,
+                Participants = board.Participants.OrderBy(p => p.JoinedAt).ToList(),
+                Applicants = board.Applicants.OrderBy(a => a.AppliedAt).ToList(),
+                DeniedUsers = board.DeniedUsers.OrderBy(d => d.DeniedAt).ToList()
+            };
+
+            return View(model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Apply(int id)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                return Unauthorized();
+            }
+
+            var board = await _context.Boards
+                .Include(b => b.Participants)
+                .Include(b => b.Applicants)
+                .Include(b => b.DeniedUsers)
+                .FirstOrDefaultAsync(b => b.Id == id);
+
+            if (board == null)
+            {
+                return NotFound();
+            }
+
+            // Check if user is the author
+            if (board.AuthorId == userId)
+            {
+                TempData["Error"] = "You cannot apply to your own board.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
+            // Check if user is already a participant
+            if (board.Participants.Any(p => p.UserId == userId))
+            {
+                TempData["Error"] = "You are already a participant.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
+            // Check if user is already an applicant
+            if (board.Applicants.Any(a => a.UserId == userId))
+            {
+                TempData["Error"] = "You have already applied.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
+            // Check if user is denied
+            if (board.DeniedUsers.Any(d => d.UserId == userId))
+            {
+                TempData["Error"] = "You have been denied access to this board.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
+            // Check if board is open
+            if (board.CurrentStatus != BoardStatus.Open)
+            {
+                TempData["Error"] = "This board is not accepting applications.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
+            // Add application
+            var applicant = new BoardApplicant
+            {
+                BoardId = id,
+                UserId = userId,
+                AppliedAt = DateTime.UtcNow
+            };
+
+            _context.BoardApplicants.Add(applicant);
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = "Your application has been submitted successfully.";
+            return RedirectToAction(nameof(Details), new { id });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ApproveApplicant(int boardId, string applicantId)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                return Unauthorized();
+            }
+
+            var board = await _context.Boards
+                .Include(b => b.Participants)
+                .Include(b => b.Applicants)
+                .FirstOrDefaultAsync(b => b.Id == boardId);
+
+            if (board == null)
+            {
+                return NotFound();
+            }
+
+            // Check if user is the author
+            if (board.AuthorId != userId)
+            {
+                return Forbid();
+            }
+
+            // Find the applicant
+            var applicant = board.Applicants.FirstOrDefault(a => a.UserId == applicantId);
+            if (applicant == null)
+            {
+                TempData["Error"] = "Applicant not found.";
+                return RedirectToAction(nameof(Details), new { id = boardId });
+            }
+
+            // Check if board is full
+            if (board.Participants.Count >= board.MaxParticipants)
+            {
+                TempData["Error"] = "Board is full. Cannot approve more participants.";
+                return RedirectToAction(nameof(Details), new { id = boardId });
+            }
+
+            // Remove from applicants and add to participants
+            _context.BoardApplicants.Remove(applicant);
+            
+            var participant = new BoardParticipant
+            {
+                BoardId = boardId,
+                UserId = applicantId,
+                JoinedAt = DateTime.UtcNow
+            };
+
+            _context.BoardParticipants.Add(participant);
+
+            // Update board status if now full
+            if (board.Participants.Count + 1 >= board.MaxParticipants)
+            {
+                if (board.GroupManagementOption == GroupManagement.CloseOnFull)
+                {
+                    board.CurrentStatus = BoardStatus.Full;
+                }
+            }
+
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = "Applicant approved successfully.";
+            return RedirectToAction(nameof(Details), new { id = boardId });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DenyApplicant(int boardId, string applicantId)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                return Unauthorized();
+            }
+
+            var board = await _context.Boards
+                .Include(b => b.Applicants)
+                .Include(b => b.DeniedUsers)
+                .FirstOrDefaultAsync(b => b.Id == boardId);
+
+            if (board == null)
+            {
+                return NotFound();
+            }
+
+            // Check if user is the author
+            if (board.AuthorId != userId)
+            {
+                return Forbid();
+            }
+
+            // Find the applicant
+            var applicant = board.Applicants.FirstOrDefault(a => a.UserId == applicantId);
+            if (applicant == null)
+            {
+                TempData["Error"] = "Applicant not found.";
+                return RedirectToAction(nameof(Details), new { id = boardId });
+            }
+
+            // Remove from applicants and add to denied list
+            _context.BoardApplicants.Remove(applicant);
+            
+            var denied = new BoardDenied
+            {
+                BoardId = boardId,
+                UserId = applicantId,
+                DeniedAt = DateTime.UtcNow
+            };
+
+            _context.BoardDenied.Add(denied);
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = "Applicant denied.";
+            return RedirectToAction(nameof(Details), new { id = boardId });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RemoveDenial(int boardId, string deniedUserId)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                return Unauthorized();
+            }
+
+            var board = await _context.Boards
+                .Include(b => b.DeniedUsers)
+                .FirstOrDefaultAsync(b => b.Id == boardId);
+
+            if (board == null)
+            {
+                return NotFound();
+            }
+
+            // Check if user is the author
+            if (board.AuthorId != userId)
+            {
+                return Forbid();
+            }
+
+            // Find the denied user
+            var deniedUser = board.DeniedUsers.FirstOrDefault(d => d.UserId == deniedUserId);
+            if (deniedUser == null)
+            {
+                TempData["Error"] = "Denied user not found.";
+                return RedirectToAction(nameof(Details), new { id = boardId });
+            }
+
+            _context.BoardDenied.Remove(deniedUser);
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = "User removed from deny list.";
+            return RedirectToAction(nameof(Details), new { id = boardId });
         }
     }
 }

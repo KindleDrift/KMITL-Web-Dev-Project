@@ -111,6 +111,7 @@
     border-radius: 999px;
     object-fit: cover;
     background: #f1f1f1;
+    border: 1px solid black;
 }
 
 .board-meta {
@@ -118,6 +119,15 @@
     gap: 6px;
     margin: 10px 0;
     font-size: 0.95rem;
+}
+
+.tag {
+    background-color: #e0e0e0;
+    border-radius: 999px;
+    padding: 4px 10px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: inline-block;
 }
 
 .participant-row {
@@ -129,7 +139,7 @@
 
 .participant-bubbles {
     display: flex;
-    align-items: center;
+    align-items: center;   
 }
 
 .participant-bubbles img {
@@ -140,6 +150,7 @@
     border: 2px solid #fff;
     margin-left: -8px;
     background: #f1f1f1;
+    border: 1px solid black;
 }
 
 .participant-bubbles img:first-child {

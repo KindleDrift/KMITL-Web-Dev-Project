@@ -1,5 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace WebDevProject.Models
 {
@@ -14,8 +15,7 @@ namespace WebDevProject.Models
         [StringLength(2048)]
         public string? ImageUrl { get; set; }
 
-        [StringLength(60)]
-        public string? Category { get; set; }
+        public ICollection<Tag> Tags { get; set; } = [];
 
         [Required]
         [StringLength(2000)]
@@ -31,6 +31,10 @@ namespace WebDevProject.Models
         public int MaxParticipants { get; set; } = 1;
 
         public ICollection<BoardParticipant> Participants { get; set; } = [];
+
+        public ICollection<BoardApplicant> Applicants { get; set; } = [];
+
+        public ICollection<BoardDenied> DeniedUsers { get; set; } = [];
 
         [Required]
         [StringLength(200)]
@@ -63,11 +67,38 @@ namespace WebDevProject.Models
         public DateTime JoinedAt { get; set; } = DateTime.UtcNow;
     }
 
+    public class BoardApplicant
+    {
+        public int BoardId { get; set; }
+
+        public Board? Board { get; set; }
+
+        public string UserId { get; set; } = string.Empty;
+
+        public Users? User { get; set; }
+
+        public DateTime AppliedAt { get; set; } = DateTime.UtcNow;
+    }
+
+    public class BoardDenied
+    {
+        public int BoardId { get; set; }
+
+        public Board? Board { get; set; }
+
+        public string UserId { get; set; } = string.Empty;
+
+        public Users? User { get; set; }
+
+        public DateTime DeniedAt { get; set; } = DateTime.UtcNow;
+    }
+
     public enum BoardStatus
     {
         Open,
         Full,
         Closed,
+        Cancelled,
         Archived
     }
 
@@ -76,5 +107,14 @@ namespace WebDevProject.Models
         CloseOnFull,
         IncreaseMaxParticipantsOnFull,
         ManualIncreaseMaxParticipants
+    }
+
+    public class Tag
+    {
+        public int Id { get; set; }
+        [Required]
+        [StringLength(50)]
+        public string Name { get; set; } = string.Empty;
+        public ICollection<Board> Boards { get; set; } = [];
     }
 }

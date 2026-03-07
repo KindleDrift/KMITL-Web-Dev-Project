@@ -8,6 +8,203 @@
     gap: 10px;
     min-height: 80vh;
 }
+
+/* Board Create Form Styles */
+#boardCreateContainer {
+    max-width: 800px;
+    margin: 40px auto;
+    padding: 30px;
+    background-color: #f9f9f9;
+    border-radius: 10px;
+}
+
+#boardCreateContainer h1 {
+    margin-bottom: 30px;
+    font-size: 28px;
+    color: #333;
+}
+
+#boardForm {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.form-group label {
+    font-weight: 600;
+    color: #333;
+    font-size: 14px;
+}
+
+.form-group input[type="text"],
+.form-group input[type="number"],
+.form-group input[type="datetime-local"],
+.form-group input[type="file"],
+.form-group textarea {
+    padding: 10px 12px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 14px;
+    font-family: inherit;
+    box-sizing: border-box;
+    transition: border-color 0.3s ease;
+}
+
+.form-group input[type="text"]:focus,
+.form-group input[type="number"]:focus,
+.form-group input[type="datetime-local"]:focus,
+.form-group input[type="file"]:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #8ec4e9;
+    box-shadow: 0 0 4px rgba(142, 196, 233, 0.3);
+}
+
+.form-group textarea {
+    resize: vertical;
+    line-height: 1.4;
+    min-height: 100px;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.tag-input-group {
+    display: flex;
+    gap: 10px;
+}
+
+.tag-input-group input {
+    flex: 1;
+    padding: 10px 12px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+.tag-input-group button {
+    padding: 10px 20px;
+    background-color: #8ec4e9;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background-color 0.3s ease;
+}
+
+.tag-input-group button:hover {
+    background-color: #7ab3d6;
+}
+
+#tagContainer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    background-color: #e0e0e0;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.tag button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    font-size: 14px;
+    color: #666;
+}
+
+.tag button:hover {
+    color: #333;
+}
+
+.radio-group {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.radio-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.radio-option input[type="radio"] {
+    cursor: pointer;
+    width: 18px;
+    height: 18px;
+}
+
+.radio-option label {
+    margin: 0;
+    cursor: pointer;
+    font-weight: normal;
+    font-size: 14px;
+}
+
+.form-group.checkbox {
+    flex-direction: row;
+    align-items: center;
+}
+
+.form-group.checkbox input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+.form-group.checkbox label {
+    margin: 0;
+    font-weight: normal;
+    cursor: pointer;
+}
+
+.error-message {
+    color: #dc3545;
+    font-size: 12px;
+    margin-top: 4px;
+}
+
+#submitBtn {
+    padding: 12px 30px;
+    background-color: #FFF697;
+    border: 3px solid rgb(200, 209, 162);
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 10px;
+}
+
+#submitBtn:hover {
+    background-color: #fff454;
+    border-color: rgb(161, 167, 138);
+}
+
+#submitBtn:active {
+    transform: scale(0.98);
+}
+
+/* Original styles for old form structure */
 #postbox {
     background-color: #eaeaea;
     border-radius: 10px;
@@ -29,7 +226,6 @@
     line-height: 1.4;       
     vertical-align: top;
     resize: none;
-
 }
 
 #textbox {
@@ -41,35 +237,33 @@
     box-sizing: border-box;
     line-height: 1.4;       
     vertical-align: top;
-
     resize: none;
 }
+
 #imgbutton {
     width: 200px;
     height: 50px;
-
     background-color: #8ec4e9;
     font-size: 20px; 
     padding: 0;
-
     border-radius: 10px;
 }
+
 #participants {
     height: 75px;
     background-color: #eaeaea;
     border-radius: 10px;
-
     display: flex;
     align-items: center;  
     justify-content: center;
     gap: 10px;
     padding: 0 10px;
 }
+
 #deadline {
     height: 75px;
     background-color: #eaeaea;
     border-radius: 10px;
-
     display: flex;
     align-items: center;  
     justify-content: center;
@@ -82,15 +276,18 @@
     height: 20px;         
     flex: 0 0 auto;       
 }
+
 .selector {
     display: block;
     padding: 5px;
     cursor: pointer;
 }
+
 #button {
     display: flex;
     justify-content: center;
 }
+
 #postbutt {
     padding: 10px 80px;
     border: 3px solid rgb(200, 209, 162);
@@ -100,6 +297,7 @@
     cursor: pointer;
     transition: background-color 0.3s ease, border-color 0.3s ease;
 }
+
 #postbutt:hover {
     border: 3px solid rgb(161, 167, 138);
     background-color: #fff454;
@@ -120,5 +318,8 @@
         width: 150px;
         height: 30px;
         font-size: 16px;
+    }
+    .form-row {
+        grid-template-columns: 1fr;
     }
 }

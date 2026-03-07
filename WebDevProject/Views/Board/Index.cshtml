@@ -29,6 +29,7 @@
                         WebDevProject.Models.BoardStatus.Open => "status-open",
                         WebDevProject.Models.BoardStatus.Full => "status-full",
                         WebDevProject.Models.BoardStatus.Closed => "status-closed",
+                        WebDevProject.Models.BoardStatus.Cancelled => "status-cancelled",
                         WebDevProject.Models.BoardStatus.Archived => "status-archived",
                         _ => "status-open"
                     };
@@ -74,12 +75,24 @@
 
                                 <div class="board-meta">
                                     <div><strong>Status:</strong> @board.CurrentStatus</div>
-                                    <div><strong>Category:</strong> @(string.IsNullOrWhiteSpace(board.Category) ? "General" : board.Category)</div>
+                                    <div><strong>Tags:</strong>
+                                        @if (board.Tags == null || !board.Tags.Any())
+                                        {
+                                            <span>None</span>
+                                        }
+                                        else
+                                        {
+                                            @foreach (var tag in board.Tags)
+                                            {
+                                                <span class="tag">@tag.Name</span>
+                                            }
+                                        }
+                                    </div>
                                     <div><strong>Join deadline:</strong> @board.Deadline.ToString("dd MMM yyyy, HH:mm")</div>
                                 </div>
 
                                 <p class="description">@board.Description</p>
-                                <a class="board-link" asp-action="Details" asp-route-id="@board.Id">Open board</a>
+                                <a class="board-link" asp-action="Details" asp-route-id="@board.Id">View Board Details</a>
                             </div>
                         </div>
                     </div>
@@ -105,6 +118,7 @@
                         WebDevProject.Models.BoardStatus.Open => "status-open",
                         WebDevProject.Models.BoardStatus.Full => "status-full",
                         WebDevProject.Models.BoardStatus.Closed => "status-closed",
+                        WebDevProject.Models.BoardStatus.Cancelled => "status-cancelled",
                         WebDevProject.Models.BoardStatus.Archived => "status-archived",
                         _ => "status-open"
                     };
@@ -146,12 +160,24 @@
 
                                 <div class="board-meta">
                                     <div><strong>Status:</strong> @board.CurrentStatus</div>
-                                    <div><strong>Category:</strong> @(string.IsNullOrWhiteSpace(board.Category) ? "General" : board.Category)</div>
+                                    <div><strong>Tag:</strong>
+                                        @if (board.Tags == null || !board.Tags.Any())
+                                        {
+                                            <span>None</span>
+                                        }
+                                        else
+                                        {
+                                            @foreach (var tag in board.Tags)
+                                            {
+                                                <span class="tag">@tag.Name</span>
+                                            }
+                                        }
+                                    </div>
                                     <div><strong>Join deadline:</strong> @board.Deadline.ToString("dd MMM yyyy, HH:mm")</div>
                                 </div>
 
                                 <p class="description">@board.Description</p>
-                                <a class="board-link" asp-action="Details" asp-route-id="@board.Id">Open board</a>
+                                <a class="board-link" asp-action="Details" asp-route-id="@board.Id">View Board Details</a>
                             </div>
                         </div>
                     </div>
