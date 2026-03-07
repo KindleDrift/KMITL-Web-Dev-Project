@@ -35,12 +35,10 @@ namespace WebDevProject.Controllers
                 return RedirectToAction("SignIn", "Account");
             }
 
-            // Populate the view model with current user data (this creates the placeholders!)
             var model = new EditProfileViewModel
             {
                 CurrentProfilePictureUrl = user.ProfilePictureUrl,
                 UserName = user.DisplayName,
-                Email = user.Email ?? string.Empty,
                 DateOfBirth = user.DateOfBirth,
                 UserGender = user.UserGender
             };
@@ -73,7 +71,7 @@ namespace WebDevProject.Controllers
                 var displayNameExists = await _userManager.Users
                     .FirstOrDefaultAsync(u => u.NormalizedDisplayName == model.UserName.ToUpper());
 
-                if (displayNameExists != null)
+                if (displayNameExists != null && displayNameExists.Id != user.Id)
                 {
                     ModelState.AddModelError(nameof(model.UserName), "This username is already in use.");
                     return View(model);
@@ -84,10 +82,6 @@ namespace WebDevProject.Controllers
                 user.NormalizedDisplayName = model.UserName.ToUpper();
                 user.DateOfBirth = model.DateOfBirth;
                 user.UserGender = model.UserGender;
-                user.Email = model.Email;
-                user.NormalizedEmail = model.Email.ToUpper();
-                user.UserName = model.Email;
-                user.NormalizedUserName = model.Email.ToUpper();
 
                 // Update user profile picture
                 if (model.ProfileImage != null && model.ProfileImage.Length > 0)

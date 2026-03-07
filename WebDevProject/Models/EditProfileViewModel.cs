@@ -7,7 +7,7 @@ namespace WebDevProject.Models
         // Profile Image upload
         public IFormFile? ProfileImage { get; set; }
 
-        // Current profile picture URL (for display)
+        // Current profile picture URL (For Display)
         public string? CurrentProfilePictureUrl { get; set; }
 
         public required string UserName { get; set; }
@@ -16,9 +16,5 @@ namespace WebDevProject.Models
         public DateTime? DateOfBirth { get; set; }
 
         public Users.Gender? UserGender { get; set; }
-
-        [EmailAddress(ErrorMessage = "Invalid email address")]
-        public required string Email { get; set; }
-
     }
 }
