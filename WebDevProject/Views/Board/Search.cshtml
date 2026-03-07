@@ -1,7 +1,9 @@
-@model List<Board>;
+@model List<WebDevProject.Models.Board>
 
 @{
     ViewData["Title"] = "Search";
+    var queryName = ViewContext.HttpContext.Request.Query["name"].ToString();
+    var boards = Model ?? new List<WebDevProject.Models.Board>();
 }
 
 @section Styles {
@@ -9,28 +11,43 @@
 }
 
 <h1 class="post_list">Post list</h1>
-    
-<div class="container">
-    @foreach (var existingBoard in Model)
+
+<section class="search-area">
+    <form asp-action="Search" method="get" class="search-form">
+        <label for="name">Search</label>
+        <input type="text" id="name" name="name" placeholder="Search post name..." value="@(queryName)" />
+        <button type="submit">Search</button>
+        <a asp-action="Search" class="clear-link">Clear</a>
+    </form>
+</section>
+
+<div class="posts-area">
+    @if (boards.Any())
     {
-        var  participantsimg = existingBoard.Participants.ToList();
-        var statusClass = existingBoard.CurrentStatus switch
+        @foreach (var existingBoard in boards)
         {
-            WebDevProject.Models.BoardStatus.Open => "status-open",
-            WebDevProject.Models.BoardStatus.Full => "status-full",
-            WebDevProject.Models.BoardStatus.Closed => "status-closed",
-            WebDevProject.Models.BoardStatus.Archived => "status-archived",
-            _ => "status-open"
-        };
-        <a class="post" asp-action="Details" asp-route-id="@existingBoard.Id">
-            <span class="status-dot @statusClass" title="@existingBoard.CurrentStatus"></span>
-            <h2 class="post_title">@existingBoard.Title</h2>
-            <div class="participant-images">
-                @foreach (var participant in existingBoard.Participants)
-                {
-                    <img src="@(participant.User?.ProfilePictureUrl ?? Url.Content("~/images/default-profile.png"))" alt="@(participant.User?.DisplayName ?? "Participant")" title="@(participant.User?.DisplayName ?? "Participant")" />
-                }
-            </div>
-        </a> 
+            var statusClass = existingBoard.CurrentStatus switch
+            {
+                WebDevProject.Models.BoardStatus.Open => "status-open",
+                WebDevProject.Models.BoardStatus.Full => "status-full",
+                WebDevProject.Models.BoardStatus.Closed => "status-closed",
+                WebDevProject.Models.BoardStatus.Archived => "status-archived",
+                _ => "status-open"
+            };
+            <a class="post" asp-action="Details" asp-route-id="@existingBoard.Id">
+                <span class="status-dot @statusClass" title="@existingBoard.CurrentStatus"></span>
+                <h2 class="post_title">@existingBoard.Title</h2>
+                <div class="participant-images">
+                    @foreach (var participant in existingBoard.Participants ?? Enumerable.Empty<WebDevProject.Models.BoardParticipant>())
+                    {
+                        <img src="@(participant.User?.ProfilePictureUrl ?? Url.Content("~/images/default-profile.png"))" alt="@(participant.User?.DisplayName ?? "Participant")" title="@(participant.User?.DisplayName ?? "Participant")" />
+                    }
+                </div>
+            </a>
+        }
+    }
+    else
+    {
+        <p>No boards found. Try a different search or <a asp-action="Create">create a board</a>.</p>
     }
 </div>

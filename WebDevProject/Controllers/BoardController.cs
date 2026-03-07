@@ -1,9 +1,10 @@
-﻿using System.Security.Claims;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
+using System.Xml.Linq;
 using WebDevProject.Data;
-using WebDevProject.Models;
 using WebDevProject.Filters;
+using WebDevProject.Models;
 
 namespace WebDevProject.Controllers
 {
@@ -56,17 +57,24 @@ namespace WebDevProject.Controllers
             return View(model);
         }
         
-        public IActionResult Search()
+        public async Task<IActionResult> Search(string name)
         {
             var boardQuery = _context.Boards
                 .AsNoTracking()
                 .Include(b => b.Author)
-                .Include(b => b.Participants);
-                
-            var existingBoards = boardQuery
-                .Where(b => b.CurrentStatus != BoardStatus.Archived)
+                .Include(b => b.Participants)
+                    .ThenInclude(bp => bp.User)
+                .Where(b => b.CurrentStatus != BoardStatus.Archived);
+
+            if (!string.IsNullOrWhiteSpace(name))
+            {
+                // SQL-friendly LIKE search; DB collation determines case sensitivity
+                boardQuery = boardQuery.Where(b => EF.Functions.Like(b.Title, $"%{name}%"));
+            }
+
+            var existingBoards = await boardQuery
                 .OrderByDescending(b => b.CreatedAt)
-                .ToList();
+                .ToListAsync();
 
             return View(existingBoards);
         }
