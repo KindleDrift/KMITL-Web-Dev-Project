@@ -67,6 +67,21 @@
         </div>
 
         <div class="form-group">
+            <label>Join Policy *</label>
+            <div class="radio-group">
+                <div class="radio-option">
+                    <input type="radio" id="joinApplication" name="JoinPolicyOption" value="application" @(Model.JoinPolicyOption == "application" ? "checked" : "") required>
+                    <label for="joinApplication">Application (author reviews applicants)</label>
+                </div>
+                <div class="radio-option">
+                    <input type="radio" id="joinFcfs" name="JoinPolicyOption" value="fcfs" @(Model.JoinPolicyOption == "fcfs" ? "checked" : "")>
+                    <label for="joinFcfs">First Come First Serve (auto-join)</label>
+                </div>
+            </div>
+            <span asp-validation-for="JoinPolicyOption" class="error-message"></span>
+        </div>
+
+        <div class="form-group">
             <label>Tags</label>
             <div class="tag-input-group">
                 <input type="text" id="tagInput" placeholder="Enter a tag...">

@@ -109,15 +109,15 @@
             <div class="radio-group">
                 <label class="radio-label">
                     <input type="radio" asp-for="GroupManagementOption" value="CloseOnFull" class="form-check-input" />
-                    <span>Close on Full</span>
+                    <span>Close When Full - Automatically closes board when capacity is reached</span>
                 </label>
                 <label class="radio-label">
                     <input type="radio" asp-for="GroupManagementOption" value="AllowOverbooking" class="form-check-input" />
-                    <span>Allow Overbooking</span>
+                    <span>Allow Overbooking - Accept participants even when full (e.g., 15/13 is possible)</span>
                 </label>
                 <label class="radio-label">
                     <input type="radio" asp-for="GroupManagementOption" value="KeepOpenWhenFull" class="form-check-input" />
-                    <span>Keep Open When Full</span>
+                    <span>Keep Open When Full - Keep board open for applications but enforce capacity</span>
                 </label>
             </div>
         </div>

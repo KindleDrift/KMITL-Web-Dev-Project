@@ -26,6 +26,7 @@ namespace WebDevProject.Controllers
                 .Include(b => b.Author)
                 .Include(b => b.Participants)
                     .ThenInclude(bp => bp.User)
+                .Include(b => b.ExternalParticipants)
                 .Include(b => b.Applicants)
                 .Include(b => b.Tags);
 
@@ -46,18 +47,15 @@ namespace WebDevProject.Controllers
                     .OrderBy(b => b.EventDate)
                     .ToListAsync();
 
-            
-
             var model = new BoardIndexViewModel
             {
                 ActiveBoards = activeBoards,
                 ParticipatingBoards = participatingBoards
             };
-            
 
             return View(model);
         }
-        
+
         public async Task<IActionResult> Search(string name)
         {
             var boardQuery = _context.Boards
@@ -65,11 +63,11 @@ namespace WebDevProject.Controllers
                 .Include(b => b.Author)
                 .Include(b => b.Participants)
                     .ThenInclude(bp => bp.User)
+                .Include(b => b.ExternalParticipants)
                 .Where(b => b.CurrentStatus != BoardStatus.Archived);
 
             if (!string.IsNullOrWhiteSpace(name))
             {
-                // SQL-friendly LIKE search; DB collation determines case sensitivity
                 boardQuery = boardQuery.Where(b => EF.Functions.Like(b.Title, $"%{name}%"));
             }
 
@@ -126,7 +124,8 @@ namespace WebDevProject.Controllers
                 NotifyAuthorOnFull = model.NotifyAuthorOnFull,
                 CurrentStatus = BoardStatus.Open,
                 CreatedAt = DateTime.UtcNow,
-                GroupManagementOption = ParseGroupManagementOption(model.GroupManagementOption)
+                GroupManagementOption = ParseGroupManagementOption(model.GroupManagementOption),
+                JoinPolicy = ParseJoinPolicyOption(model.JoinPolicyOption)
             };
 
             board.ImageUrl = await SaveBoardImageAsync(model.BoardImage, userId, null);
@@ -181,6 +180,7 @@ namespace WebDevProject.Controllers
                 MaxParticipants = board.MaxParticipants,
                 NotifyAuthorOnFull = board.NotifyAuthorOnFull,
                 GroupManagementOption = ToGroupManagementOptionValue(board.GroupManagementOption),
+                JoinPolicyOption = ToJoinPolicyOptionValue(board.JoinPolicy),
                 Tags = board.Tags.Select(t => t.Name).ToList()
             };
 
@@ -202,6 +202,7 @@ namespace WebDevProject.Controllers
             var board = await _context.Boards
                 .Include(b => b.Tags)
                 .Include(b => b.Participants)
+                .Include(b => b.ExternalParticipants)
                 .FirstOrDefaultAsync(b => b.Id == id);
 
             if (board == null)
@@ -237,6 +238,7 @@ namespace WebDevProject.Controllers
             board.MaxParticipants = model.MaxParticipants;
             board.NotifyAuthorOnFull = model.NotifyAuthorOnFull;
             board.GroupManagementOption = ParseGroupManagementOption(model.GroupManagementOption);
+            board.JoinPolicy = ParseJoinPolicyOption(model.JoinPolicyOption);
 
             board.ImageUrl = await SaveBoardImageAsync(model.BoardImage, userId, board.ImageUrl);
             if (!ModelState.IsValid)
@@ -254,7 +256,7 @@ namespace WebDevProject.Controllers
                 return View(model);
             }
 
-            UpdateBoardStatusByCapacity(board, board.Participants.Count);
+            UpdateBoardStatusByCapacity(board, GetOccupiedSeatCount(board));
             await _context.SaveChangesAsync();
 
             TempData["Success"] = "Board updated successfully.";
@@ -270,6 +272,7 @@ namespace WebDevProject.Controllers
                 .Include(b => b.Tags)
                 .Include(b => b.Participants)
                     .ThenInclude(p => p.User)
+                .Include(b => b.ExternalParticipants)
                 .Include(b => b.Applicants)
                     .ThenInclude(a => a.User)
                 .Include(b => b.DeniedUsers)
@@ -306,6 +309,7 @@ namespace WebDevProject.Controllers
                 IsAuthor = isAuthor,
                 UserApplicationStatus = applicationStatus,
                 Participants = board.Participants.OrderBy(p => p.JoinedAt).ToList(),
+                ExternalParticipants = board.ExternalParticipants.OrderBy(e => e.AddedAt).ToList(),
                 Applicants = board.Applicants.OrderBy(a => a.AppliedAt).ToList(),
                 DeniedUsers = board.DeniedUsers.OrderBy(d => d.DeniedAt).ToList()
             };
@@ -325,6 +329,7 @@ namespace WebDevProject.Controllers
 
             var board = await _context.Boards
                 .Include(b => b.Participants)
+                .Include(b => b.ExternalParticipants)
                 .Include(b => b.Applicants)
                 .Include(b => b.DeniedUsers)
                 .FirstOrDefaultAsync(b => b.Id == id);
@@ -334,42 +339,72 @@ namespace WebDevProject.Controllers
                 return NotFound();
             }
 
-            // Check if user is the author
             if (board.AuthorId == userId)
             {
                 TempData["Error"] = "You cannot apply to your own board.";
                 return RedirectToAction(nameof(Details), new { id });
             }
 
-            // Check if user is already a participant
             if (board.Participants.Any(p => p.UserId == userId))
             {
                 TempData["Error"] = "You are already a participant.";
                 return RedirectToAction(nameof(Details), new { id });
             }
 
-            // Check if user is already an applicant
             if (board.Applicants.Any(a => a.UserId == userId))
             {
                 TempData["Error"] = "You have already applied.";
                 return RedirectToAction(nameof(Details), new { id });
             }
 
-            // Check if user is denied
             if (board.DeniedUsers.Any(d => d.UserId == userId))
             {
                 TempData["Error"] = "You have been denied access to this board.";
                 return RedirectToAction(nameof(Details), new { id });
             }
 
-            // Check if board is open
             if (board.CurrentStatus != BoardStatus.Open)
             {
                 TempData["Error"] = "This board is not accepting applications.";
                 return RedirectToAction(nameof(Details), new { id });
             }
 
-            // Add application
+            if (board.Deadline <= DateTime.UtcNow)
+            {
+                TempData["Error"] = "The registration deadline has passed.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
+            var currentOccupied = GetOccupiedSeatCount(board);
+            if (currentOccupied >= board.MaxParticipants)
+            {
+                if (board.JoinPolicy == BoardJoinPolicy.FirstComeFirstServe &&
+                    board.GroupManagementOption != GroupManagement.AllowOverbooking)
+                {
+                    TempData["Error"] = "Board is full. Cannot accept more participants.";
+                    return RedirectToAction(nameof(Details), new { id });
+                }
+            }
+
+            if (board.JoinPolicy == BoardJoinPolicy.FirstComeFirstServe)
+            {
+                var occupiedBeforeAdd = GetOccupiedSeatCount(board);
+
+                var participant = new BoardParticipant
+                {
+                    BoardId = id,
+                    UserId = userId,
+                    JoinedAt = DateTime.UtcNow
+                };
+
+                _context.BoardParticipants.Add(participant);
+                UpdateBoardStatusByCapacity(board, occupiedBeforeAdd + 1);
+                await _context.SaveChangesAsync();
+
+                TempData["Success"] = "You joined this board successfully.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
             var applicant = new BoardApplicant
             {
                 BoardId = id,
@@ -386,6 +421,63 @@ namespace WebDevProject.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CancelMyApplication(int id)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                return Unauthorized();
+            }
+
+            var board = await _context.Boards
+                .Include(b => b.Participants)
+                .Include(b => b.ExternalParticipants)
+                .Include(b => b.Applicants)
+                .FirstOrDefaultAsync(b => b.Id == id);
+
+            if (board == null)
+            {
+                return NotFound();
+            }
+
+            if (board.AuthorId == userId)
+            {
+                TempData["Error"] = "Board owner cannot use this action.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
+            var applicant = board.Applicants.FirstOrDefault(a => a.UserId == userId);
+            if (applicant != null)
+            {
+                _context.BoardApplicants.Remove(applicant);
+                await _context.SaveChangesAsync();
+
+                TempData["Success"] = "Your application has been cancelled.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
+            var participant = board.Participants.FirstOrDefault(p => p.UserId == userId);
+            if (participant != null)
+            {
+                var occupiedBeforeRemoval = GetOccupiedSeatCount(board);
+
+                _context.BoardParticipants.Remove(participant);
+
+                var occupiedAfterRemoval = Math.Max(occupiedBeforeRemoval - 1, 0);
+                UpdateBoardStatusByCapacity(board, occupiedAfterRemoval);
+
+                await _context.SaveChangesAsync();
+
+                TempData["Success"] = "You left the board successfully.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
+            TempData["Error"] = "You have no active application or participation in this board.";
+            return RedirectToAction(nameof(Details), new { id });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> ApproveApplicant(int boardId, string applicantId)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -396,6 +488,7 @@ namespace WebDevProject.Controllers
 
             var board = await _context.Boards
                 .Include(b => b.Participants)
+                .Include(b => b.ExternalParticipants)
                 .Include(b => b.Applicants)
                 .FirstOrDefaultAsync(b => b.Id == boardId);
 
@@ -416,12 +509,14 @@ namespace WebDevProject.Controllers
                 return RedirectToAction(nameof(Details), new { id = boardId });
             }
 
-            var canOverbook = board.GroupManagementOption == GroupManagement.AllowOverbooking;
-            if (!canOverbook && board.Participants.Count >= board.MaxParticipants)
+            if (GetOccupiedSeatCount(board) >= board.MaxParticipants &&
+                board.GroupManagementOption != GroupManagement.AllowOverbooking)
             {
                 TempData["Error"] = "Board is full. Cannot approve more participants.";
                 return RedirectToAction(nameof(Details), new { id = boardId });
             }
+
+            var occupiedBeforeAdd = GetOccupiedSeatCount(board);
 
             _context.BoardApplicants.Remove(applicant);
 
@@ -433,11 +528,176 @@ namespace WebDevProject.Controllers
             };
 
             _context.BoardParticipants.Add(participant);
-            UpdateBoardStatusByCapacity(board, board.Participants.Count + 1);
+            UpdateBoardStatusByCapacity(board, occupiedBeforeAdd + 1);
 
             await _context.SaveChangesAsync();
 
             TempData["Success"] = "Applicant approved successfully.";
+            return RedirectToAction(nameof(Details), new { id = boardId });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DenyParticipant(int boardId, string participantId)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                return Unauthorized();
+            }
+
+            var board = await _context.Boards
+                .Include(b => b.Participants)
+                .Include(b => b.ExternalParticipants)
+                .Include(b => b.DeniedUsers)
+                .FirstOrDefaultAsync(b => b.Id == boardId);
+
+            if (board == null)
+            {
+                return NotFound();
+            }
+
+            if (board.AuthorId != userId)
+            {
+                return Forbid();
+            }
+
+            var participant = board.Participants.FirstOrDefault(p => p.UserId == participantId);
+            if (participant == null)
+            {
+                TempData["Error"] = "Participant not found.";
+                return RedirectToAction(nameof(Details), new { id = boardId });
+            }
+
+            var occupiedBeforeRemoval = GetOccupiedSeatCount(board);
+
+            _context.BoardParticipants.Remove(participant);
+
+            if (!board.DeniedUsers.Any(d => d.UserId == participantId))
+            {
+                _context.BoardDenied.Add(new BoardDenied
+                {
+                    BoardId = boardId,
+                    UserId = participantId,
+                    DeniedAt = DateTime.UtcNow
+                });
+            }
+
+            var occupiedAfterRemoval = Math.Max(occupiedBeforeRemoval - 1, 0);
+            UpdateBoardStatusByCapacity(board, occupiedAfterRemoval);
+
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = "Participant removed and denied.";
+            return RedirectToAction(nameof(Details), new { id = boardId });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddExternalParticipant(int boardId, string externalName, string? externalNote)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                return Unauthorized();
+            }
+
+            var board = await _context.Boards
+                .Include(b => b.Participants)
+                .Include(b => b.ExternalParticipants)
+                .FirstOrDefaultAsync(b => b.Id == boardId);
+
+            if (board == null)
+            {
+                return NotFound();
+            }
+
+            if (board.AuthorId != userId)
+            {
+                return Forbid();
+            }
+
+            var normalizedName = externalName?.Trim();
+            if (string.IsNullOrWhiteSpace(normalizedName))
+            {
+                TempData["Error"] = "External participant name is required.";
+                return RedirectToAction(nameof(Details), new { id = boardId });
+            }
+
+            if (normalizedName.Length > 120)
+            {
+                TempData["Error"] = "External participant name is too long.";
+                return RedirectToAction(nameof(Details), new { id = boardId });
+            }
+
+            if (GetOccupiedSeatCount(board) >= board.MaxParticipants &&
+                board.GroupManagementOption != GroupManagement.AllowOverbooking)
+            {
+                TempData["Error"] = "Board is full. Cannot add external participant.";
+                return RedirectToAction(nameof(Details), new { id = boardId });
+            }
+
+            var occupiedBeforeAdd = GetOccupiedSeatCount(board);
+
+            var participant = new BoardExternalParticipant
+            {
+                BoardId = boardId,
+                Name = normalizedName,
+                Note = string.IsNullOrWhiteSpace(externalNote) ? null : externalNote.Trim(),
+                AddedAt = DateTime.UtcNow
+            };
+
+            _context.BoardExternalParticipants.Add(participant);
+            UpdateBoardStatusByCapacity(board, occupiedBeforeAdd + 1);
+
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = "External participant added.";
+            return RedirectToAction(nameof(Details), new { id = boardId });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RemoveExternalParticipant(int boardId, int externalParticipantId)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                return Unauthorized();
+            }
+
+            var board = await _context.Boards
+                .Include(b => b.Participants)
+                .Include(b => b.ExternalParticipants)
+                .FirstOrDefaultAsync(b => b.Id == boardId);
+
+            if (board == null)
+            {
+                return NotFound();
+            }
+
+            if (board.AuthorId != userId)
+            {
+                return Forbid();
+            }
+
+            var externalParticipant = board.ExternalParticipants.FirstOrDefault(e => e.Id == externalParticipantId);
+            if (externalParticipant == null)
+            {
+                TempData["Error"] = "External participant not found.";
+                return RedirectToAction(nameof(Details), new { id = boardId });
+            }
+
+            var occupiedBeforeRemoval = GetOccupiedSeatCount(board);
+
+            _context.BoardExternalParticipants.Remove(externalParticipant);
+
+            var occupiedAfterRemoval = Math.Max(occupiedBeforeRemoval - 1, 0);
+            UpdateBoardStatusByCapacity(board, occupiedAfterRemoval);
+
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = "External participant removed.";
             return RedirectToAction(nameof(Details), new { id = boardId });
         }
 
@@ -461,13 +721,11 @@ namespace WebDevProject.Controllers
                 return NotFound();
             }
 
-            // Check if user is the author
             if (board.AuthorId != userId)
             {
                 return Forbid();
             }
 
-            // Find the applicant
             var applicant = board.Applicants.FirstOrDefault(a => a.UserId == applicantId);
             if (applicant == null)
             {
@@ -475,9 +733,8 @@ namespace WebDevProject.Controllers
                 return RedirectToAction(nameof(Details), new { id = boardId });
             }
 
-            // Remove from applicants and add to denied list
             _context.BoardApplicants.Remove(applicant);
-            
+
             var denied = new BoardDenied
             {
                 BoardId = boardId,
@@ -511,13 +768,11 @@ namespace WebDevProject.Controllers
                 return NotFound();
             }
 
-            // Check if user is the author
             if (board.AuthorId != userId)
             {
                 return Forbid();
             }
 
-            // Find the denied user
             var deniedUser = board.DeniedUsers.FirstOrDefault(d => d.UserId == deniedUserId);
             if (deniedUser == null)
             {
@@ -534,24 +789,19 @@ namespace WebDevProject.Controllers
 
         private static bool IsValidTag(string tag)
         {
-            // Check if tag starts or ends with hyphen
             if (tag.StartsWith('-') || tag.EndsWith('-'))
                 return false;
 
-            // Check if tag contains numbers
             if (tag.Any(char.IsDigit))
                 return false;
 
-            // Check if tag contains only letters and single hyphens
             for (int i = 0; i < tag.Length; i++)
             {
                 char c = tag[i];
-                
-                // Allow letters
+
                 if (char.IsLetter(c))
                     continue;
 
-                // Allow single hyphen (not consecutive)
                 if (c == '-')
                 {
                     if (i > 0 && tag[i - 1] == '-')
@@ -559,7 +809,6 @@ namespace WebDevProject.Controllers
                     continue;
                 }
 
-                // Any other character is invalid
                 return false;
             }
 
@@ -568,10 +817,8 @@ namespace WebDevProject.Controllers
 
         private static string FormatTag(string tag)
         {
-            // Convert to lowercase first
             tag = tag.ToLowerInvariant();
 
-            // Capitalize first letter
             if (tag.Length > 0)
             {
                 tag = char.ToUpperInvariant(tag[0]) + tag.Substring(1);
@@ -709,6 +956,29 @@ namespace WebDevProject.Controllers
             };
         }
 
+        private static BoardJoinPolicy ParseJoinPolicyOption(string? option)
+        {
+            return option switch
+            {
+                "fcfs" => BoardJoinPolicy.FirstComeFirstServe,
+                _ => BoardJoinPolicy.Application
+            };
+        }
+
+        private static string ToJoinPolicyOptionValue(BoardJoinPolicy option)
+        {
+            return option switch
+            {
+                BoardJoinPolicy.FirstComeFirstServe => "fcfs",
+                _ => "application"
+            };
+        }
+
+        private static int GetOccupiedSeatCount(Board board)
+        {
+            return board.Participants.Count(p => p.UserId != board.AuthorId) + board.ExternalParticipants.Count;
+        }
+
         private static void UpdateBoardStatusByCapacity(Board board, int occupiedSeats)
         {
             if (board.CurrentStatus is BoardStatus.Closed or BoardStatus.Cancelled or BoardStatus.Archived)
@@ -716,9 +986,13 @@ namespace WebDevProject.Controllers
                 return;
             }
 
-            if (board.GroupManagementOption == GroupManagement.CloseOnFull)
+            if (occupiedSeats >= board.MaxParticipants)
             {
-                board.CurrentStatus = occupiedSeats >= board.MaxParticipants ? BoardStatus.Full : BoardStatus.Open;
+                if (board.GroupManagementOption == GroupManagement.CloseOnFull)
+                {
+                    board.CurrentStatus = BoardStatus.Full;
+                }
+
                 return;
             }
 

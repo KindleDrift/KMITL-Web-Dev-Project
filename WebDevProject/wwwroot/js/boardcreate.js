@@ -49,7 +49,7 @@ document.addEventListener('DOMContentLoaded', function () {
         return tag;
     }
 
-    function createTagElement(tagText) {
+    function createTagElement(tagText = '') {
         const tag = document.createElement('span');
         tag.className = 'tag';
         tag.setAttribute('data-tag', tagText);
@@ -163,6 +163,13 @@ document.addEventListener('DOMContentLoaded', function () {
     const boardForm = document.getElementById('boardForm');
     if (boardForm) {
         boardForm.addEventListener('submit', function (e) {
+            const joinPolicyOption = document.querySelector('input[name="JoinPolicyOption"]:checked');
+            if (!joinPolicyOption) {
+                e.preventDefault();
+                alert('Please select a join system');
+                return;
+            }
+
             // Ensure group management option is selected
             const groupOption = document.querySelector('input[name="GroupManagementOption"]:checked');
             if (!groupOption) {

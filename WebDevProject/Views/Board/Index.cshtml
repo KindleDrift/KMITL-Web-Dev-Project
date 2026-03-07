@@ -21,18 +21,21 @@
             {
                 @foreach (var board in activeBoards)
                 {
-                    var participantCount = board.Participants.Count;
+                    var visibleParticipants = board.Participants.Where(p => p.UserId != board.AuthorId).ToList();
+                    var participantCount = visibleParticipants.Count + board.ExternalParticipants.Count;
                     var spotsLeft = Math.Max(board.MaxParticipants - participantCount, 0);
-                    var previewParticipants = board.Participants.Take(5).ToList();
+                    var previewParticipants = visibleParticipants.Take(5).ToList();
+                    var isOpenPastDeadline = board.CurrentStatus == WebDevProject.Models.BoardStatus.Open && board.Deadline <= DateTime.UtcNow;
                     var statusClass = board.CurrentStatus switch
                     {
-                        WebDevProject.Models.BoardStatus.Open => "status-open",
+                        WebDevProject.Models.BoardStatus.Open => isOpenPastDeadline ? "status-closed" : "status-open",
                         WebDevProject.Models.BoardStatus.Full => "status-full",
                         WebDevProject.Models.BoardStatus.Closed => "status-closed",
                         WebDevProject.Models.BoardStatus.Cancelled => "status-cancelled",
                         WebDevProject.Models.BoardStatus.Archived => "status-archived",
                         _ => "status-open"
                     };
+                    var displayStatus = isOpenPastDeadline ? "Open (Deadline Passed)" : board.CurrentStatus.ToString();
 
                     <div class="board-card">
                         <div class="board-card-layout">
@@ -74,7 +77,7 @@
                                 </div>
 
                                 <div class="board-meta">
-                                    <div><strong>Status:</strong> @board.CurrentStatus</div>
+                                    <div><strong>Status:</strong> @displayStatus</div>
                                     <div><strong>Tags:</strong>
                                         @if (board.Tags == null || !board.Tags.Any())
                                         {
@@ -110,18 +113,21 @@
             {
                 @foreach (var board in participatingBoards)
                 {
-                    var participantCount = board.Participants.Count;
+                    var visibleParticipants = board.Participants.Where(p => p.UserId != board.AuthorId).ToList();
+                    var participantCount = visibleParticipants.Count + board.ExternalParticipants.Count;
                     var spotsLeft = Math.Max(board.MaxParticipants - participantCount, 0);
-                    var previewParticipants = board.Participants.Take(5).ToList();
+                    var previewParticipants = visibleParticipants.Take(5).ToList();
+                    var isOpenPastDeadline = board.CurrentStatus == WebDevProject.Models.BoardStatus.Open && board.Deadline <= DateTime.UtcNow;
                     var statusClass = board.CurrentStatus switch
                     {
-                        WebDevProject.Models.BoardStatus.Open => "status-open",
+                        WebDevProject.Models.BoardStatus.Open => isOpenPastDeadline ? "status-closed" : "status-open",
                         WebDevProject.Models.BoardStatus.Full => "status-full",
                         WebDevProject.Models.BoardStatus.Closed => "status-closed",
                         WebDevProject.Models.BoardStatus.Cancelled => "status-cancelled",
                         WebDevProject.Models.BoardStatus.Archived => "status-archived",
                         _ => "status-open"
                     };
+                    var displayStatus = isOpenPastDeadline ? "Open (Deadline Passed)" : board.CurrentStatus.ToString();
 
                     <div class="board-card">
                         <div class="board-card-layout">
@@ -159,7 +165,7 @@
                                 </div>
 
                                 <div class="board-meta">
-                                    <div><strong>Status:</strong> @board.CurrentStatus</div>
+                                    <div><strong>Status:</strong> @displayStatus</div>
                                     <div><strong>Tag:</strong>
                                         @if (board.Tags == null || !board.Tags.Any())
                                         {
