@@ -46,7 +46,8 @@
 .form-group input[type="number"],
 .form-group input[type="datetime-local"],
 .form-group input[type="file"],
-.form-group textarea {
+.form-group textarea,
+.form-group select {
     padding: 10px 12px;
     border: 1px solid #ccc;
     border-radius: 6px;
@@ -60,7 +61,8 @@
 .form-group input[type="number"]:focus,
 .form-group input[type="datetime-local"]:focus,
 .form-group input[type="file"]:focus,
-.form-group textarea:focus {
+.form-group textarea:focus,
+.form-group select:focus {
     outline: none;
     border-color: #8ec4e9;
     box-shadow: 0 0 4px rgba(142, 196, 233, 0.3);

@@ -85,6 +85,22 @@
                 <option value="Cancelled">Cancelled</option>
                 <option value="Archived">Archived</option>
             </select>
+            <small class="form-text text-muted">Note: Status may be automatically updated based on capacity and group management settings.</small>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="JoinPolicy" class="form-label">Join Policy</label>
+            <div class="radio-group">
+                <label class="radio-label">
+                    <input type="radio" asp-for="JoinPolicy" value="Application" class="form-check-input" />
+                    <span>Application - Author reviews applicants before they join</span>
+                </label>
+                <label class="radio-label">
+                    <input type="radio" asp-for="JoinPolicy" value="FirstComeFirstServe" class="form-check-input" />
+                    <span>First Come First Serve - Users join automatically without approval</span>
+                </label>
+            </div>
+            <small class="form-text text-muted">Note: Changing from Application to FCFS will auto-approve pending applicants.</small>
         </div>
         
         <div class="form-group">
