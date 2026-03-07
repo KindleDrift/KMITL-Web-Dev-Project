@@ -169,9 +169,7 @@ namespace WebDevProject.Data
                         Deadline = DateTime.UtcNow.Date.AddDays(5).AddHours(23),
                         CurrentStatus = BoardStatus.Open,
                         NotifyAuthorOnFull = true,
-                        CloseOnFull = false,
-                        IncreaseMaxParticipantsOnFull = false,
-                        ManualIncreaseMaxParticipants = true,
+                        GroupManagementOption = GroupManagement.ManualIncreaseMaxParticipants,
                         CreatedAt = DateTime.UtcNow.AddDays(-2)
                     };
                     context.Boards.Add(board);
@@ -203,9 +201,7 @@ namespace WebDevProject.Data
                         Deadline = DateTime.UtcNow.Date.AddDays(9).AddHours(20),
                         CurrentStatus = BoardStatus.Open,
                         NotifyAuthorOnFull = true,
-                        CloseOnFull = false,
-                        IncreaseMaxParticipantsOnFull = false,
-                        ManualIncreaseMaxParticipants = true,
+                        GroupManagementOption = GroupManagement.ManualIncreaseMaxParticipants,
                         CreatedAt = DateTime.UtcNow.AddDays(-3)
                     };
                     context.Boards.Add(board);
@@ -239,9 +235,7 @@ namespace WebDevProject.Data
                         Deadline = DateTime.UtcNow.Date.AddDays(2).AddHours(18),
                         CurrentStatus = BoardStatus.Full,
                         NotifyAuthorOnFull = true,
-                        CloseOnFull = true,
-                        IncreaseMaxParticipantsOnFull = false,
-                        ManualIncreaseMaxParticipants = false,
+                        GroupManagementOption = GroupManagement.CloseOnFull,
                         CreatedAt = DateTime.UtcNow.AddDays(-5)
                     };
                     context.Boards.Add(board);
@@ -274,9 +268,7 @@ namespace WebDevProject.Data
                         Deadline = DateTime.UtcNow.Date.AddDays(4).AddHours(23),
                         CurrentStatus = BoardStatus.Closed,
                         NotifyAuthorOnFull = false,
-                        CloseOnFull = false,
-                        IncreaseMaxParticipantsOnFull = false,
-                        ManualIncreaseMaxParticipants = true,
+                        GroupManagementOption = GroupManagement.ManualIncreaseMaxParticipants,
                         CreatedAt = DateTime.UtcNow.AddDays(-10)
                     };
                     context.Boards.Add(board);
@@ -305,9 +297,7 @@ namespace WebDevProject.Data
                         Deadline = DateTime.UtcNow.Date.AddDays(3).AddHours(12),
                         CurrentStatus = BoardStatus.Open,
                         NotifyAuthorOnFull = true,
-                        CloseOnFull = false,
-                        IncreaseMaxParticipantsOnFull = true,
-                        ManualIncreaseMaxParticipants = false,
+                        GroupManagementOption = GroupManagement.IncreaseMaxParticipantsOnFull,
                         CreatedAt = DateTime.UtcNow.AddHours(-6)
                     };
                     context.Boards.Add(board);
@@ -333,9 +323,7 @@ namespace WebDevProject.Data
                         Deadline = DateTime.UtcNow.Date.AddDays(-1).AddHours(23),
                         CurrentStatus = BoardStatus.Open,
                         NotifyAuthorOnFull = false,
-                        CloseOnFull = false,
-                        IncreaseMaxParticipantsOnFull = false,
-                        ManualIncreaseMaxParticipants = true,
+                        GroupManagementOption = GroupManagement.ManualIncreaseMaxParticipants,
                         CreatedAt = DateTime.UtcNow.AddDays(-15)
                     };
                     context.Boards.Add(board);
@@ -367,9 +355,7 @@ namespace WebDevProject.Data
                         Deadline = DateTime.UtcNow.Date.AddDays(-5).AddHours(23),
                         CurrentStatus = BoardStatus.Closed,
                         NotifyAuthorOnFull = false,
-                        CloseOnFull = false,
-                        IncreaseMaxParticipantsOnFull = false,
-                        ManualIncreaseMaxParticipants = false,
+                        GroupManagementOption = GroupManagement.CloseOnFull,
                         CreatedAt = DateTime.UtcNow.AddDays(-20)
                     };
                     context.Boards.Add(board);
@@ -409,9 +395,7 @@ namespace WebDevProject.Data
                         Deadline = DateTime.UtcNow.Date.AddDays(12).AddHours(23),
                         CurrentStatus = BoardStatus.Open,
                         NotifyAuthorOnFull = true,
-                        CloseOnFull = false,
-                        IncreaseMaxParticipantsOnFull = true,
-                        ManualIncreaseMaxParticipants = true,
+                        GroupManagementOption = GroupManagement.IncreaseMaxParticipantsOnFull,
                         CreatedAt = DateTime.UtcNow.AddDays(-1)
                     };
                     context.Boards.Add(board);
@@ -449,9 +433,7 @@ namespace WebDevProject.Data
                         Deadline = DateTime.UtcNow.Date.AddDays(1).AddHours(23),
                         CurrentStatus = BoardStatus.Open,
                         NotifyAuthorOnFull = true,
-                        CloseOnFull = true,
-                        IncreaseMaxParticipantsOnFull = false,
-                        ManualIncreaseMaxParticipants = false,
+                        GroupManagementOption = GroupManagement.CloseOnFull,
                         CreatedAt = DateTime.UtcNow.AddDays(-1)
                     };
                     context.Boards.Add(board);
@@ -484,9 +466,7 @@ namespace WebDevProject.Data
                         Deadline = DateTime.UtcNow.Date.AddDays(25).AddHours(23),
                         CurrentStatus = BoardStatus.Open,
                         NotifyAuthorOnFull = true,
-                        CloseOnFull = false,
-                        IncreaseMaxParticipantsOnFull = true,
-                        ManualIncreaseMaxParticipants = true,
+                        GroupManagementOption = GroupManagement.IncreaseMaxParticipantsOnFull,
                         CreatedAt = DateTime.UtcNow.AddDays(-7)
                     };
                     context.Boards.Add(board);
@@ -518,9 +498,7 @@ namespace WebDevProject.Data
                         Deadline = DateTime.UtcNow.Date.AddDays(4).AddHours(12),
                         CurrentStatus = BoardStatus.Cancelled,
                         NotifyAuthorOnFull = false,
-                        CloseOnFull = false,
-                        IncreaseMaxParticipantsOnFull = false,
-                        ManualIncreaseMaxParticipants = false,
+                        GroupManagementOption = GroupManagement.ManualIncreaseMaxParticipants,
                         CreatedAt = DateTime.UtcNow.AddDays(-8)
                     };
                     context.Boards.Add(board);
@@ -547,9 +525,7 @@ namespace WebDevProject.Data
                         Deadline = DateTime.UtcNow.Date.AddDays(8).AddHours(12),
                         CurrentStatus = BoardStatus.Open,
                         NotifyAuthorOnFull = true,
-                        CloseOnFull = true,
-                        IncreaseMaxParticipantsOnFull = false,
-                        ManualIncreaseMaxParticipants = false,
+                        GroupManagementOption = GroupManagement.CloseOnFull,
                         CreatedAt = DateTime.UtcNow.AddDays(-4)
                     };
                     context.Boards.Add(board);

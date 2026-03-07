@@ -35,13 +35,21 @@ namespace WebDevProject.Controllers
             if (ModelState.IsValid)
             {
                 var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, lockoutOnFailure: false);
+                
                 if (result.Succeeded)
                 {
                     return RedirectToAction("Index", "Profile");
                 }
                 else
                 {
-                    ModelState.AddModelError(string.Empty, "Wrong email or password.");
+                    if (result.IsLockedOut)
+                    {
+                        ModelState.AddModelError(string.Empty, "Your account has been banned.");
+                    }
+                    else
+                    {
+                        ModelState.AddModelError(string.Empty, "Wrong email or password.");
+                    }
                 }
             }
             return View(model);
@@ -172,6 +180,7 @@ namespace WebDevProject.Controllers
             {
                 user.DateOfBirth = model.DateOfBirth;
                 user.UserGender = model.UserGender;
+                user.Bio = model.Bio;
 
                 if (model.ProfileImage != null && model.ProfileImage.Length > 0)
                 {

@@ -347,9 +347,7 @@ namespace WebDevProject.Controllers
             board.EventDate = model.EventDate;
             board.Deadline = model.Deadline;
             board.NotifyAuthorOnFull = model.NotifyAuthorOnFull;
-            board.CloseOnFull = model.CloseOnFull;
-            board.IncreaseMaxParticipantsOnFull = model.IncreaseMaxParticipantsOnFull;
-            board.ManualIncreaseMaxParticipants = model.ManualIncreaseMaxParticipants;
+            board.GroupManagementOption = model.GroupManagementOption;
             board.CurrentStatus = model.CurrentStatus;
 
             try

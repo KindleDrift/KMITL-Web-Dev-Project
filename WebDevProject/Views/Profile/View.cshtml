@@ -11,17 +11,21 @@
 <div class="profile">
     <img class="profile-picture" id="picture" src="@(Model.ProfilePictureUrl ?? "/images/default-profile.png")" alt="Profile Picture">
     <div class="profile-data">
+
+        <!-- show for yourself -->
         @if (Model.IsOwnProfile)
         {
             <a class="profile-link" href="@Url.Action("Edit", "Profile")">Edit Profile</a>
         }
 
+        <!-- show for everyone -->
         <div class="data-menu">
             <div class="row">
                 <span class="label">Username :</span>
                 <span>@Model.DisplayName</span>
             </div>
 
+            <!-- show for yourself -->
             @if (Model.IsOwnProfile)
             {
                 <div class="row">
@@ -42,6 +46,7 @@
                 </div>
             }
 
+            <!-- show for everyone -->
             <div class="row">
                 <span class="label">Gender :</span>
                 @if (Model.UserGender.HasValue)
@@ -81,7 +86,8 @@
                 <span>@Model.BoardParticipationsCount</span>
             </div>
         </div>
-
+        
+        <!-- show for yourself -->
         @if (Model.IsOwnProfile)
         {
             <a class="profile-link" href="@Url.Action("ChangePassword", "Account")">Reset Password</a>

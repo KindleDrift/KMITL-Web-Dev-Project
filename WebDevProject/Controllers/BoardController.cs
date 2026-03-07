@@ -3,9 +3,11 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebDevProject.Data;
 using WebDevProject.Models;
+using WebDevProject.Filters;
 
 namespace WebDevProject.Controllers
 {
+    [RequireOnboarding]
     public class BoardController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -44,18 +46,31 @@ namespace WebDevProject.Controllers
                     .OrderBy(b => b.EventDate)
                     .ToListAsync();
 
+            
+
             var model = new BoardIndexViewModel
             {
                 ActiveBoards = activeBoards,
                 ParticipatingBoards = participatingBoards
             };
+            
 
             return View(model);
         }
-
+        
         public IActionResult Search()
         {
-            return View();
+            var boardQuery = _context.Boards
+                .AsNoTracking()
+                .Include(b => b.Author)
+                .Include(b => b.Participants);
+                
+            var existingBoards = boardQuery
+                .Where(b => b.CurrentStatus != BoardStatus.Archived)
+                .OrderByDescending(b => b.CreatedAt)
+                .ToList();
+
+            return View(existingBoards);
         }
 
         [HttpGet]
@@ -149,13 +164,16 @@ namespace WebDevProject.Controllers
             switch (model.GroupManagementOption)
             {
                 case "closeOnFull":
-                    board.CloseOnFull = true;
+                    board.GroupManagementOption = GroupManagement.CloseOnFull;
                     break;
                 case "increaseMax":
-                    board.IncreaseMaxParticipantsOnFull = true;
+                    board.GroupManagementOption = GroupManagement.IncreaseMaxParticipantsOnFull;
                     break;
                 case "manualIncrease":
-                    board.ManualIncreaseMaxParticipants = true;
+                    board.GroupManagementOption = GroupManagement.ManualIncreaseMaxParticipants;
+                    break;
+                default:
+                    board.GroupManagementOption = GroupManagement.CloseOnFull;
                     break;
             }
 
@@ -243,7 +261,7 @@ namespace WebDevProject.Controllers
                 if (c == '-')
                 {
                     if (i > 0 && tag[i - 1] == '-')
-                        return false; // Consecutive hyphens not allowed
+                        return false;
                     continue;
                 }
 
@@ -447,7 +465,7 @@ namespace WebDevProject.Controllers
             // Update board status if now full
             if (board.Participants.Count + 1 >= board.MaxParticipants)
             {
-                if (board.CloseOnFull)
+                if (board.GroupManagementOption == GroupManagement.CloseOnFull)
                 {
                     board.CurrentStatus = BoardStatus.Full;
                 }

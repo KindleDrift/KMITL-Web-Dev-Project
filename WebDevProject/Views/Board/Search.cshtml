@@ -1,5 +1,4 @@
-@using WebDevProject.Models;
-@model SignUpViewModel;
+@model List<Board>;
 
 @{
     ViewData["Title"] = "Search";
@@ -9,48 +8,29 @@
     <link rel="stylesheet" href="~/css/search.css" asp-append-version="true" />
 }
 
-
 <h1 class="post_list">Post list</h1>
     
 <div class="container">
-    <div class="post">
-        <div class="status"></div>
-        <h2 class="post_title">(post_title)</h2>
-        <p class="participants"># participants</p>
-    </div>
-    <div class="post_">
-        <div class="status"></div>
-        <h2 class="post_title">(post_title)</h2>
-        <p class="participants"># participants</p>
-    </div>
-    <div class="post">
-        <div class="status"></div>
-        <h2 class="post_title">(post_title)</h2>
-        <p class="participants"># participants</p>
-    </div>
-    <div class="post_">
-        <div class="status"></div>
-        <h2 class="post_title">(post_title)</h2>
-        <p class="participants"># participants</p>
-    </div>
-    <div class="post">
-        <div class="status"></div>
-        <h2 class="post_title">(post_title)</h2>
-        <p class="participants"># participants</p>
-    </div>
-    <div class="post_">
-        <div class="status"></div>
-        <h2 class="post_title">(post_title)</h2>
-        <p class="participants"># participants</p>
-    </div>
-    <div class="post">
-        <div class="status"></div>
-        <h2 class="post_title">(post_title)</h2>
-        <p class="participants"># participants</p>
-    </div>
-    <div class="post_">
-        <div class="status"></div>
-        <h2 class="post_title">(post_title)</h2>
-        <p class="participants"># participants</p>
-    </div>
+    @foreach (var existingBoard in Model)
+    {
+        var  participantsimg = existingBoard.Participants.ToList();
+        var statusClass = existingBoard.CurrentStatus switch
+        {
+            WebDevProject.Models.BoardStatus.Open => "status-open",
+            WebDevProject.Models.BoardStatus.Full => "status-full",
+            WebDevProject.Models.BoardStatus.Closed => "status-closed",
+            WebDevProject.Models.BoardStatus.Archived => "status-archived",
+            _ => "status-open"
+        };
+        <a class="post" asp-action="Details" asp-route-id="@existingBoard.Id">
+            <span class="status-dot @statusClass" title="@existingBoard.CurrentStatus"></span>
+            <h2 class="post_title">@existingBoard.Title</h2>
+            <div class="participant-images">
+                @foreach (var participant in existingBoard.Participants)
+                {
+                    <img src="@(participant.User?.ProfilePictureUrl ?? Url.Content("~/images/default-profile.png"))" alt="@(participant.User?.DisplayName ?? "Participant")" title="@(participant.User?.DisplayName ?? "Participant")" />
+                }
+            </div>
+        </a> 
+    }
 </div>

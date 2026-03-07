@@ -104,25 +104,22 @@
             </label>
         </div>
 
-        <div class="form-group checkbox-group">
-            <label class="checkbox-label">
-                <input type="checkbox" asp-for="CloseOnFull" class="form-check-input" />
-                <span>Close When Full</span>
-            </label>
-        </div>
-
-        <div class="form-group checkbox-group">
-            <label class="checkbox-label">
-                <input type="checkbox" asp-for="IncreaseMaxParticipantsOnFull" class="form-check-input" />
-                <span>Auto-Increase Max Participants When Full</span>
-            </label>
-        </div>
-
-        <div class="form-group checkbox-group">
-            <label class="checkbox-label">
-                <input type="checkbox" asp-for="ManualIncreaseMaxParticipants" class="form-check-input" />
-                <span>Allow Manual Increase of Max Participants</span>
-            </label>
+        <div class="form-group">
+            <label class="form-label">Group Management</label>
+            <div class="radio-group">
+                <label class="radio-label">
+                    <input type="radio" asp-for="GroupManagementOption" value="CloseOnFull" class="form-check-input" />
+                    <span>Close When Full</span>
+                </label>
+                <label class="radio-label">
+                    <input type="radio" asp-for="GroupManagementOption" value="IncreaseMaxParticipantsOnFull" class="form-check-input" />
+                    <span>Auto-Increase Max Participants When Full</span>
+                </label>
+                <label class="radio-label">
+                    <input type="radio" asp-for="GroupManagementOption" value="ManualIncreaseMaxParticipants" class="form-check-input" />
+                    <span>Allow Manual Increase of Max Participants</span>
+                </label>
+            </div>
         </div>
 
         <div class="form-actions">
@@ -343,6 +340,23 @@
 
         .tag .btn-remove:hover {
             color: #ffcccc;
+        }
+
+        .radio-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .radio-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+
+        .radio-label input {
+            margin: 0;
         }
     </style>
 }

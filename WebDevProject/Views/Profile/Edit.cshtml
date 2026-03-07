@@ -1,3 +1,5 @@
+@model WebDevProject.Models.EditProfileViewModel
+
 @{
     ViewData["Title"] = "Edit Profile";
 }
@@ -6,47 +8,53 @@
     <link rel="stylesheet" href="~/css/editprofile.css" asp-append-version="true" />
 }
 
-<form class="profile">
+<form class="profile" id="editprofile-form" asp-action="Edit" method="post" enctype="multipart/form-data"> 
+    @Html.AntiForgeryToken()
     <div class="edit-picture">
-        <img class="profile-picture" id="preview"
-            src="" alt="picture">
-        <input type="file" id="imageInput" accept="image/*" hidden>
+        <img class="profile-picture" id="preview" src="@(Model.CurrentProfilePictureUrl ?? "/images/default-profile.png")" alt="Profile Picture">
+        <input asp-for="ProfileImage" type="file" id="imageInput" accept="image/*" hidden>
         <button id="changePicBtn" type="button">Change Picture</button>
+        <span asp-validation-for="ProfileImage"></span>
     </div>
     <div class="profile-data">
         <div class="data-menu">
             <div class="row">
-                <span class="label">username :</span>
-                <input type="text" id="usernameInput"><br>
+                <span class="label">Username :</span>
+                <input asp-for="UserName" id="usernameInput" required>
+                <span asp-validation-for="UserName" class="text-danger"></span>
+                <span id="nameError" class="text-danger"></span>
             </div>
             <div class="row">
-                <span class="label">name :</span>
-                <input type="text" id="nameInput"><br>
-            </div>
-            <div class="row">
-                <span class="label">gender :</span>
+                <span class="label">Gender :</span>
                 <span>
-                    <input type="radio" id="genderInput" name="gender" value="male">
+                    <input asp-for="UserGender" type="radio" id="male" value="0" checked="@(Model.UserGender == WebDevProject.Models.Users.Gender.Male ? "checked" : null)">
                     <label for="male">male</label>
                 </span>
                 <span>
-                    <input type="radio" id="genderInput" name="gender" value="female">
+                    <input asp-for="UserGender" type="radio" id="female" value="1" checked="@(Model.UserGender == WebDevProject.Models.Users.Gender.Female ? "checked" : null)">
                     <label for="female">female</label>
                 </span>
                 <span>
-                    <input type="radio" id="genderInput" name="gender" value="other">
+                    <input asp-for="UserGender" type="radio" id="other" value="2" checked="@(Model.UserGender == WebDevProject.Models.Users.Gender.Other ? "checked" : null)">
                     <label for="other">other</label>
                 </span>
+                <span asp-validation-for="UserGender"></span>
             </div>
             <div class="row">
-                <span class="label">birth date :</span>
-                <input type="date" id="birthdateInput"><br>
+                <span class="label">Birth Date :</span>
+                <input asp-for="DateOfBirth" type="date" id="birthdateInput"/>
+                <span asp-validation-for="DateOfBirth"></span>
             </div>
             <div class="row">
-                <span class="label">email :</span>
-                <input type="email" id="emailInput"><br>
+                <span class="label">Bio :</span>
+                <textarea asp-for="Bio" id="bioInput" rows="4" placeholder="Tell us about yourself..."></textarea>
+                <span asp-validation-for="Bio"></span>
             </div>
-            <button type="button" id="save">save change</button>
+            <button type="submit" id="save">save change</button>
         </div>
     </div>
 </form>
+
+@section Scripts {
+    <script src="~/js/editprofile.js" asp-append-version="true"></script>
+}

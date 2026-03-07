@@ -2,20 +2,21 @@
 
 namespace WebDevProject.Models
 {
-    // The whole thing can be skipped if the user doesn't want to provide their date of birth, so no required attribute is needed.
-    public class OnboardingViewModel
+    public class EditProfileViewModel
     {
         // Profile Image upload
         public IFormFile? ProfileImage { get; set; }
+
+        // Current profile picture URL (For Display)
+        public string? CurrentProfilePictureUrl { get; set; }
+
+        public required string UserName { get; set; }
 
         [DataType(DataType.Date)]
         public DateTime? DateOfBirth { get; set; }
 
         public Users.Gender? UserGender { get; set; }
 
-        [StringLength(500, ErrorMessage = "Bio cannot exceed 500 characters.")]
         public string? Bio { get; set; }
-
-        public bool SkipOnboarding { get; set; }
     }
 }
