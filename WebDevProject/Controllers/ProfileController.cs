@@ -2,17 +2,14 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebDevProject.Models;
+using WebDevProject.Filters;
 
 namespace WebDevProject.Controllers
 {
-    public class ProfileController : Controller
+    [RequireOnboarding]
+    public class ProfileController(UserManager<Users> userManager) : Controller
     {
-        private readonly UserManager<Users> _userManager;
-
-        public ProfileController(UserManager<Users> userManager)
-        {
-            _userManager = userManager;
-        }
+        private readonly UserManager<Users> _userManager = userManager;
 
         [HttpGet]
         public async Task<IActionResult> Index()
