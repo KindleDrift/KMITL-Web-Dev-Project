@@ -9,45 +9,23 @@
 }
 
 <div class="profile">
-    @if (!string.IsNullOrEmpty(Model.ProfilePictureUrl))
-    {
-        <img class="profile-picture" id="picture" src="@Model.ProfilePictureUrl" alt="picture">
-    }
-    else
-    {
-        <img class="profile-picture" id="picture" src="~/images/default-profile.png" alt="picture">
-    }
-
+    <img class="profile-picture" id="picture" src="@(Model.ProfilePictureUrl ?? "/images/default-profile.png")" alt="Profile Picture">
     <div class="profile-data">
-        <a class="profile-link" href="@Url.Action("Edit", "Profile")">edit profile</a>
+        <a class="profile-link" href="@Url.Action("Edit", "Profile")">Edit Profile</a>
 
         <div class="data-menu">
             <div class="row">
-                <span class="label">username :</span>
-                @if (!string.IsNullOrWhiteSpace(Model.DisplayName))
-                {
-                    <span>@Model.DisplayName</span>
-                }
-                else
-                {
-                    <span>-</span>
-                }
+                <span class="label">Username :</span>
+                <span>@Model.DisplayName</span>
             </div>
 
             <div class="row">
-                <span class="label">email :</span>
-                @if (!string.IsNullOrWhiteSpace(Model.Email))
-                {
-                    <span>@Model.Email</span>
-                }
-                else
-                {
-                    <span class="text-muted">Not provided</span>
-                }
+                <span class="label">Email :</span>
+                <span>@Model.Email</span>
             </div>
 
             <div class="row">
-                <span class="label">birth date :</span>
+                <span class="label">Birth Date :</span>
                 @if (Model.DateOfBirth.HasValue)
                 {
                     <span>@Model.DateOfBirth.Value.ToString("MMMM dd, yyyy")</span>
@@ -59,7 +37,7 @@
             </div>
 
             <div class="row">
-                <span class="label">gender :</span>
+                <span class="label">Gender :</span>
                 @if (Model.UserGender.HasValue)
                 {
                     <span>@Model.UserGender</span>
@@ -71,15 +49,27 @@
             </div>
 
             <div class="row">
-                <span class="label">member since :</span>
+                <span class="label">Bio :</span>
+                @if (!string.IsNullOrWhiteSpace(Model.Bio))
+                {
+                    <span>@Model.Bio</span>
+                }
+                else
+                {
+                    <span class="text-muted">Not provided</span>
+                }
+            </div>
+
+            <div class="row">
+                <span class="label">Member Since :</span>
                 <span>@Model.CreatedAt.ToString("MMMM dd, yyyy")</span>
             </div>
         </div>
 
-        <a class="profile-link" href="@Url.Action("ChangePassword", "Account")">reset password</a>
+        <a class="profile-link" href="@Url.Action("ChangePassword", "Account")">Reset Password</a>
 
         <form asp-action="SignOut" asp-controller="Account" method="post" style="display: inline;">
-            <button type="submit" class="profile-link" style="border: none; background: none; padding: 0;">sign out</button>
+            <button type="submit" class="profile-link" style="border: none; background: none; padding: 0;">Sign Out</button>
         </form>
     </div>
 </div>
