@@ -169,7 +169,8 @@ namespace WebDevProject.Data
                         Deadline = DateTime.UtcNow.Date.AddDays(5).AddHours(23),
                         CurrentStatus = BoardStatus.Open,
                         NotifyAuthorOnFull = true,
-                        GroupManagementOption = GroupManagement.ManualIncreaseMaxParticipants,
+                        GroupManagementOption = GroupManagement.CloseOnFull,
+                        JoinPolicy = BoardJoinPolicy.Application,
                         CreatedAt = DateTime.UtcNow.AddDays(-2)
                     };
                     context.Boards.Add(board);
@@ -201,7 +202,8 @@ namespace WebDevProject.Data
                         Deadline = DateTime.UtcNow.Date.AddDays(9).AddHours(20),
                         CurrentStatus = BoardStatus.Open,
                         NotifyAuthorOnFull = true,
-                        GroupManagementOption = GroupManagement.ManualIncreaseMaxParticipants,
+                        GroupManagementOption = GroupManagement.KeepOpenWhenFull,
+                        JoinPolicy = BoardJoinPolicy.Application,
                         CreatedAt = DateTime.UtcNow.AddDays(-3)
                     };
                     context.Boards.Add(board);
@@ -236,6 +238,7 @@ namespace WebDevProject.Data
                         CurrentStatus = BoardStatus.Full,
                         NotifyAuthorOnFull = true,
                         GroupManagementOption = GroupManagement.CloseOnFull,
+                        JoinPolicy = BoardJoinPolicy.FirstComeFirstServe,
                         CreatedAt = DateTime.UtcNow.AddDays(-5)
                     };
                     context.Boards.Add(board);
@@ -246,6 +249,11 @@ namespace WebDevProject.Data
                         new BoardParticipant { BoardId = board.Id, UserId = ivan.Id, JoinedAt = DateTime.UtcNow.AddDays(-4) },
                         new BoardParticipant { BoardId = board.Id, UserId = judy.Id, JoinedAt = DateTime.UtcNow.AddDays(-3) },
                         new BoardParticipant { BoardId = board.Id, UserId = karl.Id, JoinedAt = DateTime.UtcNow.AddDays(-2) }
+                    );
+                    await context.SaveChangesAsync();
+
+                    context.BoardExternalParticipants.Add(
+                        new BoardExternalParticipant { BoardId = board.Id, Name = "Guest Walk-in", Note = "Door ticket", AddedAt = DateTime.UtcNow.AddDays(-2) }
                     );
                     await context.SaveChangesAsync();
                 }
@@ -268,7 +276,8 @@ namespace WebDevProject.Data
                         Deadline = DateTime.UtcNow.Date.AddDays(4).AddHours(23),
                         CurrentStatus = BoardStatus.Closed,
                         NotifyAuthorOnFull = false,
-                        GroupManagementOption = GroupManagement.ManualIncreaseMaxParticipants,
+                        GroupManagementOption = GroupManagement.CloseOnFull,
+                        JoinPolicy = BoardJoinPolicy.Application,
                         CreatedAt = DateTime.UtcNow.AddDays(-10)
                     };
                     context.Boards.Add(board);
@@ -297,7 +306,8 @@ namespace WebDevProject.Data
                         Deadline = DateTime.UtcNow.Date.AddDays(3).AddHours(12),
                         CurrentStatus = BoardStatus.Open,
                         NotifyAuthorOnFull = true,
-                        GroupManagementOption = GroupManagement.IncreaseMaxParticipantsOnFull,
+                        GroupManagementOption = GroupManagement.AllowOverbooking,
+                        JoinPolicy = BoardJoinPolicy.Application,
                         CreatedAt = DateTime.UtcNow.AddHours(-6)
                     };
                     context.Boards.Add(board);
@@ -323,7 +333,8 @@ namespace WebDevProject.Data
                         Deadline = DateTime.UtcNow.Date.AddDays(-1).AddHours(23),
                         CurrentStatus = BoardStatus.Open,
                         NotifyAuthorOnFull = false,
-                        GroupManagementOption = GroupManagement.ManualIncreaseMaxParticipants,
+                        GroupManagementOption = GroupManagement.KeepOpenWhenFull,
+                        JoinPolicy = BoardJoinPolicy.FirstComeFirstServe,
                         CreatedAt = DateTime.UtcNow.AddDays(-15)
                     };
                     context.Boards.Add(board);
@@ -356,6 +367,7 @@ namespace WebDevProject.Data
                         CurrentStatus = BoardStatus.Closed,
                         NotifyAuthorOnFull = false,
                         GroupManagementOption = GroupManagement.CloseOnFull,
+                        JoinPolicy = BoardJoinPolicy.Application,
                         CreatedAt = DateTime.UtcNow.AddDays(-20)
                     };
                     context.Boards.Add(board);
@@ -395,7 +407,8 @@ namespace WebDevProject.Data
                         Deadline = DateTime.UtcNow.Date.AddDays(12).AddHours(23),
                         CurrentStatus = BoardStatus.Open,
                         NotifyAuthorOnFull = true,
-                        GroupManagementOption = GroupManagement.IncreaseMaxParticipantsOnFull,
+                        GroupManagementOption = GroupManagement.AllowOverbooking,
+                        JoinPolicy = BoardJoinPolicy.FirstComeFirstServe,
                         CreatedAt = DateTime.UtcNow.AddDays(-1)
                     };
                     context.Boards.Add(board);
@@ -411,6 +424,12 @@ namespace WebDevProject.Data
                         new BoardParticipant { BoardId = board.Id, UserId = charlie2.Id, JoinedAt = DateTime.UtcNow.AddHours(-6) },
                         new BoardParticipant { BoardId = board.Id, UserId = david2.Id, JoinedAt = DateTime.UtcNow.AddHours(-4) },
                         new BoardParticipant { BoardId = board.Id, UserId = eve2.Id, JoinedAt = DateTime.UtcNow.AddHours(-2) }
+                    );
+                    await context.SaveChangesAsync();
+
+                    context.BoardExternalParticipants.AddRange(
+                        new BoardExternalParticipant { BoardId = board.Id, Name = "Alumni Guest", Note = "Guest from alumni office", AddedAt = DateTime.UtcNow.AddHours(-1) },
+                        new BoardExternalParticipant { BoardId = board.Id, Name = "Exchange Student", Note = "Walk-in", AddedAt = DateTime.UtcNow.AddMinutes(-30) }
                     );
                     await context.SaveChangesAsync();
                 }
@@ -434,6 +453,7 @@ namespace WebDevProject.Data
                         CurrentStatus = BoardStatus.Open,
                         NotifyAuthorOnFull = true,
                         GroupManagementOption = GroupManagement.CloseOnFull,
+                        JoinPolicy = BoardJoinPolicy.Application,
                         CreatedAt = DateTime.UtcNow.AddDays(-1)
                     };
                     context.Boards.Add(board);
@@ -466,7 +486,8 @@ namespace WebDevProject.Data
                         Deadline = DateTime.UtcNow.Date.AddDays(25).AddHours(23),
                         CurrentStatus = BoardStatus.Open,
                         NotifyAuthorOnFull = true,
-                        GroupManagementOption = GroupManagement.IncreaseMaxParticipantsOnFull,
+                        GroupManagementOption = GroupManagement.KeepOpenWhenFull,
+                        JoinPolicy = BoardJoinPolicy.FirstComeFirstServe,
                         CreatedAt = DateTime.UtcNow.AddDays(-7)
                     };
                     context.Boards.Add(board);
@@ -498,7 +519,8 @@ namespace WebDevProject.Data
                         Deadline = DateTime.UtcNow.Date.AddDays(4).AddHours(12),
                         CurrentStatus = BoardStatus.Cancelled,
                         NotifyAuthorOnFull = false,
-                        GroupManagementOption = GroupManagement.ManualIncreaseMaxParticipants,
+                        GroupManagementOption = GroupManagement.CloseOnFull,
+                        JoinPolicy = BoardJoinPolicy.Application,
                         CreatedAt = DateTime.UtcNow.AddDays(-8)
                     };
                     context.Boards.Add(board);
@@ -526,6 +548,7 @@ namespace WebDevProject.Data
                         CurrentStatus = BoardStatus.Open,
                         NotifyAuthorOnFull = true,
                         GroupManagementOption = GroupManagement.CloseOnFull,
+                        JoinPolicy = BoardJoinPolicy.FirstComeFirstServe,
                         CreatedAt = DateTime.UtcNow.AddDays(-4)
                     };
                     context.Boards.Add(board);
@@ -535,6 +558,11 @@ namespace WebDevProject.Data
                         new BoardParticipant { BoardId = board.Id, UserId = oscar2.Id, JoinedAt = DateTime.UtcNow.AddDays(-3) },
                         new BoardParticipant { BoardId = board.Id, UserId = peggy2.Id, JoinedAt = DateTime.UtcNow.AddDays(-2) },
                         new BoardParticipant { BoardId = board.Id, UserId = quentin2.Id, JoinedAt = DateTime.UtcNow.AddDays(-1) }
+                    );
+                    await context.SaveChangesAsync();
+
+                    context.BoardExternalParticipants.Add(
+                        new BoardExternalParticipant { BoardId = board.Id, Name = "Court Guest", Note = "Friend of organizer", AddedAt = DateTime.UtcNow.AddHours(-12) }
                     );
                     await context.SaveChangesAsync();
                 }

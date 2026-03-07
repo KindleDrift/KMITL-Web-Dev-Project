@@ -15,6 +15,8 @@ namespace WebDevProject.Data
 
         public DbSet<BoardParticipant> BoardParticipants => Set<BoardParticipant>();
 
+        public DbSet<BoardExternalParticipant> BoardExternalParticipants => Set<BoardExternalParticipant>();
+
         public DbSet<BoardApplicant> BoardApplicants => Set<BoardApplicant>();
 
         public DbSet<BoardDenied> BoardDenied => Set<BoardDenied>();
@@ -44,6 +46,15 @@ namespace WebDevProject.Data
                 .HasOne(bp => bp.User)
                 .WithMany(u => u.BoardParticipations)
                 .HasForeignKey(bp => bp.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<BoardExternalParticipant>()
+                .HasKey(be => be.Id);
+
+            builder.Entity<BoardExternalParticipant>()
+                .HasOne(be => be.Board)
+                .WithMany(b => b.ExternalParticipants)
+                .HasForeignKey(be => be.BoardId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             builder.Entity<BoardApplicant>()
