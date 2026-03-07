@@ -127,8 +127,8 @@ namespace WebDevProject.Models
     public enum GroupManagement
     {
         CloseOnFull,
-        IncreaseMaxParticipantsOnFull,
-        ManualIncreaseMaxParticipants
+        AllowOverbooking,
+        KeepOpenWhenFull
     }
 
     public enum BoardJoinPolicy

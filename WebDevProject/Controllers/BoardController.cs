@@ -175,11 +175,11 @@ namespace WebDevProject.Controllers
                 case "closeOnFull":
                     board.GroupManagementOption = GroupManagement.CloseOnFull;
                     break;
-                case "increaseMax":
-                    board.GroupManagementOption = GroupManagement.IncreaseMaxParticipantsOnFull;
+                case "allowOverbooking":
+                    board.GroupManagementOption = GroupManagement.AllowOverbooking;
                     break;
-                case "manualIncrease":
-                    board.GroupManagementOption = GroupManagement.ManualIncreaseMaxParticipants;
+                case "keepOpenWhenFull":
+                    board.GroupManagementOption = GroupManagement.KeepOpenWhenFull;
                     break;
                 default:
                     board.GroupManagementOption = GroupManagement.CloseOnFull;
@@ -423,10 +423,19 @@ namespace WebDevProject.Controllers
                 return RedirectToAction(nameof(Details), new { id });
             }
 
-            if (GetOccupiedSeatCount(board) >= board.MaxParticipants)
+            // Check capacity based on group management option
+            var currentOccupied = GetOccupiedSeatCount(board);
+            if (currentOccupied >= board.MaxParticipants)
             {
-                TempData["Error"] = "Board is full. Cannot accept more participants.";
-                return RedirectToAction(nameof(Details), new { id });
+                // For FirstComeFirstServe, only AllowOverbooking can bypass capacity
+                if (board.JoinPolicy == BoardJoinPolicy.FirstComeFirstServe && 
+                    board.GroupManagementOption != GroupManagement.AllowOverbooking)
+                {
+                    TempData["Error"] = "Board is full. Cannot accept more participants.";
+                    return RedirectToAction(nameof(Details), new { id });
+                }
+                // For Application mode, KeepOpenWhenFull allows applications but not immediate joining
+                // This is handled naturally - applications can still be submitted
             }
 
             if (board.JoinPolicy == BoardJoinPolicy.FirstComeFirstServe)
@@ -554,8 +563,9 @@ namespace WebDevProject.Controllers
                 return RedirectToAction(nameof(Details), new { id = boardId });
             }
 
-            // Check if board is full
-            if (GetOccupiedSeatCount(board) >= board.MaxParticipants)
+            // Check if board is full (only block if not AllowOverbooking)
+            if (GetOccupiedSeatCount(board) >= board.MaxParticipants && 
+                board.GroupManagementOption != GroupManagement.AllowOverbooking)
             {
                 TempData["Error"] = "Board is full. Cannot approve more participants.";
                 return RedirectToAction(nameof(Details), new { id = boardId });
@@ -675,7 +685,8 @@ namespace WebDevProject.Controllers
                 return RedirectToAction(nameof(Details), new { id = boardId });
             }
 
-            if (GetOccupiedSeatCount(board) >= board.MaxParticipants)
+            if (GetOccupiedSeatCount(board) >= board.MaxParticipants && 
+                board.GroupManagementOption != GroupManagement.AllowOverbooking)
             {
                 TempData["Error"] = "Board is full. Cannot add external participant.";
                 return RedirectToAction(nameof(Details), new { id = boardId });
@@ -840,7 +851,12 @@ namespace WebDevProject.Controllers
         {
             if (occupiedSeats >= board.MaxParticipants)
             {
-                board.CurrentStatus = BoardStatus.Full;
+                // Only set to Full if CloseOnFull is selected
+                if (board.GroupManagementOption == GroupManagement.CloseOnFull)
+                {
+                    board.CurrentStatus = BoardStatus.Full;
+                }
+                // KeepOpenWhenFull and AllowOverbooking keep the board Open
                 return;
             }
 

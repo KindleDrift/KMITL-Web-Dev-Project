@@ -169,7 +169,7 @@ namespace WebDevProject.Data
                         Deadline = DateTime.UtcNow.Date.AddDays(5).AddHours(23),
                         CurrentStatus = BoardStatus.Open,
                         NotifyAuthorOnFull = true,
-                        GroupManagementOption = GroupManagement.ManualIncreaseMaxParticipants,
+                        GroupManagementOption = GroupManagement.CloseOnFull,
                         JoinPolicy = BoardJoinPolicy.Application,
                         CreatedAt = DateTime.UtcNow.AddDays(-2)
                     };
@@ -202,7 +202,7 @@ namespace WebDevProject.Data
                         Deadline = DateTime.UtcNow.Date.AddDays(9).AddHours(20),
                         CurrentStatus = BoardStatus.Open,
                         NotifyAuthorOnFull = true,
-                        GroupManagementOption = GroupManagement.ManualIncreaseMaxParticipants,
+                        GroupManagementOption = GroupManagement.KeepOpenWhenFull,
                         JoinPolicy = BoardJoinPolicy.Application,
                         CreatedAt = DateTime.UtcNow.AddDays(-3)
                     };
@@ -276,7 +276,7 @@ namespace WebDevProject.Data
                         Deadline = DateTime.UtcNow.Date.AddDays(4).AddHours(23),
                         CurrentStatus = BoardStatus.Closed,
                         NotifyAuthorOnFull = false,
-                        GroupManagementOption = GroupManagement.ManualIncreaseMaxParticipants,
+                        GroupManagementOption = GroupManagement.CloseOnFull,
                         JoinPolicy = BoardJoinPolicy.Application,
                         CreatedAt = DateTime.UtcNow.AddDays(-10)
                     };
@@ -306,7 +306,7 @@ namespace WebDevProject.Data
                         Deadline = DateTime.UtcNow.Date.AddDays(3).AddHours(12),
                         CurrentStatus = BoardStatus.Open,
                         NotifyAuthorOnFull = true,
-                        GroupManagementOption = GroupManagement.IncreaseMaxParticipantsOnFull,
+                        GroupManagementOption = GroupManagement.AllowOverbooking,
                         JoinPolicy = BoardJoinPolicy.Application,
                         CreatedAt = DateTime.UtcNow.AddHours(-6)
                     };
@@ -333,7 +333,7 @@ namespace WebDevProject.Data
                         Deadline = DateTime.UtcNow.Date.AddDays(-1).AddHours(23),
                         CurrentStatus = BoardStatus.Open,
                         NotifyAuthorOnFull = false,
-                        GroupManagementOption = GroupManagement.ManualIncreaseMaxParticipants,
+                        GroupManagementOption = GroupManagement.KeepOpenWhenFull,
                         JoinPolicy = BoardJoinPolicy.FirstComeFirstServe,
                         CreatedAt = DateTime.UtcNow.AddDays(-15)
                     };
@@ -407,7 +407,7 @@ namespace WebDevProject.Data
                         Deadline = DateTime.UtcNow.Date.AddDays(12).AddHours(23),
                         CurrentStatus = BoardStatus.Open,
                         NotifyAuthorOnFull = true,
-                        GroupManagementOption = GroupManagement.IncreaseMaxParticipantsOnFull,
+                        GroupManagementOption = GroupManagement.AllowOverbooking,
                         JoinPolicy = BoardJoinPolicy.FirstComeFirstServe,
                         CreatedAt = DateTime.UtcNow.AddDays(-1)
                     };
@@ -486,7 +486,7 @@ namespace WebDevProject.Data
                         Deadline = DateTime.UtcNow.Date.AddDays(25).AddHours(23),
                         CurrentStatus = BoardStatus.Open,
                         NotifyAuthorOnFull = true,
-                        GroupManagementOption = GroupManagement.IncreaseMaxParticipantsOnFull,
+                        GroupManagementOption = GroupManagement.KeepOpenWhenFull,
                         JoinPolicy = BoardJoinPolicy.FirstComeFirstServe,
                         CreatedAt = DateTime.UtcNow.AddDays(-7)
                     };
@@ -519,7 +519,7 @@ namespace WebDevProject.Data
                         Deadline = DateTime.UtcNow.Date.AddDays(4).AddHours(12),
                         CurrentStatus = BoardStatus.Cancelled,
                         NotifyAuthorOnFull = false,
-                        GroupManagementOption = GroupManagement.ManualIncreaseMaxParticipants,
+                        GroupManagementOption = GroupManagement.CloseOnFull,
                         JoinPolicy = BoardJoinPolicy.Application,
                         CreatedAt = DateTime.UtcNow.AddDays(-8)
                     };
