@@ -2,16 +2,18 @@
     margin: 20px;
 }
 
-.container {
+.post-create-container {
     display: grid;
     grid-template-columns: 6fr 3fr;
     gap: 10px;
     min-height: 80vh;
+/*    width: 100%;*/
 }
 #postbox {
     background-color: #eaeaea;
     border-radius: 10px;
     padding: 30px;
+    overflow: scroll;
 }
 #options {
     display: flex;
@@ -44,28 +46,37 @@
 
     resize: none;
 }
-#imgbutton {
-    width: 200px;
+#img-zone {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    align-items: center;
+    /*    width: 200px;
     height: 50px;
 
     background-color: #8ec4e9;
     font-size: 20px; 
     padding: 0;
 
-    border-radius: 10px;
+    border-radius: 10px;*/
 }
+#img-inp {
+    width: 80%;
+}
+/*#img-title {
+    width: 20%;
+}*/
 #participants {
     height: 75px;
     background-color: #eaeaea;
     border-radius: 10px;
-
     display: flex;
-    align-items: center;  
+    align-items: center;
     justify-content: center;
     gap: 10px;
     padding: 0 10px;
 }
-#deadline {
+/*#deadline {
     height: 75px;
     background-color: #eaeaea;
     border-radius: 10px;
@@ -75,7 +86,7 @@
     justify-content: center;
     gap: 10px;
     padding: 0 10px;
-}
+}*/
 
 #participants input {
     width: 150px;
@@ -106,7 +117,7 @@
 }
 
 @media (max-width: 768px) {
-    .container {
+    .post-create-container {
         grid-template-columns: 1fr; 
         grid-template-rows: auto auto;
     }
@@ -116,9 +127,9 @@
     #title {
         height: 10%;
     }
-    #imgbutton {
+/*    #img-zone {
         width: 150px;
         height: 30px;
         font-size: 16px;
-    }
+    }*/
 }

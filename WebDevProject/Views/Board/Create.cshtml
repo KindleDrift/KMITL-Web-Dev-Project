@@ -12,12 +12,17 @@
     <div asp-validation-summary="All"></div>
     <div id="postarea">
         <h1>Posting</h1>
-        <div class="container">
+        <span asp-validation-summary="All"></span>
+        <div class="post-create-container">
             <div id="postbox">
                 <textarea id="title" asp-for="Title" placeholder="Title..."></textarea>
                 <textarea id="textbox" asp-for="Description" placeholder="Type here..."></textarea>
                 <hr>
-                <input type="text" id="imgbutton" asp-for="ImageUrl">
+                <div id="img-zone">
+                    <h2>Image Url: </h2>
+                    <input type="text" id="img-inp" asp-for="ImageUrl">
+                </div>
+                
             </div>
 
             <div id="options">
@@ -38,7 +43,12 @@
                     
                 <div id="eventdate">
                     <h2>Event Date:</h2>
-                    <input type="date" id="event-date" asp-for="EventDate" placeholder="Enter location...">
+                    <input type="date" id="event-date" asp-for="EventDate" placeholder="Enter date...">
+                </div>
+
+                <div id="category">
+                    <h2>Category:</h2>
+                    <input type="text" id="cat" asp-for="Category" placeholder="Enter a category...">
                 </div>
 
                 <div id="noti">
