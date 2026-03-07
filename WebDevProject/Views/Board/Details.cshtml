@@ -1,0 +1,23 @@
+﻿@using WebDevProject.Models;
+@model Board;
+
+@{
+    ViewData["Title"] = "Details";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/boardinfo.css" asp-append-version="true" />
+}
+
+<h1 class="post_name">@Model.Title</h1>
+
+<div class="container">
+    <div class="post_content">
+        <img class="board-image" src="@(string.IsNullOrWhiteSpace(Model.ImageUrl) ? Url.Content("~/images/default-board.png") : Model.ImageUrl)" alt="@Model.Title" /> 
+        <p class="post-discription">@Model.Description</p>
+    </div> 
+    <div class="post_info">
+        <p class="participants">@Model.Participants.Count / @Model.MaxParticipants participans</p>
+        <p class="deadline">Deadline: @Model.Deadline.ToString("D")</p>
+    </div>
+</div>
