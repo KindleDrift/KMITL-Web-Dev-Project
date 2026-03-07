@@ -180,6 +180,7 @@ namespace WebDevProject.Controllers
             {
                 user.DateOfBirth = model.DateOfBirth;
                 user.UserGender = model.UserGender;
+                user.Bio = model.Bio;
 
                 if (model.ProfileImage != null && model.ProfileImage.Length > 0)
                 {

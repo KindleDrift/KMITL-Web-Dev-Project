@@ -3,9 +3,11 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebDevProject.Data;
 using WebDevProject.Models;
+using WebDevProject.Filters;
 
 namespace WebDevProject.Controllers
 {
+    [RequireOnboarding]
     public class BoardController : Controller
     {
         private readonly ApplicationDbContext _context;
