@@ -20,7 +20,44 @@ namespace WebDevProject.Controllers
                 return RedirectToAction("SignIn", "Account");
             }
 
-            return View(user);
+            // Redirect to View action with own user ID
+            return RedirectToAction("View", new { userId = user.Id });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> View(string userId)
+        {
+            var userToView = await _userManager.Users
+                .Include(u => u.AuthoredBoards)
+                .Include(u => u.BoardParticipations)
+                .FirstOrDefaultAsync(u => u.Id == userId);
+
+            if (userToView == null)
+            {
+                return NotFound();
+            }
+
+            var currentUser = await _userManager.GetUserAsync(User);
+            bool isOwnProfile = (currentUser != null && currentUser.Id == userId);
+
+            var model = new UserProfileViewModel
+            {
+                UserId = userToView.Id,
+                DisplayName = userToView.DisplayName,
+                Bio = userToView.Bio,
+                ProfilePictureUrl = userToView.ProfilePictureUrl,
+                CreatedAt = userToView.CreatedAt,
+                IsOwnProfile = isOwnProfile,
+                BoardsCreatedCount = userToView.AuthoredBoards?.Count ?? 0,
+                BoardParticipationsCount = userToView.BoardParticipations?.Count ?? 0,
+                UserGender = userToView.UserGender
+
+                // Only include sensitive data if viewing own profile
+                Email = isOwnProfile ? userToView.Email : null,
+                DateOfBirth = isOwnProfile ? userToView.DateOfBirth : null,
+            };
+
+            return View(model);
         }
 
         [HttpGet]
