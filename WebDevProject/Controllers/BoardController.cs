@@ -463,6 +463,64 @@ namespace WebDevProject.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CancelMyApplication(int id)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                return Unauthorized();
+            }
+
+            var board = await _context.Boards
+                .Include(b => b.Participants)
+                .Include(b => b.ExternalParticipants)
+                .Include(b => b.Applicants)
+                .FirstOrDefaultAsync(b => b.Id == id);
+
+            if (board == null)
+            {
+                return NotFound();
+            }
+
+            if (board.AuthorId == userId)
+            {
+                TempData["Error"] = "Board owner cannot use this action.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
+            var applicant = board.Applicants.FirstOrDefault(a => a.UserId == userId);
+            if (applicant != null)
+            {
+                _context.BoardApplicants.Remove(applicant);
+                await _context.SaveChangesAsync();
+
+                TempData["Success"] = "Your application has been cancelled.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
+            var participant = board.Participants.FirstOrDefault(p => p.UserId == userId);
+            if (participant != null)
+            {
+                _context.BoardParticipants.Remove(participant);
+
+                var occupiedAfterRemoval = Math.Max(GetOccupiedSeatCount(board) - 1, 0);
+                if (board.CurrentStatus == BoardStatus.Full && board.GroupManagementOption == GroupManagement.CloseOnFull && occupiedAfterRemoval < board.MaxParticipants)
+                {
+                    board.CurrentStatus = BoardStatus.Open;
+                }
+
+                await _context.SaveChangesAsync();
+
+                TempData["Success"] = "You left the board successfully.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
+            TempData["Error"] = "You have no active application or participation in this board.";
+            return RedirectToAction(nameof(Details), new { id });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> ApproveApplicant(int boardId, string applicantId)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
