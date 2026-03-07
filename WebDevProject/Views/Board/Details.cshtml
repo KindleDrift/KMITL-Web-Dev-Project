@@ -31,6 +31,8 @@
 
         @{
             var isOpenPastDeadline = Model.Board.CurrentStatus == WebDevProject.Models.BoardStatus.Open && Model.Board.Deadline <= DateTime.UtcNow;
+            var visibleParticipants = Model.Participants.Where(p => p.UserId != Model.Board.AuthorId).ToList();
+            var visibleOccupiedSlots = visibleParticipants.Count + Model.ExternalParticipants.Count;
             var statusClass = Model.Board.CurrentStatus switch
             {
                 WebDevProject.Models.BoardStatus.Open => isOpenPastDeadline ? "status-closed" : "status-open",
@@ -58,7 +60,7 @@
                     <div><strong>Event Date:</strong> @Model.Board.EventDate.ToString("dd MMM yyyy, HH:mm")</div>
                     <div><strong>Location:</strong> @Model.Board.Location</div>
                     <div><strong>Join Deadline:</strong> @Model.Board.Deadline.ToString("dd MMM yyyy, HH:mm")</div>
-                    <div><strong>Participants:</strong> @Model.OccupiedSlots / @Model.Board.MaxParticipants</div>
+                    <div><strong>Participants:</strong> @visibleOccupiedSlots / @Model.Board.MaxParticipants</div>
                     <div><strong>Join System:</strong> @(Model.Board.JoinPolicy == BoardJoinPolicy.FirstComeFirstServe ? "First-Come-First-Serve" : "Application System")</div>
                     <div><strong>Author:</strong> 
                         <img src="@(Model.Board.Author?.ProfilePictureUrl ?? Url.Content("~/images/default-profile.png"))" alt="@(Model.Board.Author?.DisplayName ?? "Author")" class="small-avatar" />
@@ -125,11 +127,11 @@
 
             <div class="status-sections-container">
                 <div class="participants-section status-section-column">
-                    <h3>Participants (@Model.OccupiedSlots / @Model.Board.MaxParticipants)</h3>
-                    @if (Model.Participants.Any())
+                    <h3>Participants (@visibleOccupiedSlots / @Model.Board.MaxParticipants)</h3>
+                    @if (visibleParticipants.Any())
                     {
                         <div class="user-list">
-                            @foreach (var participant in Model.Participants)
+                            @foreach (var participant in visibleParticipants)
                             {
                                 <div class="user-item">
                                     <img src="@(participant.User?.ProfilePictureUrl ?? Url.Content("~/images/default-profile.png"))" alt="@(participant.User?.DisplayName ?? "Participant")" class="user-avatar" />

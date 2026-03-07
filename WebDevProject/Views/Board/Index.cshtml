@@ -21,9 +21,10 @@
             {
                 @foreach (var board in activeBoards)
                 {
-                    var participantCount = board.Participants.Count + board.ExternalParticipants.Count;
+                    var visibleParticipants = board.Participants.Where(p => p.UserId != board.AuthorId).ToList();
+                    var participantCount = visibleParticipants.Count + board.ExternalParticipants.Count;
                     var spotsLeft = Math.Max(board.MaxParticipants - participantCount, 0);
-                    var previewParticipants = board.Participants.Take(5).ToList();
+                    var previewParticipants = visibleParticipants.Take(5).ToList();
                     var isOpenPastDeadline = board.CurrentStatus == WebDevProject.Models.BoardStatus.Open && board.Deadline <= DateTime.UtcNow;
                     var statusClass = board.CurrentStatus switch
                     {
@@ -112,9 +113,10 @@
             {
                 @foreach (var board in participatingBoards)
                 {
-                    var participantCount = board.Participants.Count + board.ExternalParticipants.Count;
+                    var visibleParticipants = board.Participants.Where(p => p.UserId != board.AuthorId).ToList();
+                    var participantCount = visibleParticipants.Count + board.ExternalParticipants.Count;
                     var spotsLeft = Math.Max(board.MaxParticipants - participantCount, 0);
-                    var previewParticipants = board.Participants.Take(5).ToList();
+                    var previewParticipants = visibleParticipants.Take(5).ToList();
                     var isOpenPastDeadline = board.CurrentStatus == WebDevProject.Models.BoardStatus.Open && board.Deadline <= DateTime.UtcNow;
                     var statusClass = board.CurrentStatus switch
                     {

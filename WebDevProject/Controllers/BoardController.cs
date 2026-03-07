@@ -432,6 +432,8 @@ namespace WebDevProject.Controllers
 
             if (board.JoinPolicy == BoardJoinPolicy.FirstComeFirstServe)
             {
+                var occupiedBeforeAdd = GetOccupiedSeatCount(board);
+
                 var participant = new BoardParticipant
                 {
                     BoardId = id,
@@ -440,7 +442,7 @@ namespace WebDevProject.Controllers
                 };
 
                 _context.BoardParticipants.Add(participant);
-                UpdateBoardStatusByCapacity(board, GetOccupiedSeatCount(board) + 1);
+                UpdateBoardStatusByCapacity(board, occupiedBeforeAdd + 1);
                 await _context.SaveChangesAsync();
 
                 TempData["Success"] = "You joined this board successfully.";
@@ -501,13 +503,12 @@ namespace WebDevProject.Controllers
             var participant = board.Participants.FirstOrDefault(p => p.UserId == userId);
             if (participant != null)
             {
+                var occupiedBeforeRemoval = GetOccupiedSeatCount(board);
+
                 _context.BoardParticipants.Remove(participant);
 
-                var occupiedAfterRemoval = Math.Max(GetOccupiedSeatCount(board) - 1, 0);
-                if (board.CurrentStatus == BoardStatus.Full && board.GroupManagementOption == GroupManagement.CloseOnFull && occupiedAfterRemoval < board.MaxParticipants)
-                {
-                    board.CurrentStatus = BoardStatus.Open;
-                }
+                var occupiedAfterRemoval = Math.Max(occupiedBeforeRemoval - 1, 0);
+                UpdateBoardStatusByCapacity(board, occupiedAfterRemoval);
 
                 await _context.SaveChangesAsync();
 
@@ -561,6 +562,8 @@ namespace WebDevProject.Controllers
                 return RedirectToAction(nameof(Details), new { id = boardId });
             }
 
+            var occupiedBeforeAdd = GetOccupiedSeatCount(board);
+
             _context.BoardApplicants.Remove(applicant);
 
             var participant = new BoardParticipant
@@ -571,7 +574,7 @@ namespace WebDevProject.Controllers
             };
 
             _context.BoardParticipants.Add(participant);
-            UpdateBoardStatusByCapacity(board, GetOccupiedSeatCount(board) + 1);
+            UpdateBoardStatusByCapacity(board, occupiedBeforeAdd + 1);
 
             await _context.SaveChangesAsync();
 
@@ -612,6 +615,8 @@ namespace WebDevProject.Controllers
                 return RedirectToAction(nameof(Details), new { id = boardId });
             }
 
+            var occupiedBeforeRemoval = GetOccupiedSeatCount(board);
+
             _context.BoardParticipants.Remove(participant);
 
             if (!board.DeniedUsers.Any(d => d.UserId == participantId))
@@ -624,11 +629,8 @@ namespace WebDevProject.Controllers
                 });
             }
 
-            var occupiedAfterRemoval = Math.Max(GetOccupiedSeatCount(board) - 1, 0);
-            if (board.CurrentStatus == BoardStatus.Full && board.GroupManagementOption == GroupManagement.CloseOnFull && occupiedAfterRemoval < board.MaxParticipants)
-            {
-                board.CurrentStatus = BoardStatus.Open;
-            }
+            var occupiedAfterRemoval = Math.Max(occupiedBeforeRemoval - 1, 0);
+            UpdateBoardStatusByCapacity(board, occupiedAfterRemoval);
 
             await _context.SaveChangesAsync();
 
@@ -680,6 +682,8 @@ namespace WebDevProject.Controllers
                 return RedirectToAction(nameof(Details), new { id = boardId });
             }
 
+            var occupiedBeforeAdd = GetOccupiedSeatCount(board);
+
             var participant = new BoardExternalParticipant
             {
                 BoardId = boardId,
@@ -689,7 +693,7 @@ namespace WebDevProject.Controllers
             };
 
             _context.BoardExternalParticipants.Add(participant);
-            UpdateBoardStatusByCapacity(board, GetOccupiedSeatCount(board) + 1);
+            UpdateBoardStatusByCapacity(board, occupiedBeforeAdd + 1);
 
             await _context.SaveChangesAsync();
 
@@ -729,13 +733,12 @@ namespace WebDevProject.Controllers
                 return RedirectToAction(nameof(Details), new { id = boardId });
             }
 
+            var occupiedBeforeRemoval = GetOccupiedSeatCount(board);
+
             _context.BoardExternalParticipants.Remove(externalParticipant);
 
-            var occupiedAfterRemoval = Math.Max(GetOccupiedSeatCount(board) - 1, 0);
-            if (board.CurrentStatus == BoardStatus.Full && board.GroupManagementOption == GroupManagement.CloseOnFull && occupiedAfterRemoval < board.MaxParticipants)
-            {
-                board.CurrentStatus = BoardStatus.Open;
-            }
+            var occupiedAfterRemoval = Math.Max(occupiedBeforeRemoval - 1, 0);
+            UpdateBoardStatusByCapacity(board, occupiedAfterRemoval);
 
             await _context.SaveChangesAsync();
 
@@ -831,14 +834,20 @@ namespace WebDevProject.Controllers
 
         private static int GetOccupiedSeatCount(Board board)
         {
-            return board.Participants.Count + board.ExternalParticipants.Count;
+            return board.Participants.Count(p => p.UserId != board.AuthorId) + board.ExternalParticipants.Count;
         }
 
         private static void UpdateBoardStatusByCapacity(Board board, int occupiedSeats)
         {
-            if (board.GroupManagementOption == GroupManagement.CloseOnFull && occupiedSeats >= board.MaxParticipants)
+            if (occupiedSeats >= board.MaxParticipants)
             {
                 board.CurrentStatus = BoardStatus.Full;
+                return;
+            }
+
+            if (board.CurrentStatus == BoardStatus.Full)
+            {
+                board.CurrentStatus = BoardStatus.Open;
             }
         }
     }
