@@ -73,12 +73,11 @@
                 <option value="Full">Full</option>
                 <option value="Closed">Closed</option>
                 <option value="Cancelled">Cancelled</option>
-                <option value="Archived">Archived</option>
             </select>
             <span asp-validation-for="CurrentStatus" class="error-message"></span>
             <small style="display: block; margin-top: 4px; color: #666; font-size: 0.9em;">
                 Note: Status may be automatically updated based on capacity and group management settings.
-                Changing Join Policy or Group Management may affect status.
+                Changing Join Policy or Group Management may affect status. To archive this board, use the Archive button on the details page.
             </small>
         </div>
 
@@ -145,4 +144,4 @@
 @section Scripts {
     <script src="~/js/boardcreate.js" asp-append-version="true"></script>
     <partial name="_ValidationScriptsPartial" />
-}
+}}

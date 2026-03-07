@@ -25,7 +25,16 @@
             <h1>@Model.Board.Title</h1>
             @if (Model.IsAuthor)
             {
-                <a class="button" asp-action="Edit" asp-route-id="@Model.Board.Id">Edit Board</a>
+                <div style="display: flex; gap: 10px;">
+                    <a class="button" asp-action="Edit" asp-route-id="@Model.Board.Id">Edit Board</a>
+                    @if (Model.Board.CurrentStatus != BoardStatus.Archived && Model.Board.EventDate <= DateTime.UtcNow)
+                    {
+                        <form asp-action="Archive" asp-route-id="@Model.Board.Id" method="post" style="display: inline;" onsubmit="return confirm('Are you sure you want to archive this board? This action will hide the board from active listings.');">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="button button-warning">Archive Board</button>
+                        </form>
+                    }
+                </div>
             }
         </div>
 

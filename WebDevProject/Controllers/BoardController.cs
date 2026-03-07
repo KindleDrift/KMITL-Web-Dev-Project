@@ -872,6 +872,51 @@ namespace WebDevProject.Controllers
             return RedirectToAction(nameof(Details), new { id = boardId });
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Archive(int id)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                return Unauthorized();
+            }
+
+            var board = await _context.Boards
+                .AsNoTracking()
+                .FirstOrDefaultAsync(b => b.Id == id);
+
+            if (board == null)
+            {
+                return NotFound();
+            }
+
+            if (board.AuthorId != userId)
+            {
+                return Forbid();
+            }
+
+            if (board.CurrentStatus == BoardStatus.Archived)
+            {
+                TempData["Error"] = "Board is already archived.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            // Optional: Check if event date has passed
+            if (board.EventDate > DateTime.UtcNow)
+            {
+                TempData["Error"] = "You can only archive boards after the event date has passed.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
+            board.CurrentStatus = BoardStatus.Archived;
+            _context.Boards.Update(board);
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = "Board has been archived successfully.";
+            return RedirectToAction(nameof(Index));
+        }
+
         private static bool IsValidTag(string tag)
         {
             if (tag.StartsWith('-') || tag.EndsWith('-'))
