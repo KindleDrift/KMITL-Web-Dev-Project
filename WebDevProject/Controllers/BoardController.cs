@@ -102,9 +102,16 @@ namespace WebDevProject.Controllers
             return RedirectToAction(nameof(Index));
         }
         
-        public IActionResult BoardInfo()
+        public IActionResult Details(int id)
         {
-            return View();
+            var board = _context.Boards.Find(id);
+            
+            if (board == null)
+            {
+                return NotFound();
+            }
+                
+            return View(board);
         }
     }
 }
