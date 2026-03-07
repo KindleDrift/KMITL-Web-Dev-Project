@@ -214,7 +214,7 @@ namespace WebDevProject.Controllers
         // Admin/EditBoard/{id} - POST: Update board
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<ActionResult> EditBoard(int id, [Bind("Id,Title,Description,MaxParticipants,Location,EventDate,Deadline,NotifyAuthorOnFull,GroupManagementOption,CurrentStatus")] Board model, IFormFile? BoardImage, List<string>? Tags)
+        public async Task<ActionResult> EditBoard(int id, [Bind("Id,Title,Description,MaxParticipants,Location,EventDate,Deadline,NotifyAuthorOnFull,GroupManagementOption,JoinPolicy,CurrentStatus")] Board model, IFormFile? BoardImage, List<string>? Tags)
         {
             if (id != model.Id)
             {
@@ -223,12 +223,19 @@ namespace WebDevProject.Controllers
 
             var board = await _context.Boards
                 .Include(b => b.Tags)
+                .Include(b => b.Participants)
+                .Include(b => b.ExternalParticipants)
+                .Include(b => b.Applicants)
                 .FirstOrDefaultAsync(b => b.Id == id);
             
             if (board == null)
             {
                 return NotFound();
             }
+
+            var oldJoinPolicy = board.JoinPolicy;
+            var oldGroupManagement = board.GroupManagementOption;
+            var oldMaxParticipants = board.MaxParticipants;
 
             // Handle board image upload
             if (BoardImage != null && BoardImage.Length > 0)
@@ -348,7 +355,82 @@ namespace WebDevProject.Controllers
             board.Deadline = model.Deadline;
             board.NotifyAuthorOnFull = model.NotifyAuthorOnFull;
             board.GroupManagementOption = model.GroupManagementOption;
+            board.JoinPolicy = model.JoinPolicy;
             board.CurrentStatus = model.CurrentStatus;
+
+            // Edge Case 1: Join Policy changed from Application to FirstComeFirstServe
+            // Auto-approve all pending applicants
+            if (oldJoinPolicy == BoardJoinPolicy.Application && board.JoinPolicy == BoardJoinPolicy.FirstComeFirstServe)
+            {
+                var applicantsToApprove = board.Applicants.ToList();
+                foreach (var applicant in applicantsToApprove)
+                {
+                    var currentOccupied = GetOccupiedSeatCount(board);
+                    
+                    // Only approve if there's space OR if AllowOverbooking is enabled
+                    if (currentOccupied < board.MaxParticipants || board.GroupManagementOption == GroupManagement.AllowOverbooking)
+                    {
+                        _context.BoardApplicants.Remove(applicant);
+                        
+                        var participant = new BoardParticipant
+                        {
+                            BoardId = id,
+                            UserId = applicant.UserId,
+                            JoinedAt = DateTime.UtcNow
+                        };
+                        
+                        _context.BoardParticipants.Add(participant);
+                    }
+                }
+            }
+
+            // Edge Case 2: GroupManagement changed from CloseOnFull to AllowOverbooking/KeepOpenWhenFull
+            // If board is currently Full, reconsider the status
+            if (oldGroupManagement == GroupManagement.CloseOnFull && 
+                board.GroupManagementOption != GroupManagement.CloseOnFull &&
+                board.CurrentStatus == BoardStatus.Full)
+            {
+                // Set back to Open since we're no longer using CloseOnFull
+                board.CurrentStatus = BoardStatus.Open;
+            }
+
+            // Edge Case 3: GroupManagement changed to CloseOnFull from something else
+            // If currently at or over capacity, set to Full
+            if (oldGroupManagement != GroupManagement.CloseOnFull &&
+                board.GroupManagementOption == GroupManagement.CloseOnFull)
+            {
+                var currentOccupied = GetOccupiedSeatCount(board);
+                if (currentOccupied >= board.MaxParticipants && board.CurrentStatus == BoardStatus.Open)
+                {
+                    board.CurrentStatus = BoardStatus.Full;
+                }
+            }
+
+            // Edge Case 4: MaxParticipants changed - recalculate status
+            if (oldMaxParticipants != board.MaxParticipants)
+            {
+                var currentOccupied = GetOccupiedSeatCount(board);
+                
+                // If capacity increased and was Full, might need to reopen
+                if (board.MaxParticipants > oldMaxParticipants && board.CurrentStatus == BoardStatus.Full)
+                {
+                    if (currentOccupied < board.MaxParticipants)
+                    {
+                        board.CurrentStatus = BoardStatus.Open;
+                    }
+                }
+                // If capacity decreased and now over capacity
+                else if (board.MaxParticipants < oldMaxParticipants && board.GroupManagementOption == GroupManagement.CloseOnFull)
+                {
+                    if (currentOccupied >= board.MaxParticipants && board.CurrentStatus == BoardStatus.Open)
+                    {
+                        board.CurrentStatus = BoardStatus.Full;
+                    }
+                }
+            }
+
+            // Final status update based on current capacity
+            UpdateBoardStatusByCapacity(board, GetOccupiedSeatCount(board));
 
             try
             {
@@ -413,6 +495,34 @@ namespace WebDevProject.Controllers
             }
 
             return tag;
+        }
+
+        private static int GetOccupiedSeatCount(Board board)
+        {
+            return board.Participants.Count(p => p.UserId != board.AuthorId) + board.ExternalParticipants.Count;
+        }
+
+        private static void UpdateBoardStatusByCapacity(Board board, int occupiedSeats)
+        {
+            if (board.CurrentStatus is BoardStatus.Closed or BoardStatus.Cancelled or BoardStatus.Archived)
+            {
+                return;
+            }
+
+            if (occupiedSeats >= board.MaxParticipants)
+            {
+                if (board.GroupManagementOption == GroupManagement.CloseOnFull)
+                {
+                    board.CurrentStatus = BoardStatus.Full;
+                }
+
+                return;
+            }
+
+            if (board.CurrentStatus == BoardStatus.Full)
+            {
+                board.CurrentStatus = BoardStatus.Open;
+            }
         }
     }
 }

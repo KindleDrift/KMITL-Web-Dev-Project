@@ -39,5 +39,7 @@ namespace WebDevProject.Models
         public string JoinPolicyOption { get; set; } = string.Empty;
 
         public List<string> Tags { get; set; } = [];
+
+        public BoardStatus? CurrentStatus { get; set; }
     }
 }

@@ -181,7 +181,8 @@ namespace WebDevProject.Controllers
                 NotifyAuthorOnFull = board.NotifyAuthorOnFull,
                 GroupManagementOption = ToGroupManagementOptionValue(board.GroupManagementOption),
                 JoinPolicyOption = ToJoinPolicyOptionValue(board.JoinPolicy),
-                Tags = board.Tags.Select(t => t.Name).ToList()
+                Tags = board.Tags.Select(t => t.Name).ToList(),
+                CurrentStatus = board.CurrentStatus
             };
 
             ViewBag.BoardId = board.Id;
@@ -203,6 +204,7 @@ namespace WebDevProject.Controllers
                 .Include(b => b.Tags)
                 .Include(b => b.Participants)
                 .Include(b => b.ExternalParticipants)
+                .Include(b => b.Applicants)
                 .FirstOrDefaultAsync(b => b.Id == id);
 
             if (board == null)
@@ -230,6 +232,10 @@ namespace WebDevProject.Controllers
                 return View(model);
             }
 
+            var oldJoinPolicy = board.JoinPolicy;
+            var oldGroupManagement = board.GroupManagementOption;
+            var oldMaxParticipants = board.MaxParticipants;
+
             board.Title = model.Title;
             board.Description = model.Description;
             board.Location = model.Location;
@@ -239,6 +245,12 @@ namespace WebDevProject.Controllers
             board.NotifyAuthorOnFull = model.NotifyAuthorOnFull;
             board.GroupManagementOption = ParseGroupManagementOption(model.GroupManagementOption);
             board.JoinPolicy = ParseJoinPolicyOption(model.JoinPolicyOption);
+            
+            // Allow manual status override (unless automatic status will be applied)
+            if (model.CurrentStatus.HasValue)
+            {
+                board.CurrentStatus = model.CurrentStatus.Value;
+            }
 
             board.ImageUrl = await SaveBoardImageAsync(model.BoardImage, userId, board.ImageUrl);
             if (!ModelState.IsValid)
@@ -256,7 +268,80 @@ namespace WebDevProject.Controllers
                 return View(model);
             }
 
+            // Edge Case 1: Join Policy changed from Application to FirstComeFirstServe
+            // Auto-approve all pending applicants
+            if (oldJoinPolicy == BoardJoinPolicy.Application && board.JoinPolicy == BoardJoinPolicy.FirstComeFirstServe)
+            {
+                var applicantsToApprove = board.Applicants.ToList();
+                foreach (var applicant in applicantsToApprove)
+                {
+                    var currentOccupied = GetOccupiedSeatCount(board);
+                    
+                    // Only approve if there's space OR if AllowOverbooking is enabled
+                    if (currentOccupied < board.MaxParticipants || board.GroupManagementOption == GroupManagement.AllowOverbooking)
+                    {
+                        _context.BoardApplicants.Remove(applicant);
+                        
+                        var participant = new BoardParticipant
+                        {
+                            BoardId = id,
+                            UserId = applicant.UserId,
+                            JoinedAt = DateTime.UtcNow
+                        };
+                        
+                        _context.BoardParticipants.Add(participant);
+                    }
+                }
+            }
+
+            // Edge Case 2: GroupManagement changed from CloseOnFull to AllowOverbooking/KeepOpenWhenFull
+            // If board is currently Full, reconsider the status
+            if (oldGroupManagement == GroupManagement.CloseOnFull && 
+                board.GroupManagementOption != GroupManagement.CloseOnFull &&
+                board.CurrentStatus == BoardStatus.Full)
+            {
+                // Set back to Open since we're no longer using CloseOnFull
+                board.CurrentStatus = BoardStatus.Open;
+            }
+
+            // Edge Case 3: GroupManagement changed to CloseOnFull from something else
+            // If currently at or over capacity, set to Full
+            if (oldGroupManagement != GroupManagement.CloseOnFull &&
+                board.GroupManagementOption == GroupManagement.CloseOnFull)
+            {
+                var currentOccupied = GetOccupiedSeatCount(board);
+                if (currentOccupied >= board.MaxParticipants && board.CurrentStatus == BoardStatus.Open)
+                {
+                    board.CurrentStatus = BoardStatus.Full;
+                }
+            }
+
+            // Edge Case 4: MaxParticipants changed - recalculate status
+            if (oldMaxParticipants != board.MaxParticipants)
+            {
+                var currentOccupied = GetOccupiedSeatCount(board);
+                
+                // If capacity increased and was Full, might need to reopen
+                if (board.MaxParticipants > oldMaxParticipants && board.CurrentStatus == BoardStatus.Full)
+                {
+                    if (currentOccupied < board.MaxParticipants)
+                    {
+                        board.CurrentStatus = BoardStatus.Open;
+                    }
+                }
+                // If capacity decreased and now over capacity
+                else if (board.MaxParticipants < oldMaxParticipants && board.GroupManagementOption == GroupManagement.CloseOnFull)
+                {
+                    if (currentOccupied >= board.MaxParticipants && board.CurrentStatus == BoardStatus.Open)
+                    {
+                        board.CurrentStatus = BoardStatus.Full;
+                    }
+                }
+            }
+
+            // Final status update based on current capacity
             UpdateBoardStatusByCapacity(board, GetOccupiedSeatCount(board));
+            
             await _context.SaveChangesAsync();
 
             TempData["Success"] = "Board updated successfully.";
@@ -785,6 +870,51 @@ namespace WebDevProject.Controllers
 
             TempData["Success"] = "User removed from deny list.";
             return RedirectToAction(nameof(Details), new { id = boardId });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Archive(int id)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                return Unauthorized();
+            }
+
+            var board = await _context.Boards
+                .AsNoTracking()
+                .FirstOrDefaultAsync(b => b.Id == id);
+
+            if (board == null)
+            {
+                return NotFound();
+            }
+
+            if (board.AuthorId != userId)
+            {
+                return Forbid();
+            }
+
+            if (board.CurrentStatus == BoardStatus.Archived)
+            {
+                TempData["Error"] = "Board is already archived.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            // Optional: Check if event date has passed
+            if (board.EventDate > DateTime.UtcNow)
+            {
+                TempData["Error"] = "You can only archive boards after the event date has passed.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
+            board.CurrentStatus = BoardStatus.Archived;
+            _context.Boards.Update(board);
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = "Board has been archived successfully.";
+            return RedirectToAction(nameof(Index));
         }
 
         private static bool IsValidTag(string tag)
