@@ -2,52 +2,91 @@
 
 @{
     ViewData["Title"] = "Search";
-    var queryName = ViewContext.HttpContext.Request.Query["name"].ToString();
-    var boards = Model ?? new List<WebDevProject.Models.Board>();
 }
 
 @section Styles {
     <link rel="stylesheet" href="~/css/search.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/boardcreate.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/board.css" asp-append-version="true" />
 }
 
-<h1 class="post_list">Post list</h1>
+<div class="main-container">
+    <h1 class="post_list">Search Boards</h1>
 
-<section class="search-area">
-    <form asp-action="Search" method="get" class="search-form">
-        <label for="name">Search</label>
-        <input type="text" id="name" name="name" placeholder="Search post name..." value="@(queryName)" />
-        <button type="submit">Search</button>
-        <a asp-action="Search" class="clear-link">Clear</a>
-    </form>
-</section>
+    <section class="search-area">
+        <div class="search-form">
+            <div class="search-field">
+                <label for="searchName">Search by Name</label>
+                <input type="text" id="searchName" name="searchName" placeholder="Search board title..." />
+            </div>
 
-<div class="posts-area">
-    @if (boards.Any())
-    {
-        @foreach (var existingBoard in boards)
-        {
-            var statusClass = existingBoard.CurrentStatus switch
-            {
-                WebDevProject.Models.BoardStatus.Open => "status-open",
-                WebDevProject.Models.BoardStatus.Full => "status-full",
-                WebDevProject.Models.BoardStatus.Closed => "status-closed",
-                WebDevProject.Models.BoardStatus.Archived => "status-archived",
-                _ => "status-open"
-            };
-            <a class="post" asp-action="Details" asp-route-id="@existingBoard.Id">
-                <span class="status-dot @statusClass" title="@existingBoard.CurrentStatus"></span>
-                <h2 class="post_title">@existingBoard.Title</h2>
-                <div class="participant-images">
-                    @foreach (var participant in existingBoard.Participants ?? Enumerable.Empty<WebDevProject.Models.BoardParticipant>())
-                    {
-                        <img src="@(participant.User?.ProfilePictureUrl ?? Url.Content("~/images/default-profile.png"))" alt="@(participant.User?.DisplayName ?? "Participant")" title="@(participant.User?.DisplayName ?? "Participant")" />
-                    }
+            <div class="search-field">
+                <label for="tagInput">Filter by Tags</label>
+                <div style="display: flex; gap: 10px; align-items: flex-start;">
+                    <div style="flex: 1;">
+                        <input type="text" id="tagInput" placeholder="Add tag (e.g., Sports, Outdoor)..." />
+                        <div id="tagContainer" class="tag-container" style="margin-top: 10px; min-height: 30px;"></div>
+                    </div>
+                    <button type="button" id="addTagButton" class="btn-tag">Add Tag</button>
                 </div>
-            </a>
-        }
-    }
-    else
-    {
-        <p>No boards found. Try a different search or <a asp-action="Create">create a board</a>.</p>
-    }
+            </div>
+
+            <div class="search-row">
+                <div class="search-field">
+                    <label for="eventDateFrom">Event Date From</label>
+                    <input type="date" id="eventDateFrom" name="eventDateFrom" />
+                </div>
+
+                <div class="search-field">
+                    <label for="eventDateTo">Event Date To</label>
+                    <input type="date" id="eventDateTo" name="eventDateTo" />
+                </div>
+            </div>
+
+            <div class="search-field">
+                <label>Filter by Status</label>
+                <div class="checkbox-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="status" value="Open" class="status-filter" checked />
+                        <span class="status-indicator status-open"></span> Open
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="status" value="Full" class="status-filter" />
+                        <span class="status-indicator status-full"></span> Full
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="status" value="Closed" class="status-filter" />
+                        <span class="status-indicator status-closed"></span> Closed
+                    </label>
+                </div>
+            </div>
+
+            <div class="search-field">
+                <label>Filter by Join Policy</label>
+                <div class="checkbox-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="joinPolicy" value="Application" class="policy-filter" checked />
+                        📝 Application
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="joinPolicy" value="FirstComeFirstServe" class="policy-filter" checked />
+                        🏃 First Come First Serve
+                    </label>
+                </div>
+            </div>
+
+            <div class="search-actions">
+                <button type="button" id="searchButton" class="btn-search">Search</button>
+                <button type="button" id="clearButton" class="btn-clear">Clear</button>
+            </div>
+        </div>
+    </section>
+
+    <div id="searchResults" class="board-list board-grid search-results-container">
+        <p class="loading-message">Use the filters above to search for boards.</p>
+    </div>
 </div>
+
+@section Scripts {
+    <script src="~/js/boardsearch.js" asp-append-version="true"></script>
+}

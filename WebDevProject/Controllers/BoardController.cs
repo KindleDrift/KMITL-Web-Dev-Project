@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
+using System.Text;
+using System.Xml;
 using WebDevProject.Data;
 using WebDevProject.Filters;
 using WebDevProject.Models;
@@ -58,24 +60,206 @@ namespace WebDevProject.Controllers
 
         public async Task<IActionResult> Search(string name)
         {
+            return View();
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> SearchBoards(string searchName, string tags, DateTime? eventDateFrom, DateTime? eventDateTo, string statuses, string joinPolicies)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            
             var boardQuery = _context.Boards
                 .AsNoTracking()
                 .Include(b => b.Author)
                 .Include(b => b.Participants)
                     .ThenInclude(bp => bp.User)
                 .Include(b => b.ExternalParticipants)
+                .Include(b => b.Tags)
                 .Where(b => b.CurrentStatus != BoardStatus.Archived);
 
-            if (!string.IsNullOrWhiteSpace(name))
+            // Exclude user's own posts if logged in
+            if (!string.IsNullOrWhiteSpace(userId))
             {
-                boardQuery = boardQuery.Where(b => EF.Functions.Like(b.Title, $"%{name}%"));
+                boardQuery = boardQuery.Where(b => b.AuthorId != userId);
             }
 
-            var existingBoards = await boardQuery
+            // Filter by name
+            if (!string.IsNullOrWhiteSpace(searchName))
+            {
+                boardQuery = boardQuery.Where(b => EF.Functions.Like(b.Title, $"%{searchName}%"));
+            }
+
+            // Filter by tags
+            if (!string.IsNullOrWhiteSpace(tags))
+            {
+                var tagList = tags.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                    .Select(t => t.Trim())
+                    .Where(t => !string.IsNullOrWhiteSpace(t))
+                    .ToList();
+
+                if (tagList.Any())
+                {
+                    boardQuery = boardQuery.Where(b => b.Tags.Any(t => tagList.Contains(t.Name)));
+                }
+            }
+
+            // Filter by event date range
+            if (eventDateFrom.HasValue)
+            {
+                boardQuery = boardQuery.Where(b => b.EventDate >= eventDateFrom.Value);
+            }
+
+            if (eventDateTo.HasValue)
+            {
+                // Add one day to include boards on the "to" date
+                var eventDateToInclusive = eventDateTo.Value.AddDays(1);
+                boardQuery = boardQuery.Where(b => b.EventDate < eventDateToInclusive);
+            }
+
+            // Filter by status
+            if (!string.IsNullOrWhiteSpace(statuses))
+            {
+                var statusList = statuses.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                    .Select(s => s.Trim())
+                    .Where(s => !string.IsNullOrWhiteSpace(s))
+                    .ToList();
+
+                if (statusList.Any())
+                {
+                    var parsedStatuses = new List<BoardStatus>();
+                    foreach (var status in statusList)
+                    {
+                        if (Enum.TryParse<BoardStatus>(status, true, out var parsed))
+                        {
+                            parsedStatuses.Add(parsed);
+                        }
+                    }
+
+                    if (parsedStatuses.Any())
+                    {
+                        boardQuery = boardQuery.Where(b => parsedStatuses.Contains(b.CurrentStatus));
+                    }
+                }
+            }
+
+            // Filter by join policy
+            if (!string.IsNullOrWhiteSpace(joinPolicies))
+            {
+                var policyList = joinPolicies.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                    .Select(p => p.Trim())
+                    .Where(p => !string.IsNullOrWhiteSpace(p))
+                    .ToList();
+
+                if (policyList.Any())
+                {
+                    var parsedPolicies = new List<BoardJoinPolicy>();
+                    foreach (var policy in policyList)
+                    {
+                        if (Enum.TryParse<BoardJoinPolicy>(policy, true, out var parsed))
+                        {
+                            parsedPolicies.Add(parsed);
+                        }
+                    }
+
+                    if (parsedPolicies.Any())
+                    {
+                        boardQuery = boardQuery.Where(b => parsedPolicies.Contains(b.JoinPolicy));
+                    }
+                }
+            }
+
+            var boards = await boardQuery
                 .OrderByDescending(b => b.CreatedAt)
                 .ToListAsync();
 
-            return View(existingBoards);
+            // Build XML response
+            var sb = new StringBuilder();
+            var settings = new XmlWriterSettings
+            {
+                Indent = true,
+                OmitXmlDeclaration = false,
+                Encoding = Encoding.UTF8
+            };
+
+            using (var writer = XmlWriter.Create(sb, settings))
+            {
+                writer.WriteStartDocument();
+                writer.WriteStartElement("Boards");
+
+                foreach (var b in boards)
+                {
+                    var visibleParticipants = b.Participants.Where(p => p.UserId != b.AuthorId).ToList();
+                    var participantCount = visibleParticipants.Count + b.ExternalParticipants.Count;
+                    var spotsLeft = Math.Max(b.MaxParticipants - participantCount, 0);
+                    var isOpenPastDeadline = b.CurrentStatus == BoardStatus.Open && b.Deadline <= DateTime.UtcNow;
+
+                    writer.WriteStartElement("Board");
+
+                    writer.WriteElementString("Id", b.Id.ToString());
+                    writer.WriteElementString("Title", b.Title);
+                    writer.WriteElementString("Description", b.Description);
+                    writer.WriteElementString("ImageUrl", string.IsNullOrWhiteSpace(b.ImageUrl) ? "/images/default-board.png" : b.ImageUrl);
+                    writer.WriteElementString("Status", b.CurrentStatus.ToString());
+                    writer.WriteElementString("DisplayStatus", isOpenPastDeadline ? "Open (Deadline Passed)" : b.CurrentStatus.ToString());
+                    
+                    var statusClass = b.CurrentStatus switch
+                    {
+                        BoardStatus.Open => isOpenPastDeadline ? "status-closed" : "status-open",
+                        BoardStatus.Full => "status-full",
+                        BoardStatus.Closed => "status-closed",
+                        BoardStatus.Cancelled => "status-cancelled",
+                        BoardStatus.Archived => "status-archived",
+                        _ => "status-open"
+                    };
+                    writer.WriteElementString("StatusClass", statusClass);
+
+                    writer.WriteElementString("EventDate", b.EventDate.ToString("dd MMM yyyy"));
+                    writer.WriteElementString("EventTime", b.EventDate.ToString("HH:mm"));
+                    writer.WriteElementString("Deadline", b.Deadline.ToString("dd MMM yyyy, HH:mm"));
+                    writer.WriteElementString("Location", b.Location);
+
+                    // Tags
+                    writer.WriteStartElement("Tags");
+                    foreach (var tag in b.Tags)
+                    {
+                        writer.WriteElementString("Tag", tag.Name);
+                    }
+                    writer.WriteEndElement(); // Tags
+
+                    writer.WriteElementString("JoinPolicy", b.JoinPolicy.ToString());
+                    writer.WriteElementString("JoinPolicyDisplay", b.JoinPolicy == BoardJoinPolicy.FirstComeFirstServe ? "First Come First Serve" : "Application");
+                    writer.WriteElementString("CurrentParticipants", participantCount.ToString());
+                    writer.WriteElementString("MaxParticipants", b.MaxParticipants.ToString());
+                    writer.WriteElementString("SpotsLeft", spotsLeft.ToString());
+
+                    // Author
+                    writer.WriteStartElement("Author");
+                    writer.WriteElementString("DisplayName", b.Author?.DisplayName ?? "Unknown");
+                    writer.WriteElementString("ProfilePictureUrl", b.Author?.ProfilePictureUrl ?? "/images/default-profile.png");
+                    writer.WriteEndElement(); // Author
+
+                    // Preview Participants
+                    writer.WriteStartElement("PreviewParticipants");
+                    var previewParticipants = visibleParticipants.Take(5);
+                    foreach (var participant in previewParticipants)
+                    {
+                        writer.WriteStartElement("Participant");
+                        writer.WriteElementString("ProfilePictureUrl", participant.User?.ProfilePictureUrl ?? "/images/default-profile.png");
+                        writer.WriteElementString("DisplayName", participant.User?.DisplayName ?? "Participant");
+                        writer.WriteEndElement(); // Participant
+                    }
+                    writer.WriteEndElement(); // PreviewParticipants
+
+                    writer.WriteElementString("TotalVisibleParticipants", visibleParticipants.Count.ToString());
+
+                    writer.WriteEndElement(); // Board
+                }
+
+                writer.WriteEndElement(); // Boards
+                writer.WriteEndDocument();
+            }
+
+            return Content(sb.ToString(), "application/xml");
         }
 
         [HttpGet]
