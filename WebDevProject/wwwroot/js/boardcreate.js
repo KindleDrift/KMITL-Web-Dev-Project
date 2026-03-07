@@ -52,12 +52,16 @@ document.addEventListener('DOMContentLoaded', function () {
     function createTagElement(tagText) {
         const tag = document.createElement('span');
         tag.className = 'tag';
-        tag.innerHTML = `${tagText} <button type="button" class="btn-remove" style="font-size: 0.75rem;"></button>`;
+        tag.setAttribute('data-tag', tagText);
+        tag.innerHTML = `${tagText} <button type="button" class="btn-remove" style="font-size: 0.75rem;">×</button>`;
         
         const removeBtn = tag.querySelector('button');
         removeBtn.addEventListener('click', function (e) {
             e.preventDefault();
-            tags.splice(tags.indexOf(tagText), 1);
+            const index = tags.findIndex(t => t.toLowerCase() === tagText.toLowerCase());
+            if (index > -1) {
+                tags.splice(index, 1);
+            }
             tag.remove();
             updateTagsInput();
         });
@@ -71,6 +75,10 @@ document.addEventListener('DOMContentLoaded', function () {
         existingInputs.forEach(input => input.remove());
         
         const boardForm = document.getElementById('boardForm');
+        if (!boardForm) {
+            return;
+        }
+
         tags.forEach(tag => {
             const input = document.createElement('input');
             input.type = 'hidden';
@@ -110,6 +118,26 @@ document.addEventListener('DOMContentLoaded', function () {
     const tagInput = document.getElementById('tagInput');
     const addTagButton = document.getElementById('addTagButton');
     const tagContainer = document.getElementById('tagContainer');
+
+    if (tagContainer) {
+        const existingTagElements = Array.from(tagContainer.querySelectorAll('.tag'));
+        tagContainer.innerHTML = '';
+
+        existingTagElements.forEach(tagElement => {
+            const rawTag = tagElement.getAttribute('data-tag') || tagElement.textContent || '';
+            const normalizedTag = formatTag(rawTag.trim());
+            if (!normalizedTag) {
+                return;
+            }
+
+            if (!tags.some(t => t.toLowerCase() === normalizedTag.toLowerCase())) {
+                tags.push(normalizedTag);
+                tagContainer.appendChild(createTagElement(normalizedTag));
+            }
+        });
+
+        updateTagsInput();
+    }
 
     if (tagInput && addTagButton) {
         // Add tag on button click

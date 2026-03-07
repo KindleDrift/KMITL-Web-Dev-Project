@@ -1,7 +1,9 @@
 @model BoardCreateViewModel
 
 @{
-    ViewData["Title"] = "Create a Board";
+    ViewData["Title"] = "Edit Board";
+    var boardId = (int)ViewBag.BoardId;
+    var currentImageUrl = ViewBag.CurrentImageUrl as string;
 }
 
 @section Styles {
@@ -9,9 +11,9 @@
 }
 
 <div id="boardCreateContainer">
-    <h1>Create a New Board</h1>
-    
-    <form id="boardForm" method="post" asp-controller="Board" asp-action="Create" enctype="multipart/form-data">
+    <h1>Edit Board</h1>
+
+    <form id="boardForm" method="post" asp-controller="Board" asp-action="Edit" asp-route-id="@boardId" enctype="multipart/form-data">
         @Html.AntiForgeryToken()
 
         <div class="form-group">
@@ -28,6 +30,12 @@
 
         <div class="form-group">
             <label for="boardImage">Board Image</label>
+            @if (!string.IsNullOrWhiteSpace(currentImageUrl))
+            {
+                <div style="margin-bottom: 12px;">
+                    <img src="@currentImageUrl" alt="Current board image" style="max-width: 260px; max-height: 180px; border-radius: 8px; object-fit: cover;" />
+                </div>
+            }
             <input type="file" id="boardImage" asp-for="BoardImage" accept="image/*">
             <span asp-validation-for="BoardImage" class="error-message"></span>
         </div>
@@ -64,22 +72,27 @@
                 <input type="text" id="tagInput" placeholder="Enter a tag...">
                 <button type="button" id="addTagButton">Add Tag</button>
             </div>
-            <div id="tagContainer"></div>
+            <div id="tagContainer">
+                @foreach (var tag in Model.Tags)
+                {
+                    <span class="tag" data-tag="@tag">@tag</span>
+                }
+            </div>
         </div>
 
         <div class="form-group">
             <label>Group Management *</label>
             <div class="radio-group">
                 <div class="radio-option">
-                    <input type="radio" id="closeOnFull" name="GroupManagementOption" value="closeOnFull" @((Model?.GroupManagementOption == "closeOnFull" || string.IsNullOrWhiteSpace(Model?.GroupManagementOption)) ? "checked" : "") required>
+                    <input type="radio" id="closeOnFull" name="GroupManagementOption" value="closeOnFull" @(Model.GroupManagementOption == "closeOnFull" ? "checked" : "") required>
                     <label for="closeOnFull">Close on full (board status becomes Full, no more joins)</label>
                 </div>
                 <div class="radio-option">
-                    <input type="radio" id="allowOverbooking" name="GroupManagementOption" value="allowOverbooking" @(Model?.GroupManagementOption == "allowOverbooking" ? "checked" : "")>
+                    <input type="radio" id="allowOverbooking" name="GroupManagementOption" value="allowOverbooking" @(Model.GroupManagementOption == "allowOverbooking" ? "checked" : "")>
                     <label for="allowOverbooking">Allow overbooking (author can approve beyond max capacity)</label>
                 </div>
                 <div class="radio-option">
-                    <input type="radio" id="keepOpenWhenFull" name="GroupManagementOption" value="keepOpenWhenFull" @(Model?.GroupManagementOption == "keepOpenWhenFull" ? "checked" : "")>
+                    <input type="radio" id="keepOpenWhenFull" name="GroupManagementOption" value="keepOpenWhenFull" @(Model.GroupManagementOption == "keepOpenWhenFull" ? "checked" : "")>
                     <label for="keepOpenWhenFull">Keep open when full (stay Open, but still enforce capacity)</label>
                 </div>
             </div>
@@ -91,7 +104,10 @@
             <label for="notifyOnFull">Notify me when the group is full</label>
         </div>
 
-        <button type="submit" id="submitBtn">Create Board</button>
+        <div style="display:flex; gap:10px;">
+            <button type="submit" id="submitBtn">Save Changes</button>
+            <a asp-controller="Board" asp-action="Details" asp-route-id="@boardId" class="button" style="text-decoration:none;">Cancel</a>
+        </div>
     </form>
 </div>
 

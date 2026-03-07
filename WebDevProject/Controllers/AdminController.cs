@@ -214,7 +214,7 @@ namespace WebDevProject.Controllers
         // Admin/EditBoard/{id} - POST: Update board
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<ActionResult> EditBoard(int id, [Bind("Id,Title,Description,MaxParticipants,Location,EventDate,Deadline,NotifyAuthorOnFull,CloseOnFull,IncreaseMaxParticipantsOnFull,ManualIncreaseMaxParticipants,CurrentStatus")] Board model, IFormFile? BoardImage, List<string>? Tags)
+        public async Task<ActionResult> EditBoard(int id, [Bind("Id,Title,Description,MaxParticipants,Location,EventDate,Deadline,NotifyAuthorOnFull,GroupManagementOption,CurrentStatus")] Board model, IFormFile? BoardImage, List<string>? Tags)
         {
             if (id != model.Id)
             {

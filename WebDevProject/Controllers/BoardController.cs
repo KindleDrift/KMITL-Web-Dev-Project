@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
-using System.Xml.Linq;
 using WebDevProject.Data;
 using WebDevProject.Filters;
 using WebDevProject.Models;
@@ -103,7 +102,6 @@ namespace WebDevProject.Controllers
                 return View(model);
             }
 
-            // Validate dates
             if (model.Deadline > model.EventDate)
             {
                 ModelState.AddModelError(nameof(model.Deadline), "Deadline must be before the event date.");
@@ -116,48 +114,10 @@ namespace WebDevProject.Controllers
                 return View(model);
             }
 
-            // Handle image upload
-            string? imageUrl = null;
-            if (model.BoardImage != null && model.BoardImage.Length > 0)
-            {
-                var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
-                var fileExtension = Path.GetExtension(model.BoardImage.FileName).ToLowerInvariant();
-                
-                if (!allowedExtensions.Contains(fileExtension))
-                {
-                    ModelState.AddModelError(nameof(model.BoardImage), "Only image files are allowed (.jpg, .jpeg, .png, .gif, .webp).");
-                    return View(model);
-                }
-
-                if (model.BoardImage.Length > 5 * 1024 * 1024) // 5MB limit
-                {
-                    ModelState.AddModelError(nameof(model.BoardImage), "Image file size must not exceed 5MB.");
-                    return View(model);
-                }
-
-                var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "boards");
-                if (!Directory.Exists(uploadsFolder))
-                {
-                    Directory.CreateDirectory(uploadsFolder);
-                }
-
-                var uniqueFileName = $"{userId}_{Guid.NewGuid()}{fileExtension}";
-                var filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-                using (var fileStream = new FileStream(filePath, FileMode.Create))
-                {
-                    await model.BoardImage.CopyToAsync(fileStream);
-                }
-
-                imageUrl = $"/uploads/boards/{uniqueFileName}";
-            }
-
-            // Create the board
             var board = new Board
             {
                 Title = model.Title,
                 Description = model.Description,
-                ImageUrl = imageUrl,
                 Location = model.Location,
                 EventDate = model.EventDate,
                 Deadline = model.Deadline,
@@ -165,78 +125,20 @@ namespace WebDevProject.Controllers
                 AuthorId = userId,
                 NotifyAuthorOnFull = model.NotifyAuthorOnFull,
                 CurrentStatus = BoardStatus.Open,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
+                GroupManagementOption = ParseGroupManagementOption(model.GroupManagementOption)
             };
 
-            // Set group management options
-            switch (model.GroupManagementOption)
+            board.ImageUrl = await SaveBoardImageAsync(model.BoardImage, userId, null);
+            if (!ModelState.IsValid)
             {
-                case "closeOnFull":
-                    board.GroupManagementOption = GroupManagement.CloseOnFull;
-                    break;
-                case "increaseMax":
-                    board.GroupManagementOption = GroupManagement.IncreaseMaxParticipantsOnFull;
-                    break;
-                case "manualIncrease":
-                    board.GroupManagementOption = GroupManagement.ManualIncreaseMaxParticipants;
-                    break;
-                default:
-                    board.GroupManagementOption = GroupManagement.CloseOnFull;
-                    break;
+                return View(model);
             }
 
-            // Handle tags
-            if (model.Tags != null && model.Tags.Any())
+            await ApplyTagsToBoardAsync(board, model.Tags);
+            if (!ModelState.IsValid)
             {
-                var validatedTags = new List<string>();
-                
-                foreach (var tag in model.Tags)
-                {
-                    var trimmedTag = tag?.Trim();
-                    if (string.IsNullOrWhiteSpace(trimmedTag))
-                        continue;
-
-                    // Validate and format tag
-                    if (!IsValidTag(trimmedTag))
-                    {
-                        ModelState.AddModelError(nameof(model.Tags), $"Invalid tag '{trimmedTag}'. Tags must contain only letters and single hyphens (not at start or end).");
-                        return View(model);
-                    }
-
-                    var formattedTag = FormatTag(trimmedTag);
-                    if (!validatedTags.Contains(formattedTag, StringComparer.OrdinalIgnoreCase))
-                    {
-                        validatedTags.Add(formattedTag);
-                    }
-                }
-
-                if (validatedTags.Any())
-                {
-                    var existingTags = await _context.Tags
-                        .Where(t => validatedTags.Contains(t.Name))
-                        .ToListAsync();
-
-                    var existingNames = new HashSet<string>(existingTags.Select(t => t.Name), StringComparer.OrdinalIgnoreCase);
-
-                    // Add new tags
-                    foreach (var name in validatedTags)
-                    {
-                        if (!existingNames.Contains(name))
-                        {
-                            var newTag = new Tag { Name = name };
-                            _context.Tags.Add(newTag);
-                            existingTags.Add(newTag);
-                        }
-                    }
-
-                    await _context.SaveChangesAsync();
-
-                    // Link tags to board
-                    foreach (var tag in existingTags)
-                    {
-                        board.Tags.Add(tag);
-                    }
-                }
+                return View(model);
             }
 
             _context.Boards.Add(board);
@@ -245,53 +147,118 @@ namespace WebDevProject.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        // Tag validation
-        private static bool IsValidTag(string tag)
+        [HttpGet]
+        public async Task<IActionResult> Edit(int id)
         {
-            // Check if tag starts or ends with hyphen
-            if (tag.StartsWith('-') || tag.EndsWith('-'))
-                return false;
-
-            // Check if tag contains numbers
-            if (tag.Any(char.IsDigit))
-                return false;
-
-            // Check if tag contains only letters and single hyphens
-            for (int i = 0; i < tag.Length; i++)
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrWhiteSpace(userId))
             {
-                char c = tag[i];
-                
-                // Allow letters
-                if (char.IsLetter(c))
-                    continue;
-
-                // Allow single hyphen (not consecutive)
-                if (c == '-')
-                {
-                    if (i > 0 && tag[i - 1] == '-')
-                        return false;
-                    continue;
-                }
-
-                // Any other character is invalid
-                return false;
+                return Unauthorized();
             }
 
-            return true;
+            var board = await _context.Boards
+                .Include(b => b.Tags)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(b => b.Id == id);
+
+            if (board == null)
+            {
+                return NotFound();
+            }
+
+            if (board.AuthorId != userId)
+            {
+                return Forbid();
+            }
+
+            var model = new BoardCreateViewModel
+            {
+                Title = board.Title,
+                Description = board.Description,
+                Location = board.Location,
+                EventDate = board.EventDate,
+                Deadline = board.Deadline,
+                MaxParticipants = board.MaxParticipants,
+                NotifyAuthorOnFull = board.NotifyAuthorOnFull,
+                GroupManagementOption = ToGroupManagementOptionValue(board.GroupManagementOption),
+                Tags = board.Tags.Select(t => t.Name).ToList()
+            };
+
+            ViewBag.BoardId = board.Id;
+            ViewBag.CurrentImageUrl = board.ImageUrl;
+            return View(model);
         }
 
-        private static string FormatTag(string tag)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int id, BoardCreateViewModel model)
         {
-            // Convert to lowercase first
-            tag = tag.ToLowerInvariant();
-
-            // Capitalize first letter
-            if (tag.Length > 0)
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrWhiteSpace(userId))
             {
-                tag = char.ToUpperInvariant(tag[0]) + tag.Substring(1);
+                return Unauthorized();
             }
 
-            return tag;
+            var board = await _context.Boards
+                .Include(b => b.Tags)
+                .Include(b => b.Participants)
+                .FirstOrDefaultAsync(b => b.Id == id);
+
+            if (board == null)
+            {
+                return NotFound();
+            }
+
+            if (board.AuthorId != userId)
+            {
+                return Forbid();
+            }
+
+            if (!ModelState.IsValid)
+            {
+                ViewBag.BoardId = board.Id;
+                ViewBag.CurrentImageUrl = board.ImageUrl;
+                return View(model);
+            }
+
+            if (model.Deadline > model.EventDate)
+            {
+                ModelState.AddModelError(nameof(model.Deadline), "Deadline must be before the event date.");
+                ViewBag.BoardId = board.Id;
+                ViewBag.CurrentImageUrl = board.ImageUrl;
+                return View(model);
+            }
+
+            board.Title = model.Title;
+            board.Description = model.Description;
+            board.Location = model.Location;
+            board.EventDate = model.EventDate;
+            board.Deadline = model.Deadline;
+            board.MaxParticipants = model.MaxParticipants;
+            board.NotifyAuthorOnFull = model.NotifyAuthorOnFull;
+            board.GroupManagementOption = ParseGroupManagementOption(model.GroupManagementOption);
+
+            board.ImageUrl = await SaveBoardImageAsync(model.BoardImage, userId, board.ImageUrl);
+            if (!ModelState.IsValid)
+            {
+                ViewBag.BoardId = board.Id;
+                ViewBag.CurrentImageUrl = board.ImageUrl;
+                return View(model);
+            }
+
+            await ApplyTagsToBoardAsync(board, model.Tags);
+            if (!ModelState.IsValid)
+            {
+                ViewBag.BoardId = board.Id;
+                ViewBag.CurrentImageUrl = board.ImageUrl;
+                return View(model);
+            }
+
+            UpdateBoardStatusByCapacity(board, board.Participants.Count);
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = "Board updated successfully.";
+            return RedirectToAction(nameof(Details), new { id = board.Id });
         }
 
         public async Task<IActionResult> Details(int id)
@@ -437,13 +404,11 @@ namespace WebDevProject.Controllers
                 return NotFound();
             }
 
-            // Check if user is the author
             if (board.AuthorId != userId)
             {
                 return Forbid();
             }
 
-            // Find the applicant
             var applicant = board.Applicants.FirstOrDefault(a => a.UserId == applicantId);
             if (applicant == null)
             {
@@ -451,16 +416,15 @@ namespace WebDevProject.Controllers
                 return RedirectToAction(nameof(Details), new { id = boardId });
             }
 
-            // Check if board is full
-            if (board.Participants.Count >= board.MaxParticipants)
+            var canOverbook = board.GroupManagementOption == GroupManagement.AllowOverbooking;
+            if (!canOverbook && board.Participants.Count >= board.MaxParticipants)
             {
                 TempData["Error"] = "Board is full. Cannot approve more participants.";
                 return RedirectToAction(nameof(Details), new { id = boardId });
             }
 
-            // Remove from applicants and add to participants
             _context.BoardApplicants.Remove(applicant);
-            
+
             var participant = new BoardParticipant
             {
                 BoardId = boardId,
@@ -469,15 +433,7 @@ namespace WebDevProject.Controllers
             };
 
             _context.BoardParticipants.Add(participant);
-
-            // Update board status if now full
-            if (board.Participants.Count + 1 >= board.MaxParticipants)
-            {
-                if (board.GroupManagementOption == GroupManagement.CloseOnFull)
-                {
-                    board.CurrentStatus = BoardStatus.Full;
-                }
-            }
+            UpdateBoardStatusByCapacity(board, board.Participants.Count + 1);
 
             await _context.SaveChangesAsync();
 
@@ -574,6 +530,202 @@ namespace WebDevProject.Controllers
 
             TempData["Success"] = "User removed from deny list.";
             return RedirectToAction(nameof(Details), new { id = boardId });
+        }
+
+        private static bool IsValidTag(string tag)
+        {
+            // Check if tag starts or ends with hyphen
+            if (tag.StartsWith('-') || tag.EndsWith('-'))
+                return false;
+
+            // Check if tag contains numbers
+            if (tag.Any(char.IsDigit))
+                return false;
+
+            // Check if tag contains only letters and single hyphens
+            for (int i = 0; i < tag.Length; i++)
+            {
+                char c = tag[i];
+                
+                // Allow letters
+                if (char.IsLetter(c))
+                    continue;
+
+                // Allow single hyphen (not consecutive)
+                if (c == '-')
+                {
+                    if (i > 0 && tag[i - 1] == '-')
+                        return false;
+                    continue;
+                }
+
+                // Any other character is invalid
+                return false;
+            }
+
+            return true;
+        }
+
+        private static string FormatTag(string tag)
+        {
+            // Convert to lowercase first
+            tag = tag.ToLowerInvariant();
+
+            // Capitalize first letter
+            if (tag.Length > 0)
+            {
+                tag = char.ToUpperInvariant(tag[0]) + tag.Substring(1);
+            }
+
+            return tag;
+        }
+
+        private async Task<string?> SaveBoardImageAsync(IFormFile? boardImage, string userId, string? existingImageUrl)
+        {
+            if (boardImage == null || boardImage.Length <= 0)
+            {
+                return existingImageUrl;
+            }
+
+            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
+            var fileExtension = Path.GetExtension(boardImage.FileName).ToLowerInvariant();
+
+            if (!allowedExtensions.Contains(fileExtension))
+            {
+                ModelState.AddModelError(nameof(BoardCreateViewModel.BoardImage), "Only image files are allowed (.jpg, .jpeg, .png, .gif, .webp).");
+                return existingImageUrl;
+            }
+
+            if (boardImage.Length > 5 * 1024 * 1024)
+            {
+                ModelState.AddModelError(nameof(BoardCreateViewModel.BoardImage), "Image file size must not exceed 5MB.");
+                return existingImageUrl;
+            }
+
+            var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "boards");
+            if (!Directory.Exists(uploadsFolder))
+            {
+                Directory.CreateDirectory(uploadsFolder);
+            }
+
+            if (!string.IsNullOrWhiteSpace(existingImageUrl))
+            {
+                var oldImagePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", existingImageUrl.TrimStart('/'));
+                if (System.IO.File.Exists(oldImagePath))
+                {
+                    System.IO.File.Delete(oldImagePath);
+                }
+            }
+
+            var uniqueFileName = $"{userId}_{Guid.NewGuid()}{fileExtension}";
+            var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+            using (var fileStream = new FileStream(filePath, FileMode.Create))
+            {
+                await boardImage.CopyToAsync(fileStream);
+            }
+
+            return $"/uploads/boards/{uniqueFileName}";
+        }
+
+        private async Task ApplyTagsToBoardAsync(Board board, List<string>? tags)
+        {
+            board.Tags.Clear();
+
+            if (tags == null || !tags.Any())
+            {
+                return;
+            }
+
+            var validatedTags = new List<string>();
+
+            foreach (var tag in tags)
+            {
+                var trimmedTag = tag?.Trim();
+                if (string.IsNullOrWhiteSpace(trimmedTag))
+                    continue;
+
+                if (!IsValidTag(trimmedTag))
+                {
+                    ModelState.AddModelError(nameof(BoardCreateViewModel.Tags), $"Invalid tag '{trimmedTag}'. Tags must contain only letters and single hyphens (not at start or end).");
+                    return;
+                }
+
+                var formattedTag = FormatTag(trimmedTag);
+                if (!validatedTags.Contains(formattedTag, StringComparer.OrdinalIgnoreCase))
+                {
+                    validatedTags.Add(formattedTag);
+                }
+            }
+
+            if (!validatedTags.Any())
+            {
+                return;
+            }
+
+            var existingTags = await _context.Tags
+                .Where(t => validatedTags.Contains(t.Name))
+                .ToListAsync();
+
+            var existingNames = new HashSet<string>(existingTags.Select(t => t.Name), StringComparer.OrdinalIgnoreCase);
+
+            foreach (var name in validatedTags)
+            {
+                if (!existingNames.Contains(name))
+                {
+                    var newTag = new Tag { Name = name };
+                    _context.Tags.Add(newTag);
+                    existingTags.Add(newTag);
+                }
+            }
+
+            await _context.SaveChangesAsync();
+
+            foreach (var tag in existingTags)
+            {
+                board.Tags.Add(tag);
+            }
+        }
+
+        private static GroupManagement ParseGroupManagementOption(string? option)
+        {
+            return option switch
+            {
+                "allowOverbooking" => GroupManagement.AllowOverbooking,
+                "keepOpenWhenFull" => GroupManagement.KeepOpenWhenFull,
+                "increaseMax" => GroupManagement.AllowOverbooking,
+                "manualIncrease" => GroupManagement.KeepOpenWhenFull,
+                _ => GroupManagement.CloseOnFull
+            };
+        }
+
+        private static string ToGroupManagementOptionValue(GroupManagement option)
+        {
+            return option switch
+            {
+                GroupManagement.AllowOverbooking => "allowOverbooking",
+                GroupManagement.KeepOpenWhenFull => "keepOpenWhenFull",
+                _ => "closeOnFull"
+            };
+        }
+
+        private static void UpdateBoardStatusByCapacity(Board board, int occupiedSeats)
+        {
+            if (board.CurrentStatus is BoardStatus.Closed or BoardStatus.Cancelled or BoardStatus.Archived)
+            {
+                return;
+            }
+
+            if (board.GroupManagementOption == GroupManagement.CloseOnFull)
+            {
+                board.CurrentStatus = occupiedSeats >= board.MaxParticipants ? BoardStatus.Full : BoardStatus.Open;
+                return;
+            }
+
+            if (board.CurrentStatus == BoardStatus.Full)
+            {
+                board.CurrentStatus = BoardStatus.Open;
+            }
         }
     }
 }

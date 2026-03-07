@@ -105,8 +105,8 @@ namespace WebDevProject.Models
     public enum GroupManagement
     {
         CloseOnFull,
-        IncreaseMaxParticipantsOnFull,
-        ManualIncreaseMaxParticipants
+        AllowOverbooking,
+        KeepOpenWhenFull
     }
 
     public class Tag
