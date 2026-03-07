@@ -1,0 +1,20 @@
+﻿.container{
+    display: flex;
+    flex-flow: row wrap;
+    justify-content: center;
+    gap: 10px;
+    padding-left: 50px;
+    padding-right: 50px;
+}
+.post_content{
+    display: flex;
+    flex-flow: column nowrap;
+    padding: 10px;
+    background-color: lightgrey;
+    border-radius: 10px;
+}
+.post_info{
+    background-color: lightgray;
+    border-radius: 10px;
+    padding: 10px;
+}
