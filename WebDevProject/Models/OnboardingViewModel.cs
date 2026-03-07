@@ -13,6 +13,9 @@ namespace WebDevProject.Models
 
         public Users.Gender? UserGender { get; set; }
 
+        [StringLength(500, ErrorMessage = "Bio cannot exceed 500 characters.")]
+        public string? Bio { get; set; }
+
         public bool SkipOnboarding { get; set; }
     }
 }
