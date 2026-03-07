@@ -45,6 +45,11 @@
                 <input asp-for="DateOfBirth" type="date" id="birthdateInput"/>
                 <span asp-validation-for="DateOfBirth"></span>
             </div>
+            <div class="row">
+                <span class="label">Bio :</span>
+                <textarea asp-for="Bio" id="bioInput" rows="4" placeholder="Tell us about yourself..."></textarea>
+                <span asp-validation-for="Bio"></span>
+            </div>
             <button type="submit" id="save">save change</button>
         </div>
     </div>

@@ -40,7 +40,8 @@ namespace WebDevProject.Controllers
                 CurrentProfilePictureUrl = user.ProfilePictureUrl,
                 UserName = user.DisplayName,
                 DateOfBirth = user.DateOfBirth,
-                UserGender = user.UserGender
+                UserGender = user.UserGender,
+                Bio = user.Bio
             };
 
             return View(model);
@@ -82,6 +83,7 @@ namespace WebDevProject.Controllers
                 user.NormalizedDisplayName = model.UserName.ToUpper();
                 user.DateOfBirth = model.DateOfBirth;
                 user.UserGender = model.UserGender;
+                user.Bio = model.Bio;
 
                 // Update user profile picture
                 if (model.ProfileImage != null && model.ProfileImage.Length > 0)

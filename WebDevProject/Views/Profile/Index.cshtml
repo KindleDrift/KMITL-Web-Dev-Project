@@ -49,6 +49,18 @@
             </div>
 
             <div class="row">
+                <span class="label">Bio :</span>
+                @if (!string.IsNullOrWhiteSpace(Model.Bio))
+                {
+                    <span>@Model.Bio</span>
+                }
+                else
+                {
+                    <span class="text-muted">Not provided</span>
+                }
+            </div>
+
+            <div class="row">
                 <span class="label">Member Since :</span>
                 <span>@Model.CreatedAt.ToString("MMMM dd, yyyy")</span>
             </div>

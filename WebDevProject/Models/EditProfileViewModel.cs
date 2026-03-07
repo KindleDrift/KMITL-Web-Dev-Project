@@ -16,5 +16,7 @@ namespace WebDevProject.Models
         public DateTime? DateOfBirth { get; set; }
 
         public Users.Gender? UserGender { get; set; }
+
+        public string? Bio { get; set; }
     }
 }
