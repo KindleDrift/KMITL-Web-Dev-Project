@@ -1,8 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
-using System.Text;
-using System.Xml;
 using WebDevProject.Data;
 using WebDevProject.Filters;
 using WebDevProject.Models;
@@ -15,11 +13,13 @@ namespace WebDevProject.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly NotificationsService _notificationsService;
+        private readonly BoardService _boardService;
 
-        public BoardController(ApplicationDbContext context, NotificationsService notificationsService)
+        public BoardController(ApplicationDbContext context, NotificationsService notificationsService, BoardService boardService)
         {
             _context = context;
             _notificationsService = notificationsService;
+            _boardService = boardService;
         }
 
         public async Task<IActionResult> Index()
@@ -175,94 +175,8 @@ namespace WebDevProject.Controllers
                 .OrderByDescending(b => b.CreatedAt)
                 .ToListAsync();
 
-            // Build XML response
-            var sb = new StringBuilder();
-            var settings = new XmlWriterSettings
-            {
-                Indent = true,
-                OmitXmlDeclaration = false,
-                Encoding = Encoding.UTF8
-            };
-
-            using (var writer = XmlWriter.Create(sb, settings))
-            {
-                writer.WriteStartDocument();
-                writer.WriteStartElement("Boards");
-
-                foreach (var b in boards)
-                {
-                    var visibleParticipants = b.Participants.Where(p => p.UserId != b.AuthorId).ToList();
-                    var participantCount = visibleParticipants.Count + b.ExternalParticipants.Count;
-                    var spotsLeft = Math.Max(b.MaxParticipants - participantCount, 0);
-                    var isOpenPastDeadline = b.CurrentStatus == BoardStatus.Open && b.Deadline <= DateTime.UtcNow;
-
-                    writer.WriteStartElement("Board");
-
-                    writer.WriteElementString("Id", b.Id.ToString());
-                    writer.WriteElementString("Title", b.Title);
-                    writer.WriteElementString("Description", b.Description);
-                    writer.WriteElementString("ImageUrl", string.IsNullOrWhiteSpace(b.ImageUrl) ? "/images/default-board.png" : b.ImageUrl);
-                    writer.WriteElementString("Status", b.CurrentStatus.ToString());
-                    writer.WriteElementString("DisplayStatus", isOpenPastDeadline ? "Open (Deadline Passed)" : b.CurrentStatus.ToString());
-                    
-                    var statusClass = b.CurrentStatus switch
-                    {
-                        BoardStatus.Open => isOpenPastDeadline ? "status-closed" : "status-open",
-                        BoardStatus.Full => "status-full",
-                        BoardStatus.Closed => "status-closed",
-                        BoardStatus.Cancelled => "status-cancelled",
-                        BoardStatus.Archived => "status-archived",
-                        _ => "status-open"
-                    };
-                    writer.WriteElementString("StatusClass", statusClass);
-
-                    writer.WriteElementString("EventDate", b.EventDate.ToString("dd MMM yyyy"));
-                    writer.WriteElementString("EventTime", b.EventDate.ToString("HH:mm"));
-                    writer.WriteElementString("Deadline", b.Deadline.ToString("dd MMM yyyy, HH:mm"));
-                    writer.WriteElementString("Location", b.Location);
-
-                    // Tags
-                    writer.WriteStartElement("Tags");
-                    foreach (var tag in b.Tags)
-                    {
-                        writer.WriteElementString("Tag", tag.Name);
-                    }
-                    writer.WriteEndElement(); // Tags
-
-                    writer.WriteElementString("JoinPolicy", b.JoinPolicy.ToString());
-                    writer.WriteElementString("JoinPolicyDisplay", b.JoinPolicy == BoardJoinPolicy.FirstComeFirstServe ? "First Come First Serve" : "Application");
-                    writer.WriteElementString("CurrentParticipants", participantCount.ToString());
-                    writer.WriteElementString("MaxParticipants", b.MaxParticipants.ToString());
-                    writer.WriteElementString("SpotsLeft", spotsLeft.ToString());
-
-                    // Author
-                    writer.WriteStartElement("Author");
-                    writer.WriteElementString("DisplayName", b.Author?.DisplayName ?? "Unknown");
-                    writer.WriteElementString("ProfilePictureUrl", b.Author?.ProfilePictureUrl ?? "/images/default-profile.png");
-                    writer.WriteEndElement(); // Author
-
-                    // Preview Participants
-                    writer.WriteStartElement("PreviewParticipants");
-                    var previewParticipants = visibleParticipants.Take(5);
-                    foreach (var participant in previewParticipants)
-                    {
-                        writer.WriteStartElement("Participant");
-                        writer.WriteElementString("ProfilePictureUrl", participant.User?.ProfilePictureUrl ?? "/images/default-profile.png");
-                        writer.WriteElementString("DisplayName", participant.User?.DisplayName ?? "Participant");
-                        writer.WriteEndElement(); // Participant
-                    }
-                    writer.WriteEndElement(); // PreviewParticipants
-
-                    writer.WriteElementString("TotalVisibleParticipants", visibleParticipants.Count.ToString());
-
-                    writer.WriteEndElement(); // Board
-                }
-
-                writer.WriteEndElement(); // Boards
-                writer.WriteEndDocument();
-            }
-
-            return Content(sb.ToString(), "application/xml");
+            var xml = _boardService.BuildBoardsXml(boards);
+            return Content(xml, "application/xml");
         }
 
         [HttpGet]
@@ -311,17 +225,28 @@ namespace WebDevProject.Controllers
                 NotifyAuthorOnFull = model.NotifyAuthorOnFull,
                 CurrentStatus = BoardStatus.Open,
                 CreatedAt = DateTime.UtcNow,
-                GroupManagementOption = ParseGroupManagementOption(model.GroupManagementOption),
-                JoinPolicy = ParseJoinPolicyOption(model.JoinPolicyOption)
+                GroupManagementOption = _boardService.ParseGroupManagementOption(model.GroupManagementOption),
+                JoinPolicy = _boardService.ParseJoinPolicyOption(model.JoinPolicyOption)
             };
 
-            board.ImageUrl = await SaveBoardImageAsync(model.BoardImage, userId, null);
+            var imageResult = await _boardService.SaveBoardImageAsync(model.BoardImage, userId, null);
+            board.ImageUrl = imageResult.ImageUrl;
+            if (!imageResult.Success)
+            {
+                ModelState.AddModelError(nameof(BoardCreateViewModel.BoardImage), imageResult.ErrorMessage!);
+            }
+
             if (!ModelState.IsValid)
             {
                 return View(model);
             }
 
-            await ApplyTagsToBoardAsync(board, model.Tags);
+            var tagsResult = await _boardService.ApplyTagsToBoardAsync(board, model.Tags);
+            if (!tagsResult.Success)
+            {
+                ModelState.AddModelError(nameof(BoardCreateViewModel.Tags), tagsResult.ErrorMessage!);
+            }
+
             if (!ModelState.IsValid)
             {
                 return View(model);
@@ -366,8 +291,8 @@ namespace WebDevProject.Controllers
                 Deadline = board.Deadline,
                 MaxParticipants = board.MaxParticipants,
                 NotifyAuthorOnFull = board.NotifyAuthorOnFull,
-                GroupManagementOption = ToGroupManagementOptionValue(board.GroupManagementOption),
-                JoinPolicyOption = ToJoinPolicyOptionValue(board.JoinPolicy),
+                GroupManagementOption = _boardService.ToGroupManagementOptionValue(board.GroupManagementOption),
+                JoinPolicyOption = _boardService.ToJoinPolicyOptionValue(board.JoinPolicy),
                 Tags = board.Tags.Select(t => t.Name).ToList(),
                 CurrentStatus = board.CurrentStatus
             };
@@ -430,8 +355,8 @@ namespace WebDevProject.Controllers
             board.Deadline = model.Deadline;
             board.MaxParticipants = model.MaxParticipants;
             board.NotifyAuthorOnFull = model.NotifyAuthorOnFull;
-            board.GroupManagementOption = ParseGroupManagementOption(model.GroupManagementOption);
-            board.JoinPolicy = ParseJoinPolicyOption(model.JoinPolicyOption);
+            board.GroupManagementOption = _boardService.ParseGroupManagementOption(model.GroupManagementOption);
+            board.JoinPolicy = _boardService.ParseJoinPolicyOption(model.JoinPolicyOption);
             
             // Allow manual status override (unless automatic status will be applied)
             if (model.CurrentStatus.HasValue)
@@ -439,7 +364,13 @@ namespace WebDevProject.Controllers
                 board.CurrentStatus = model.CurrentStatus.Value;
             }
 
-            board.ImageUrl = await SaveBoardImageAsync(model.BoardImage, userId, board.ImageUrl);
+            var editImageResult = await _boardService.SaveBoardImageAsync(model.BoardImage, userId, board.ImageUrl);
+            board.ImageUrl = editImageResult.ImageUrl;
+            if (!editImageResult.Success)
+            {
+                ModelState.AddModelError(nameof(BoardCreateViewModel.BoardImage), editImageResult.ErrorMessage!);
+            }
+
             if (!ModelState.IsValid)
             {
                 ViewBag.BoardId = board.Id;
@@ -447,7 +378,12 @@ namespace WebDevProject.Controllers
                 return View(model);
             }
 
-            await ApplyTagsToBoardAsync(board, model.Tags);
+            var editTagsResult = await _boardService.ApplyTagsToBoardAsync(board, model.Tags);
+            if (!editTagsResult.Success)
+            {
+                ModelState.AddModelError(nameof(BoardCreateViewModel.Tags), editTagsResult.ErrorMessage!);
+            }
+
             if (!ModelState.IsValid)
             {
                 ViewBag.BoardId = board.Id;
@@ -462,7 +398,7 @@ namespace WebDevProject.Controllers
                 var applicantsToApprove = board.Applicants.ToList();
                 foreach (var applicant in applicantsToApprove)
                 {
-                    var currentOccupied = GetOccupiedSeatCount(board);
+                    var currentOccupied = _boardService.GetOccupiedSeatCount(board);
                     
                     // Only approve if there's space OR if AllowOverbooking is enabled
                     if (currentOccupied < board.MaxParticipants || board.GroupManagementOption == GroupManagement.AllowOverbooking)
@@ -496,7 +432,7 @@ namespace WebDevProject.Controllers
             if (oldGroupManagement != GroupManagement.CloseOnFull &&
                 board.GroupManagementOption == GroupManagement.CloseOnFull)
             {
-                var currentOccupied = GetOccupiedSeatCount(board);
+                var currentOccupied = _boardService.GetOccupiedSeatCount(board);
                 if (currentOccupied >= board.MaxParticipants && board.CurrentStatus == BoardStatus.Open)
                 {
                     board.CurrentStatus = BoardStatus.Full;
@@ -506,7 +442,7 @@ namespace WebDevProject.Controllers
             // Edge Case 4: MaxParticipants changed - recalculate status
             if (oldMaxParticipants != board.MaxParticipants)
             {
-                var currentOccupied = GetOccupiedSeatCount(board);
+                var currentOccupied = _boardService.GetOccupiedSeatCount(board);
                 
                 // If capacity increased and was Full, might need to reopen
                 if (board.MaxParticipants > oldMaxParticipants && board.CurrentStatus == BoardStatus.Full)
@@ -527,7 +463,7 @@ namespace WebDevProject.Controllers
             }
 
             // Final status update based on current capacity
-            UpdateBoardStatusByCapacity(board, GetOccupiedSeatCount(board));
+            _boardService.UpdateBoardStatusByCapacity(board, _boardService.GetOccupiedSeatCount(board));
             
             await _context.SaveChangesAsync();
 
@@ -647,7 +583,7 @@ namespace WebDevProject.Controllers
                 return RedirectToAction(nameof(Details), new { id });
             }
 
-            var currentOccupied = GetOccupiedSeatCount(board);
+            var currentOccupied = _boardService.GetOccupiedSeatCount(board);
             if (currentOccupied >= board.MaxParticipants)
             {
                 if (board.JoinPolicy == BoardJoinPolicy.FirstComeFirstServe &&
@@ -660,7 +596,7 @@ namespace WebDevProject.Controllers
 
             if (board.JoinPolicy == BoardJoinPolicy.FirstComeFirstServe)
             {
-                var occupiedBeforeAdd = GetOccupiedSeatCount(board);
+                var occupiedBeforeAdd = _boardService.GetOccupiedSeatCount(board);
 
                 var participant = new BoardParticipant
                 {
@@ -670,7 +606,7 @@ namespace WebDevProject.Controllers
                 };
 
                 _context.BoardParticipants.Add(participant);
-                UpdateBoardStatusByCapacity(board, occupiedBeforeAdd + 1);
+                _boardService.UpdateBoardStatusByCapacity(board, occupiedBeforeAdd + 1);
                 await _context.SaveChangesAsync();
 
                 // Notify the board author about the new participant
@@ -749,12 +685,12 @@ namespace WebDevProject.Controllers
             var participant = board.Participants.FirstOrDefault(p => p.UserId == userId);
             if (participant != null)
             {
-                var occupiedBeforeRemoval = GetOccupiedSeatCount(board);
+                var occupiedBeforeRemoval = _boardService.GetOccupiedSeatCount(board);
 
                 _context.BoardParticipants.Remove(participant);
 
                 var occupiedAfterRemoval = Math.Max(occupiedBeforeRemoval - 1, 0);
-                UpdateBoardStatusByCapacity(board, occupiedAfterRemoval);
+                _boardService.UpdateBoardStatusByCapacity(board, occupiedAfterRemoval);
 
                 await _context.SaveChangesAsync();
 
@@ -799,14 +735,14 @@ namespace WebDevProject.Controllers
                 return RedirectToAction(nameof(Details), new { id = boardId });
             }
 
-            if (GetOccupiedSeatCount(board) >= board.MaxParticipants &&
+            if (_boardService.GetOccupiedSeatCount(board) >= board.MaxParticipants &&
                 board.GroupManagementOption != GroupManagement.AllowOverbooking)
             {
                 TempData["Error"] = "Board is full. Cannot approve more participants.";
                 return RedirectToAction(nameof(Details), new { id = boardId });
             }
 
-            var occupiedBeforeAdd = GetOccupiedSeatCount(board);
+            var occupiedBeforeAdd = _boardService.GetOccupiedSeatCount(board);
 
             _context.BoardApplicants.Remove(applicant);
 
@@ -818,7 +754,7 @@ namespace WebDevProject.Controllers
             };
 
             _context.BoardParticipants.Add(participant);
-            UpdateBoardStatusByCapacity(board, occupiedBeforeAdd + 1);
+            _boardService.UpdateBoardStatusByCapacity(board, occupiedBeforeAdd + 1);
 
             await _context.SaveChangesAsync();
 
@@ -867,7 +803,7 @@ namespace WebDevProject.Controllers
                 return RedirectToAction(nameof(Details), new { id = boardId });
             }
 
-            var occupiedBeforeRemoval = GetOccupiedSeatCount(board);
+            var occupiedBeforeRemoval = _boardService.GetOccupiedSeatCount(board);
 
             _context.BoardParticipants.Remove(participant);
 
@@ -882,7 +818,7 @@ namespace WebDevProject.Controllers
             }
 
             var occupiedAfterRemoval = Math.Max(occupiedBeforeRemoval - 1, 0);
-            UpdateBoardStatusByCapacity(board, occupiedAfterRemoval);
+            _boardService.UpdateBoardStatusByCapacity(board, occupiedAfterRemoval);
 
             await _context.SaveChangesAsync();
 
@@ -936,14 +872,14 @@ namespace WebDevProject.Controllers
                 return RedirectToAction(nameof(Details), new { id = boardId });
             }
 
-            if (GetOccupiedSeatCount(board) >= board.MaxParticipants &&
+            if (_boardService.GetOccupiedSeatCount(board) >= board.MaxParticipants &&
                 board.GroupManagementOption != GroupManagement.AllowOverbooking)
             {
                 TempData["Error"] = "Board is full. Cannot add external participant.";
                 return RedirectToAction(nameof(Details), new { id = boardId });
             }
 
-            var occupiedBeforeAdd = GetOccupiedSeatCount(board);
+            var occupiedBeforeAdd = _boardService.GetOccupiedSeatCount(board);
 
             var participant = new BoardExternalParticipant
             {
@@ -954,7 +890,7 @@ namespace WebDevProject.Controllers
             };
 
             _context.BoardExternalParticipants.Add(participant);
-            UpdateBoardStatusByCapacity(board, occupiedBeforeAdd + 1);
+            _boardService.UpdateBoardStatusByCapacity(board, occupiedBeforeAdd + 1);
 
             await _context.SaveChangesAsync();
 
@@ -994,12 +930,12 @@ namespace WebDevProject.Controllers
                 return RedirectToAction(nameof(Details), new { id = boardId });
             }
 
-            var occupiedBeforeRemoval = GetOccupiedSeatCount(board);
+            var occupiedBeforeRemoval = _boardService.GetOccupiedSeatCount(board);
 
             _context.BoardExternalParticipants.Remove(externalParticipant);
 
             var occupiedAfterRemoval = Math.Max(occupiedBeforeRemoval - 1, 0);
-            UpdateBoardStatusByCapacity(board, occupiedAfterRemoval);
+            _boardService.UpdateBoardStatusByCapacity(board, occupiedAfterRemoval);
 
             await _context.SaveChangesAsync();
 
@@ -1144,221 +1080,6 @@ namespace WebDevProject.Controllers
 
             TempData["Success"] = "Board has been archived successfully.";
             return RedirectToAction(nameof(Index));
-        }
-
-        private static bool IsValidTag(string tag)
-        {
-            if (tag.StartsWith('-') || tag.EndsWith('-'))
-                return false;
-
-            if (tag.Any(char.IsDigit))
-                return false;
-
-            for (int i = 0; i < tag.Length; i++)
-            {
-                char c = tag[i];
-
-                if (char.IsLetter(c))
-                    continue;
-
-                if (c == '-')
-                {
-                    if (i > 0 && tag[i - 1] == '-')
-                        return false;
-                    continue;
-                }
-
-                return false;
-            }
-
-            return true;
-        }
-
-        private static string FormatTag(string tag)
-        {
-            tag = tag.ToLowerInvariant();
-
-            if (tag.Length > 0)
-            {
-                tag = char.ToUpperInvariant(tag[0]) + tag.Substring(1);
-            }
-
-            return tag;
-        }
-
-        private async Task<string?> SaveBoardImageAsync(IFormFile? boardImage, string userId, string? existingImageUrl)
-        {
-            if (boardImage == null || boardImage.Length <= 0)
-            {
-                return existingImageUrl;
-            }
-
-            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
-            var fileExtension = Path.GetExtension(boardImage.FileName).ToLowerInvariant();
-
-            if (!allowedExtensions.Contains(fileExtension))
-            {
-                ModelState.AddModelError(nameof(BoardCreateViewModel.BoardImage), "Only image files are allowed (.jpg, .jpeg, .png, .gif, .webp).");
-                return existingImageUrl;
-            }
-
-            if (boardImage.Length > 5 * 1024 * 1024)
-            {
-                ModelState.AddModelError(nameof(BoardCreateViewModel.BoardImage), "Image file size must not exceed 5MB.");
-                return existingImageUrl;
-            }
-
-            var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "boards");
-            if (!Directory.Exists(uploadsFolder))
-            {
-                Directory.CreateDirectory(uploadsFolder);
-            }
-
-            if (!string.IsNullOrWhiteSpace(existingImageUrl))
-            {
-                var oldImagePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", existingImageUrl.TrimStart('/'));
-                if (System.IO.File.Exists(oldImagePath))
-                {
-                    System.IO.File.Delete(oldImagePath);
-                }
-            }
-
-            var uniqueFileName = $"{userId}_{Guid.NewGuid()}{fileExtension}";
-            var filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-            using (var fileStream = new FileStream(filePath, FileMode.Create))
-            {
-                await boardImage.CopyToAsync(fileStream);
-            }
-
-            return $"/uploads/boards/{uniqueFileName}";
-        }
-
-        private async Task ApplyTagsToBoardAsync(Board board, List<string>? tags)
-        {
-            board.Tags.Clear();
-
-            if (tags == null || !tags.Any())
-            {
-                return;
-            }
-
-            var validatedTags = new List<string>();
-
-            foreach (var tag in tags)
-            {
-                var trimmedTag = tag?.Trim();
-                if (string.IsNullOrWhiteSpace(trimmedTag))
-                    continue;
-
-                if (!IsValidTag(trimmedTag))
-                {
-                    ModelState.AddModelError(nameof(BoardCreateViewModel.Tags), $"Invalid tag '{trimmedTag}'. Tags must contain only letters and single hyphens (not at start or end).");
-                    return;
-                }
-
-                var formattedTag = FormatTag(trimmedTag);
-                if (!validatedTags.Contains(formattedTag, StringComparer.OrdinalIgnoreCase))
-                {
-                    validatedTags.Add(formattedTag);
-                }
-            }
-
-            if (!validatedTags.Any())
-            {
-                return;
-            }
-
-            var existingTags = await _context.Tags
-                .Where(t => validatedTags.Contains(t.Name))
-                .ToListAsync();
-
-            var existingNames = new HashSet<string>(existingTags.Select(t => t.Name), StringComparer.OrdinalIgnoreCase);
-
-            foreach (var name in validatedTags)
-            {
-                if (!existingNames.Contains(name))
-                {
-                    var newTag = new Tag { Name = name };
-                    _context.Tags.Add(newTag);
-                    existingTags.Add(newTag);
-                }
-            }
-
-            await _context.SaveChangesAsync();
-
-            foreach (var tag in existingTags)
-            {
-                board.Tags.Add(tag);
-            }
-        }
-
-        private static GroupManagement ParseGroupManagementOption(string? option)
-        {
-            return option switch
-            {
-                "allowOverbooking" => GroupManagement.AllowOverbooking,
-                "keepOpenWhenFull" => GroupManagement.KeepOpenWhenFull,
-                "increaseMax" => GroupManagement.AllowOverbooking,
-                "manualIncrease" => GroupManagement.KeepOpenWhenFull,
-                _ => GroupManagement.CloseOnFull
-            };
-        }
-
-        private static string ToGroupManagementOptionValue(GroupManagement option)
-        {
-            return option switch
-            {
-                GroupManagement.AllowOverbooking => "allowOverbooking",
-                GroupManagement.KeepOpenWhenFull => "keepOpenWhenFull",
-                _ => "closeOnFull"
-            };
-        }
-
-        private static BoardJoinPolicy ParseJoinPolicyOption(string? option)
-        {
-            return option switch
-            {
-                "fcfs" => BoardJoinPolicy.FirstComeFirstServe,
-                _ => BoardJoinPolicy.Application
-            };
-        }
-
-        private static string ToJoinPolicyOptionValue(BoardJoinPolicy option)
-        {
-            return option switch
-            {
-                BoardJoinPolicy.FirstComeFirstServe => "fcfs",
-                _ => "application"
-            };
-        }
-
-        private static int GetOccupiedSeatCount(Board board)
-        {
-            return board.Participants.Count(p => p.UserId != board.AuthorId) + board.ExternalParticipants.Count;
-        }
-
-        private static void UpdateBoardStatusByCapacity(Board board, int occupiedSeats)
-        {
-            if (board.CurrentStatus is BoardStatus.Closed or BoardStatus.Cancelled or BoardStatus.Archived)
-            {
-                return;
-            }
-
-            if (occupiedSeats >= board.MaxParticipants)
-            {
-                if (board.GroupManagementOption == GroupManagement.CloseOnFull)
-                {
-                    board.CurrentStatus = BoardStatus.Full;
-                }
-
-                return;
-            }
-
-            if (board.CurrentStatus == BoardStatus.Full)
-            {
-                board.CurrentStatus = BoardStatus.Open;
-            }
         }
     }
 }
