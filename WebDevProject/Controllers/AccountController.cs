@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebDevProject.Models;
+using WebDevProject.Services;
 
 namespace WebDevProject.Controllers
 {
@@ -10,12 +11,18 @@ namespace WebDevProject.Controllers
         private readonly SignInManager<Users> _signInManager;
         private readonly UserManager<Users> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
+        private readonly ProfileImageService _profileImageService;
 
-        public AccountController(SignInManager<Users> signInManager, UserManager<Users> userManager, RoleManager<IdentityRole> roleManager)
+        public AccountController(
+            SignInManager<Users> signInManager,
+            UserManager<Users> userManager,
+            RoleManager<IdentityRole> roleManager,
+            ProfileImageService profileImageService)
         {
             _signInManager = signInManager;
             _userManager = userManager;
             _roleManager = roleManager;
+            _profileImageService = profileImageService;
         }
 
         [HttpGet]
@@ -184,22 +191,13 @@ namespace WebDevProject.Controllers
 
                 if (model.ProfileImage != null && model.ProfileImage.Length > 0)
                 {
-                    var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "profiles");
-                    if (!Directory.Exists(uploadsFolder))
+                    var profileImageResult = await _profileImageService.SaveProfileImageAsync(model.ProfileImage, user.Id, user.ProfilePictureUrl);
+                    user.ProfilePictureUrl = profileImageResult.ImageUrl;
+                    if (!profileImageResult.Success)
                     {
-                        Directory.CreateDirectory(uploadsFolder);
+                        ModelState.AddModelError(nameof(model.ProfileImage), profileImageResult.ErrorMessage!);
+                        return View(model);
                     }
-
-                    var sanitizedFileName = Path.GetFileName(model.ProfileImage.FileName);
-                    var uniqueFileName = $"{user.Id}_{Guid.NewGuid()}_{sanitizedFileName}";
-                    var filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-                    using (var fileStream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await model.ProfileImage.CopyToAsync(fileStream);
-                    }
-
-                    user.ProfilePictureUrl = $"/uploads/profiles/{uniqueFileName}";
                 }
 
                 user.HasCompletedOnboarding = true;
