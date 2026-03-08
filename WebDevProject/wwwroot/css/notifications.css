@@ -1,0 +1,28 @@
+.notification-item {
+    transition: all 0.3s ease;
+}
+
+.notification-item:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.notification-actions {
+    display: flex;
+    gap: 5px;
+}
+
+.notification-type {
+    display: inline-block;
+}
+
+.notification-highlight {
+    font-weight: 600;
+    color: #0d6efd;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.notification-highlight:hover {
+    color: #0a58ca;
+    text-decoration: underline;
+}
