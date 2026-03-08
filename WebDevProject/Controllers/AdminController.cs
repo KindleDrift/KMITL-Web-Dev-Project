@@ -396,7 +396,8 @@ namespace WebDevProject.Controllers
                         approvedApplicantIds,
                         $"Accepted: {board.Title}",
                         "An admin changed the board settings and you have been automatically accepted.",
-                        NotificationType.AdminAction);
+                        NotificationType.AdminAction,
+                        boardId: id);
                 }
             }
 

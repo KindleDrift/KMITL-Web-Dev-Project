@@ -678,7 +678,9 @@ namespace WebDevProject.Controllers
                     board.AuthorId,
                     $"New Participant: {board.Title}",
                     $"A new user has joined your board.",
-                    NotificationType.NewRequest);
+                    NotificationType.NewRequest,
+                    boardId: id,
+                    relatedUserId: userId);
 
                 TempData["Success"] = "You joined this board successfully.";
                 return RedirectToAction(nameof(Details), new { id });
@@ -699,7 +701,9 @@ namespace WebDevProject.Controllers
                 board.AuthorId,
                 $"New Application: {board.Title}",
                 $"A new user has applied to join your board.",
-                NotificationType.NewRequest);
+                NotificationType.NewRequest,
+                boardId: id,
+                relatedUserId: userId);
 
             TempData["Success"] = "Your application has been submitted successfully.";
             return RedirectToAction(nameof(Details), new { id });
@@ -823,7 +827,8 @@ namespace WebDevProject.Controllers
                 applicantId,
                 $"Accepted: {board.Title}",
                 $"Congratulations! You have been accepted to join '{board.Title}'.",
-                NotificationType.IsAccepted);
+                NotificationType.IsAccepted,
+                boardId: boardId);
 
             TempData["Success"] = "Applicant approved successfully.";
             return RedirectToAction(nameof(Details), new { id = boardId });
@@ -886,7 +891,8 @@ namespace WebDevProject.Controllers
                 participantId,
                 $"Removed from Board: {board.Title}",
                 $"You have been removed from '{board.Title}' and are no longer able to rejoin.",
-                NotificationType.IsRejected);
+                NotificationType.IsRejected,
+                boardId: boardId);
 
             TempData["Success"] = "Participant removed and denied.";
             return RedirectToAction(nameof(Details), new { id = boardId });
@@ -1050,7 +1056,8 @@ namespace WebDevProject.Controllers
                 applicantId,
                 $"Application Rejected: {board.Title}",
                 $"Your application for '{board.Title}' has been rejected.",
-                NotificationType.IsRejected);
+                NotificationType.IsRejected,
+                boardId: boardId);
 
             TempData["Success"] = "Applicant denied.";
             return RedirectToAction(nameof(Details), new { id = boardId });

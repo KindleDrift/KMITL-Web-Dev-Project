@@ -13,7 +13,7 @@ namespace WebDevProject.Services
             _context = context;
         }
 
-        public async Task CreateNotificationAsync(string userId, string title, string? description, NotificationType type)
+        public async Task CreateNotificationAsync(string userId, string title, string? description, NotificationType type, int? boardId = null, string? relatedUserId = null)
         {
             var notification = new Notification
             {
@@ -22,7 +22,9 @@ namespace WebDevProject.Services
                 Description = description,
                 CreatedDate = DateTime.UtcNow,
                 Type = type,
-                IsRead = false
+                IsRead = false,
+                BoardId = boardId,
+                RelatedUserId = relatedUserId
             };
 
             _context.Notifications.Add(notification);
@@ -30,7 +32,7 @@ namespace WebDevProject.Services
         }
 
         // Bulk create for multiple users
-        public async Task CreateNotificationsForMultipleUsersAsync(List<string> userIds, string title, string? description, NotificationType type)
+        public async Task CreateNotificationsForMultipleUsersAsync(List<string> userIds, string title, string? description, NotificationType type, int? boardId = null, string? relatedUserId = null)
         {
             var notifications = userIds.Select(userId => new Notification
             {
@@ -39,7 +41,9 @@ namespace WebDevProject.Services
                 Description = description,
                 CreatedDate = DateTime.UtcNow,
                 Type = type,
-                IsRead = false
+                IsRead = false,
+                BoardId = boardId,
+                RelatedUserId = relatedUserId
             }).ToList();
 
             _context.Notifications.AddRange(notifications);
@@ -67,6 +71,8 @@ namespace WebDevProject.Services
         {
             var skip = (pageNumber - 1) * pageSize;
             return await _context.Notifications
+                .Include(n => n.Board)
+                .Include(n => n.RelatedUser)
                 .Where(n => n.UserId == userId)
                 .OrderByDescending(n => n.CreatedDate)
                 .Skip(skip)
