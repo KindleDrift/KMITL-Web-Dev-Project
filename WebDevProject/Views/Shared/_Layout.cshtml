@@ -6,11 +6,12 @@
     <title>@ViewData["Title"] | TinyTender</title>
     <script type="importmap"></script>
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/notifications.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/WebDevProject.styles.css" asp-append-version="true" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=account_circle,add,close,code,deployed_code,female,forum,grid_view,groups,info,language,lock,logout,male,menu,menu_open,notifications,open_in_new,person,rocket_launch,school,space_dashboard,terminal,transgender,visibility,visibility_off">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=account_circle,add,check_circle,close,code,deployed_code,female,forum,grid_view,groups,info,language,lock,logout,male,menu,menu_open,notifications,open_in_new,person,rocket_launch,school,space_dashboard,terminal,transgender,visibility,visibility_off">
     @await RenderSectionAsync("Styles", required: false)
 </head>
 <body>
@@ -34,6 +35,7 @@
         </div>
     </footer>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/js/notifications.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

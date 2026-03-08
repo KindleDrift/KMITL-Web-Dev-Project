@@ -75,8 +75,35 @@ async function updateUnreadCount() {
     try {
         const response = await fetch('/Notifications/GetUnreadCount');
         const data = await response.json();
-        document.getElementById('unread-count').textContent = data.count;
+        
+        const unreadCountElement = document.getElementById('unread-count');
+        if (unreadCountElement) {
+            unreadCountElement.textContent = data.count;
+        }
+
+        updateNotificationDots(data.count);
     } catch (error) {
         console.error('Error updating unread count:', error);
     }
 }
+
+function updateNotificationDots(count) {
+    const profileDot = document.querySelector('.profile-notification-dot');
+    const optionDot = document.querySelector('.option-notification-dot');
+    
+    if (count > 0) {
+        if (profileDot) profileDot.style.display = 'block';
+        if (optionDot) optionDot.style.display = 'block';
+    } else {
+        if (profileDot) profileDot.style.display = 'none';
+        if (optionDot) optionDot.style.display = 'none';
+    }
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    updateUnreadCount();
+    
+    // Poll for unread count updates every 30 seconds
+    setInterval(updateUnreadCount, 30000);
+});
