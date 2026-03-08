@@ -1,7 +1,11 @@
-﻿.profile {
+﻿#profile {
     display: flex;
     flex-direction: column;
     align-items: center;
+}
+
+#profile-data {
+    width: 80%;
 }
 
 .profile-picture {
@@ -11,14 +15,10 @@
     object-fit: cover;
     border-radius: 100%;
     align-items: center;
-    margin-bottom: -60px;
+    margin-bottom: -50px;
     z-index: 2;
-}
-
-.profile-data {
-    width: 95%;
-    background-color: #CADEFE;
-    padding: 20px;
+    background-color: #eaeaea;
+    border: 1px solid black;
 }
 
 .profile-link {
@@ -40,6 +40,16 @@
 .label {
     font-weight: bold;
     font-size: 20px;
+}
+
+.bio-text {
+    overflow-wrap: break-word;
+    max-width: 85%;
+}
+
+.divider {
+    display: flex;
+    justify-content: space-between;
 }
 
 @media (max-width: 768px) {
