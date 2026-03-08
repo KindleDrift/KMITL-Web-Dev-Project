@@ -10,10 +10,16 @@
 
 <div class="main-container" id="profile">
     <img class="profile-picture" id="picture" src="@(Model.ProfilePictureUrl ?? "/images/default-profile.png")" alt="Profile Picture">
-    <div class="card" id="profile-data">
+    <div class="card @(Model.IsOwnProfile ? "profile-card-own" : "")" id="profile-data">
         @if (Model.IsOwnProfile)
         {
-            <a class="profile-link" href="@Url.Action("Edit", "Profile")">Edit Profile</a>
+            <div class="profile-actions">
+                <a class="btn btn-primary profile-action-btn profile-action-edit" href="@Url.Action("Edit", "Profile")">Edit Profile</a>
+                <a class="btn btn-primary profile-action-btn profile-action-reset" href="@Url.Action("ChangePassword", "Account")">Reset Password</a>
+                <form asp-action="SignOut" asp-controller="Account" method="post" class="inline-form profile-action-signout-form">
+                    <button type="submit" class="btn btn-primary profile-action-btn profile-action-signout">Sign Out</button>
+                </form>
+            </div>
         }
 
         <div class="data-menu">
@@ -81,16 +87,5 @@
                 <span>@Model.BoardParticipationsCount</span>
             </div>
         </div>
-
-        @if (Model.IsOwnProfile)
-        {
-            <div class="divider">
-                <a class="profile-link" href="@Url.Action("ChangePassword", "Account")">Reset Password</a>
-
-                <form asp-action="SignOut" asp-controller="Account" method="post" style="display: inline;">
-                    <button type="submit" class="profile-link" style="border: none; background: none; padding: 0;">Sign Out</button>
-                </form>
-            </div>
-        }
     </div>
 </div>

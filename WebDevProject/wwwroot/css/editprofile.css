@@ -18,29 +18,38 @@
     border-radius: 100%;
     background-color: #eaeaea;
     border: 2px solid #1f1f1f;
-    margin-bottom: -100px;
+    margin-bottom: -60px;
 }
 
 #changePicBtn {
     position: relative;
     z-index: 4;
-    margin-bottom: 10px;
+    margin-bottom: -20px;
 }
 
 #profile-data {
     width: 100%;
     max-width: 800px;
-    padding-top: 120px;
+    padding-top: 90px;
+}
+
+#profile-data .form-group > label {
+    font-weight: bold;
+    font-size: 18px;
 }
 
 @media (max-width: 768px) {
     .edit-picture .profile-picture {
         width: 150px;
         height: 150px;
-        margin-bottom: -75px;
+        margin-bottom: -45px;
+    }
+    
+    #changePicBtn {
+        margin-bottom: -15px;
     }
     
     #profile-data {
-        padding-top: 90px;
+        padding-top: 75px;
     }
 }

@@ -8,106 +8,110 @@
     <link rel="stylesheet" href="~/css/board.css" asp-append-version="true" />
 }
 
-<div id="boardCreateContainer">
+<div class="main-container">
     <h1>Create a New Board</h1>
 
-    <form id="boardForm" method="post" asp-controller="Board" asp-action="Create" enctype="multipart/form-data">
-        @Html.AntiForgeryToken()
+    <div class="card">
+        <form id="boardForm" method="post" asp-controller="Board" asp-action="Create" enctype="multipart/form-data">
+            @Html.AntiForgeryToken()
 
-        <div class="form-group">
-            <label for="title">Title *</label>
-            <input type="text" id="title" asp-for="Title" placeholder="What is your board about?" required>
-            <span asp-validation-for="Title" class="text-danger"></span>
-        </div>
-
-        <div class="form-group">
-            <label for="description">Description *</label>
-            <textarea id="description" asp-for="Description" rows="4" placeholder="Tell us more about your board..." required></textarea>
-            <span asp-validation-for="Description" class="text-danger"></span>
-        </div>
-
-        <div class="form-group">
-            <label for="boardImage">Board Image</label>
-            <input type="file" id="boardImage" asp-for="BoardImage" accept="image/*">
-            <span asp-validation-for="BoardImage" class="text-danger"></span>
-        </div>
-
-        <div class="form-group">
-            <label for="location">Location *</label>
-            <input type="text" id="location" asp-for="Location" placeholder="Where will this take place?" required>
-            <span asp-validation-for="Location" class="text-danger"></span>
-        </div>
-
-        <div class="form-row">
             <div class="form-group">
-                <label for="eventDate">Event Date *</label>
-                <input type="datetime-local" id="eventDate" asp-for="EventDate" required>
-                <span asp-validation-for="EventDate" class="text-danger"></span>
+                <label for="title">Title *</label>
+                <input type="text" id="title" asp-for="Title" placeholder="What is your board about?" required>
+                <span asp-validation-for="Title" class="text-danger"></span>
             </div>
 
             <div class="form-group">
-                <label for="deadline">Registration Deadline *</label>
-                <input type="datetime-local" id="deadline" asp-for="Deadline" required>
-                <span asp-validation-for="Deadline" class="text-danger"></span>
+                <label for="description">Description *</label>
+                <textarea id="description" asp-for="Description" rows="4" placeholder="Tell us more about your board..." required></textarea>
+                <span asp-validation-for="Description" class="text-danger"></span>
             </div>
-        </div>
 
-        <div class="form-group">
-            <label for="maxParticipants">Maximum Participants *</label>
-            <input type="number" id="maxParticipants" asp-for="MaxParticipants" min="1" max="1000" required>
-            <span asp-validation-for="MaxParticipants" class="text-danger"></span>
-        </div>
-
-        <div class="form-group">
-            <label>Join Policy *</label>
-            <div class="radio-group">
-                <div class="radio-option">
-                    <input type="radio" id="joinApplication" name="JoinPolicyOption" value="application" @((Model?.JoinPolicyOption == "application" || string.IsNullOrWhiteSpace(Model?.JoinPolicyOption)) ? "checked" : "") required>
-                    <label for="joinApplication">Application (author reviews applicants)</label>
-                </div>
-                <div class="radio-option">
-                    <input type="radio" id="joinFcfs" name="JoinPolicyOption" value="fcfs" @(Model?.JoinPolicyOption == "fcfs" ? "checked" : "")>
-                    <label for="joinFcfs">First Come First Serve (auto-join)</label>
-                </div>
+            <div class="form-group">
+                <label for="boardImage">Board Image</label>
+                <input type="file" id="boardImage" asp-for="BoardImage" accept="image/*">
+                <span asp-validation-for="BoardImage" class="text-danger"></span>
             </div>
-            <span asp-validation-for="JoinPolicyOption" class="text-danger"></span>
-        </div>
 
-        <div class="form-group">
-            <label>Tags</label>
-            <div class="tag-input-group">
-                <input type="text" id="tagInput" placeholder="Enter a tag...">
-                <button type="button" id="addTagButton" class="btn btn-light">Add Tag</button>
+            <div class="form-group">
+                <label for="location">Location *</label>
+                <input type="text" id="location" asp-for="Location" placeholder="Where will this take place?" required>
+                <span asp-validation-for="Location" class="text-danger"></span>
             </div>
-            <div id="tagContainer"></div>
-        </div>
 
-        <div class="form-group">
-            <label>Group Management *</label>
-            <div class="radio-group">
-                <div class="radio-option">
-                    <input type="radio" id="closeOnFull" name="GroupManagementOption" value="closeOnFull" @((Model?.GroupManagementOption == "closeOnFull" || string.IsNullOrWhiteSpace(Model?.GroupManagementOption)) ? "checked" : "") required>
-                    <label for="closeOnFull">Close on full (board status becomes Full, no more joins)</label>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="eventDate">Event Date *</label>
+                    <input type="datetime-local" id="eventDate" asp-for="EventDate" required>
+                    <span asp-validation-for="EventDate" class="text-danger"></span>
                 </div>
-                <div class="radio-option">
-                    <input type="radio" id="allowOverbooking" name="GroupManagementOption" value="allowOverbooking" @(Model?.GroupManagementOption == "allowOverbooking" ? "checked" : "")>
-                    <label for="allowOverbooking">Allow overbooking (author can approve beyond max capacity)</label>
-                </div>
-                <div class="radio-option">
-                    <input type="radio" id="keepOpenWhenFull" name="GroupManagementOption" value="keepOpenWhenFull" @(Model?.GroupManagementOption == "keepOpenWhenFull" ? "checked" : "")>
-                    <label for="keepOpenWhenFull">Keep open when full (stay Open, but still enforce capacity)</label>
+
+                <div class="form-group">
+                    <label for="deadline">Registration Deadline *</label>
+                    <input type="datetime-local" id="deadline" asp-for="Deadline" required>
+                    <span asp-validation-for="Deadline" class="text-danger"></span>
                 </div>
             </div>
-            <span asp-validation-for="GroupManagementOption" class="text-danger"></span>
-        </div>
 
-        <div class="form-input single-checkbox-input">
-            <input type="checkbox" id="notifyOnFull" asp-for="NotifyAuthorOnFull">
-            <label for="notifyOnFull">Notify me when the group is full</label>
-        </div>
+            <div class="form-group">
+                <label for="maxParticipants">Maximum Participants *</label>
+                <input type="number" id="maxParticipants" asp-for="MaxParticipants" min="1" max="1000" required>
+                <span asp-validation-for="MaxParticipants" class="text-danger"></span>
+            </div>
 
-        <button type="submit" class="btn btn-accent btn-stretch">Create Board</button>
-    </form>
+            <div class="form-group">
+                <label>Join Policy *</label>
+                <div class="radio-group">
+                    <div class="radio-option">
+                        <input type="radio" id="joinApplication" name="JoinPolicyOption" value="application" @((Model?.JoinPolicyOption == "application" || string.IsNullOrWhiteSpace(Model?.JoinPolicyOption)) ? "checked" : "") required>
+                        <label for="joinApplication">Application (author reviews applicants)</label>
+                    </div>
+                    <div class="radio-option">
+                        <input type="radio" id="joinFcfs" name="JoinPolicyOption" value="fcfs" @(Model?.JoinPolicyOption == "fcfs" ? "checked" : "")>
+                        <label for="joinFcfs">First Come First Serve (auto-join)</label>
+                    </div>
+                </div>
+                <span asp-validation-for="JoinPolicyOption" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label>Tags</label>
+                <div class="tag-input-group">
+                    <input type="text" id="tagInput" placeholder="Enter a tag...">
+                    <button type="button" id="addTagButton" class="btn btn-light">Add Tag</button>
+                </div>
+                <div id="tagContainer"></div>
+            </div>
+
+            <div class="form-group">
+                <label>Group Management *</label>
+                <div class="radio-group">
+                    <div class="radio-option">
+                        <input type="radio" id="closeOnFull" name="GroupManagementOption" value="closeOnFull" @((Model?.GroupManagementOption == "closeOnFull" || string.IsNullOrWhiteSpace(Model?.GroupManagementOption)) ? "checked" : "") required>
+                        <label for="closeOnFull">Close on full (board status becomes Full, no more joins)</label>
+                    </div>
+                    <div class="radio-option">
+                        <input type="radio" id="allowOverbooking" name="GroupManagementOption" value="allowOverbooking" @(Model?.GroupManagementOption == "allowOverbooking" ? "checked" : "")>
+                        <label for="allowOverbooking">Allow overbooking (author can approve beyond max capacity)</label>
+                    </div>
+                    <div class="radio-option">
+                        <input type="radio" id="keepOpenWhenFull" name="GroupManagementOption" value="keepOpenWhenFull" @(Model?.GroupManagementOption == "keepOpenWhenFull" ? "checked" : "")>
+                        <label for="keepOpenWhenFull">Keep open when full (stay Open, but still enforce capacity)</label>
+                    </div>
+                </div>
+                <span asp-validation-for="GroupManagementOption" class="text-danger"></span>
+            </div>
+
+            <div class="form-input">
+                <div class="single-checkbox-input">
+                    <input type="checkbox" id="notifyOnFull" asp-for="NotifyAuthorOnFull">
+                    <label for="notifyOnFull">Notify me when the group is full</label>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-accent btn-stretch">Create Board</button>
+        </form>
+    </div>
 </div>
 
 @section Scripts {

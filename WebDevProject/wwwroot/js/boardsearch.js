@@ -1,7 +1,6 @@
 document.addEventListener('DOMContentLoaded', function () {
     const searchNameInput = document.getElementById('searchName');
     const hideOptionButton = document.getElementById('hideOptionButton');
-    const hidden_items = document.querySelectorAll(".hidden");
     const tagInput = document.getElementById('tagInput');
     const addTagButton = document.getElementById('addTagButton');
     const tagContainer = document.getElementById('tagContainer');
@@ -12,13 +11,14 @@ document.addEventListener('DOMContentLoaded', function () {
     const searchResults = document.getElementById('searchResults');
     const statusFilters = document.querySelectorAll('.status-filter');
     const policyFilters = document.querySelectorAll('.policy-filter');
+    const advancedSearchItems = document.querySelectorAll('.search-form .search-field.hidden, .search-form .search-row.hidden');
 
     const selectedTags = [];
 
     // Hide/Show more search option
     hideOptionButton.addEventListener('click', function (e) {
-        hidden_items.forEach(item => {
-            item.classList.toggle("hidden");
+        advancedSearchItems.forEach(item => {
+            item.classList.toggle('hidden');
         });
     });
 

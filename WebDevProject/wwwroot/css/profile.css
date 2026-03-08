@@ -9,6 +9,15 @@
     max-width: 800px;
 }
 
+.profile-card-own {
+    position: relative;
+    padding-bottom: 90px;
+}
+
+.profile-card-own .data-menu {
+    padding-right: 190px;
+}
+
 .profile-picture {
     width: 200px;
     height: 200px;
@@ -68,6 +77,40 @@
     border-top: 1px solid #dee2e6;
 }
 
+.profile-actions {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+.profile-action-btn,
+.profile-action-signout-form {
+    pointer-events: auto;
+}
+
+.profile-action-edit {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+}
+
+.profile-action-reset {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+}
+
+.profile-action-signout-form {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    margin: 0;
+}
+
+.profile-action-signout {
+    margin: 0;
+}
+
 @media (max-width: 768px) {
     .row {
         flex-direction: column;
@@ -82,6 +125,15 @@
     #profile-data {
         width: 100%;
     }
+
+    .profile-card-own {
+        padding-top: 20px;
+        padding-bottom: 20px;
+    }
+
+    .profile-card-own .data-menu {
+        padding-right: 0;
+    }
     
     .profile-picture {
         width: 150px;
@@ -91,5 +143,20 @@
     
     .data-menu {
         padding-top: 50px;
+    }
+
+    .profile-actions {
+        position: static;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-bottom: 20px;
+        pointer-events: auto;
+    }
+
+    .profile-action-edit,
+    .profile-action-reset,
+    .profile-action-signout-form {
+        position: static;
     }
 }

@@ -11,7 +11,7 @@
 <div class="search-div">
     <h1>Search Boards</h1>
 
-    <section class="search-area">
+    <div class="card">
         <div class="search-form">
             <div class="search-field">
                 <label for="searchName">Search by Name</label>
@@ -19,7 +19,7 @@
                 <button type="button" id="hideOptionButton" class="btn-hide">Show / Hide search options</button>
             </div>
 
-            <div class="search-field hidden" id="moreOption">
+            <div class="search-field hidden">
                 <label for="tagInput">Filter by Tags</label>
                 <div class="tag-input-row">
                     <input type="text" id="tagInput" placeholder="Add tag (e.g., Sports, Outdoor)..." />
@@ -28,7 +28,7 @@
                 <div id="tagContainer" class="tag-container"></div>
             </div>
 
-            <div class="search-row hidden" id="moreOption">
+            <div class="search-row hidden">
                 <div class="search-field">
                     <label for="eventDateFrom">Event Date From</label>
                     <input type="date" id="eventDateFrom" name="eventDateFrom" />
@@ -40,7 +40,7 @@
                 </div>
             </div>
 
-            <div class="search-field hidden" id="moreOption">
+            <div class="search-field hidden">
                 <label>Filter by Status</label>
                 <div class="checkbox-group">
                     <label class="checkbox-label">
@@ -58,7 +58,7 @@
                 </div>
             </div>
 
-            <div class="search-field hidden" id="moreOption">
+            <div class="search-field hidden">
                 <label>Filter by Join Policy</label>
                 <div class="checkbox-group">
                     <label class="checkbox-label">
@@ -77,7 +77,7 @@
                 <button type="button" id="clearButton" class="btn-clear">Clear</button>
             </div>
         </div>
-    </section>
+    </div>
 
     <div id="searchResults" class="board-grid search-results-container">
         <p class="loading-message">Use the filters above to search for boards.</p>

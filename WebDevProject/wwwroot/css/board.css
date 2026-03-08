@@ -565,29 +565,32 @@
     padding: 20px;
 }
 
+.search-div .card {
+    margin-bottom: 20px;
+}
+
 .search-div h1 {
     font-family: "Inter", sans-serif;
     font-weight: 700;
     margin-bottom: 20px;
 }
 
-.search-area {
-    padding: 20px;
-    background-color: #f5f5f5;
-    border-radius: 10px;
-    margin-bottom: 30px;
-}
-
 .search-form {
     display: flex;
     flex-direction: column;
     gap: 20px;
+    padding: 20px;
+    border-radius: 10px;
 }
 
 .search-field {
     display: flex;
     flex-direction: column;
     gap: 8px;
+}
+
+.search-form .hidden {
+    display: none !important;
 }
 
 .search-row {
@@ -867,8 +870,8 @@
     .application-section {
         padding: 1rem;
     }
-
-    .search-area {
+    
+    .search-form {
         padding: 15px;
     }
     
