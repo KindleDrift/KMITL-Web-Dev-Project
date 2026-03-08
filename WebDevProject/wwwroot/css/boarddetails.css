@@ -115,7 +115,7 @@
 
 .status-section-column {
     flex: 1;
-    min-width: 280px;
+    min-width: 350px;
     max-width: 100%;
     background-color: #f8f9fa;
     border-radius: 8px;
@@ -142,6 +142,7 @@
 .user-item {
     display: flex;
     align-items: center;
+    flex-flow: row wrap;
     gap: 1rem;
     padding: 1rem;
     background-color: #ffffff;
@@ -179,14 +180,16 @@
     color: #6c757d;
     overflow: hidden;
     text-overflow: ellipsis;
-    white-space: nowrap;
-}
+    
+  }
 
 .user-actions {
     display: flex;
+    flex-flow: column wrap;
     gap: 0.5rem;
-    flex-wrap: wrap;
     flex-shrink: 0;
+    align-items: flex-start;
+    justify-content: center;
 }
 
 .button {
@@ -404,4 +407,8 @@
 .applicants-section .user-actions {
     margin-left: auto;
     align-self: center;
+}
+
+.form-group{
+    margin-bottom: 1rem;
 }
