@@ -18,20 +18,19 @@
             <div class="search-field">
                 <label for="searchName">Search by Name</label>
                 <input type="text" id="searchName" name="searchName" placeholder="Search board title..." />
+                <button type="button" id="hideOptionButton" class="btn-hide">Show / Hide serach options</button>
             </div>
 
-            <div class="search-field">
+            <div class="search-field hidden" id="moreOption">
                 <label for="tagInput">Filter by Tags</label>
-                <div style="display: flex; gap: 10px; align-items: flex-start;">
-                    <div style="flex: 1;">
-                        <input type="text" id="tagInput" placeholder="Add tag (e.g., Sports, Outdoor)..." />
-                        <div id="tagContainer" class="tag-container" style="margin-top: 10px; min-height: 30px;"></div>
-                    </div>
+                <div class="tag-input-row">
+                    <input type="text" id="tagInput" placeholder="Add tag (e.g., Sports, Outdoor)..." />
                     <button type="button" id="addTagButton" class="btn-tag">Add Tag</button>
                 </div>
+                <div id="tagContainer" class="tag-container"></div>
             </div>
 
-            <div class="search-row">
+            <div class="search-row hidden" id="moreOption">
                 <div class="search-field">
                     <label for="eventDateFrom">Event Date From</label>
                     <input type="date" id="eventDateFrom" name="eventDateFrom" />
@@ -43,7 +42,7 @@
                 </div>
             </div>
 
-            <div class="search-field">
+            <div class="search-field hidden" id="moreOption">
                 <label>Filter by Status</label>
                 <div class="checkbox-group">
                     <label class="checkbox-label">
@@ -61,7 +60,7 @@
                 </div>
             </div>
 
-            <div class="search-field">
+            <div class="search-field hidden" id="moreOption">
                 <label>Filter by Join Policy</label>
                 <div class="checkbox-group">
                     <label class="checkbox-label">
