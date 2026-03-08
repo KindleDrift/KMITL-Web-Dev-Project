@@ -6,6 +6,7 @@ using System.Xml;
 using WebDevProject.Data;
 using WebDevProject.Filters;
 using WebDevProject.Models;
+using WebDevProject.Services;
 
 namespace WebDevProject.Controllers
 {
@@ -13,10 +14,12 @@ namespace WebDevProject.Controllers
     public class BoardController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly NotificationsService _notificationsService;
 
-        public BoardController(ApplicationDbContext context)
+        public BoardController(ApplicationDbContext context, NotificationsService notificationsService)
         {
             _context = context;
+            _notificationsService = notificationsService;
         }
 
         public async Task<IActionResult> Index()
@@ -670,6 +673,15 @@ namespace WebDevProject.Controllers
                 UpdateBoardStatusByCapacity(board, occupiedBeforeAdd + 1);
                 await _context.SaveChangesAsync();
 
+                // Notify the board author about the new participant
+                await _notificationsService.CreateNotificationAsync(
+                    board.AuthorId,
+                    $"New Participant: {board.Title}",
+                    $"A new user has joined your board.",
+                    NotificationType.NewRequest,
+                    boardId: id,
+                    relatedUserId: userId);
+
                 TempData["Success"] = "You joined this board successfully.";
                 return RedirectToAction(nameof(Details), new { id });
             }
@@ -683,6 +695,15 @@ namespace WebDevProject.Controllers
 
             _context.BoardApplicants.Add(applicant);
             await _context.SaveChangesAsync();
+
+            // Notify the board author about the new application
+            await _notificationsService.CreateNotificationAsync(
+                board.AuthorId,
+                $"New Application: {board.Title}",
+                $"A new user has applied to join your board.",
+                NotificationType.NewRequest,
+                boardId: id,
+                relatedUserId: userId);
 
             TempData["Success"] = "Your application has been submitted successfully.";
             return RedirectToAction(nameof(Details), new { id });
@@ -801,6 +822,14 @@ namespace WebDevProject.Controllers
 
             await _context.SaveChangesAsync();
 
+            // Notify the applicant that they have been accepted
+            await _notificationsService.CreateNotificationAsync(
+                applicantId,
+                $"Accepted: {board.Title}",
+                $"Congratulations! You have been accepted to join '{board.Title}'.",
+                NotificationType.IsAccepted,
+                boardId: boardId);
+
             TempData["Success"] = "Applicant approved successfully.";
             return RedirectToAction(nameof(Details), new { id = boardId });
         }
@@ -856,6 +885,14 @@ namespace WebDevProject.Controllers
             UpdateBoardStatusByCapacity(board, occupiedAfterRemoval);
 
             await _context.SaveChangesAsync();
+
+            // Notify the user they were removed and denied
+            await _notificationsService.CreateNotificationAsync(
+                participantId,
+                $"Removed from Board: {board.Title}",
+                $"You have been removed from '{board.Title}' and are no longer able to rejoin.",
+                NotificationType.IsRejected,
+                boardId: boardId);
 
             TempData["Success"] = "Participant removed and denied.";
             return RedirectToAction(nameof(Details), new { id = boardId });
@@ -1013,6 +1050,14 @@ namespace WebDevProject.Controllers
 
             _context.BoardDenied.Add(denied);
             await _context.SaveChangesAsync();
+
+            // Notify the applicant they were rejected
+            await _notificationsService.CreateNotificationAsync(
+                applicantId,
+                $"Application Rejected: {board.Title}",
+                $"Your application for '{board.Title}' has been rejected.",
+                NotificationType.IsRejected,
+                boardId: boardId);
 
             TempData["Success"] = "Applicant denied.";
             return RedirectToAction(nameof(Details), new { id = boardId });

@@ -23,6 +23,8 @@ namespace WebDevProject.Data
 
         public DbSet<Tag> Tags => Set<Tag>();
 
+        public DbSet<Notification> Notifications => Set<Notification>();
+
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
