@@ -106,11 +106,7 @@
     font-weight: 600;
 }
 
-.btn-hide {
-    background-color: #8ec4e9;
-    color: white;
-}
-
+.btn-hide,
 .btn-search {
     background-color: #8ec4e9;
     color: white;
@@ -175,7 +171,8 @@
     .search-actions {
         flex-direction: column;
     }
-    
+
+    .btn-hide,
     .btn-search,
     .btn-clear,
     .btn-tag {
