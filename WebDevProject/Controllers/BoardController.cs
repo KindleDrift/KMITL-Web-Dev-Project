@@ -12,14 +12,17 @@ namespace WebDevProject.Controllers
     public class BoardController : Controller
     {
         private readonly ApplicationDbContext _context;
-        private readonly NotificationsService _notificationsService;
         private readonly BoardService _boardService;
+        private readonly BoardMembershipService _boardMembershipService;
 
-        public BoardController(ApplicationDbContext context, NotificationsService notificationsService, BoardService boardService)
+        public BoardController(
+            ApplicationDbContext context,
+            BoardService boardService,
+            BoardMembershipService boardMembershipService)
         {
             _context = context;
-            _notificationsService = notificationsService;
             _boardService = boardService;
+            _boardMembershipService = boardMembershipService;
         }
 
         public async Task<IActionResult> Index()
@@ -393,77 +396,9 @@ namespace WebDevProject.Controllers
 
             // Edge Case 1: Join Policy changed from Application to FirstComeFirstServe
             // Auto-approve all pending applicants
-            if (oldJoinPolicy == BoardJoinPolicy.Application && board.JoinPolicy == BoardJoinPolicy.FirstComeFirstServe)
-            {
-                var applicantsToApprove = board.Applicants.ToList();
-                foreach (var applicant in applicantsToApprove)
-                {
-                    var currentOccupied = _boardService.GetOccupiedSeatCount(board);
-                    
-                    // Only approve if there's space OR if AllowOverbooking is enabled
-                    if (currentOccupied < board.MaxParticipants || board.GroupManagementOption == GroupManagement.AllowOverbooking)
-                    {
-                        _context.BoardApplicants.Remove(applicant);
-                        
-                        var participant = new BoardParticipant
-                        {
-                            BoardId = id,
-                            UserId = applicant.UserId,
-                            JoinedAt = DateTime.UtcNow
-                        };
-                        
-                        _context.BoardParticipants.Add(participant);
-                    }
-                }
-            }
+            _boardService.AutoApproveApplicantsOnJoinPolicyChange(board, id, oldJoinPolicy);
 
-            // Edge Case 2: GroupManagement changed from CloseOnFull to AllowOverbooking/KeepOpenWhenFull
-            // If board is currently Full, reconsider the status
-            if (oldGroupManagement == GroupManagement.CloseOnFull && 
-                board.GroupManagementOption != GroupManagement.CloseOnFull &&
-                board.CurrentStatus == BoardStatus.Full)
-            {
-                // Set back to Open since we're no longer using CloseOnFull
-                board.CurrentStatus = BoardStatus.Open;
-            }
-
-            // Edge Case 3: GroupManagement changed to CloseOnFull from something else
-            // If currently at or over capacity, set to Full
-            if (oldGroupManagement != GroupManagement.CloseOnFull &&
-                board.GroupManagementOption == GroupManagement.CloseOnFull)
-            {
-                var currentOccupied = _boardService.GetOccupiedSeatCount(board);
-                if (currentOccupied >= board.MaxParticipants && board.CurrentStatus == BoardStatus.Open)
-                {
-                    board.CurrentStatus = BoardStatus.Full;
-                }
-            }
-
-            // Edge Case 4: MaxParticipants changed - recalculate status
-            if (oldMaxParticipants != board.MaxParticipants)
-            {
-                var currentOccupied = _boardService.GetOccupiedSeatCount(board);
-                
-                // If capacity increased and was Full, might need to reopen
-                if (board.MaxParticipants > oldMaxParticipants && board.CurrentStatus == BoardStatus.Full)
-                {
-                    if (currentOccupied < board.MaxParticipants)
-                    {
-                        board.CurrentStatus = BoardStatus.Open;
-                    }
-                }
-                // If capacity decreased and now over capacity
-                else if (board.MaxParticipants < oldMaxParticipants && board.GroupManagementOption == GroupManagement.CloseOnFull)
-                {
-                    if (currentOccupied >= board.MaxParticipants && board.CurrentStatus == BoardStatus.Open)
-                    {
-                        board.CurrentStatus = BoardStatus.Full;
-                    }
-                }
-            }
-
-            // Final status update based on current capacity
-            _boardService.UpdateBoardStatusByCapacity(board, _boardService.GetOccupiedSeatCount(board));
+            _boardService.RecalculateStatusAfterBoardSettingChanges(board, oldGroupManagement, oldMaxParticipants);
             
             await _context.SaveChangesAsync();
 
@@ -529,520 +464,111 @@ namespace WebDevProject.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Apply(int id)
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrWhiteSpace(userId))
+            if (!TryGetCurrentUserId(out var userId))
             {
                 return Unauthorized();
             }
 
-            var board = await _context.Boards
-                .Include(b => b.Participants)
-                .Include(b => b.ExternalParticipants)
-                .Include(b => b.Applicants)
-                .Include(b => b.DeniedUsers)
-                .FirstOrDefaultAsync(b => b.Id == id);
-
-            if (board == null)
-            {
-                return NotFound();
-            }
-
-            if (board.AuthorId == userId)
-            {
-                TempData["Error"] = "You cannot apply to your own board.";
-                return RedirectToAction(nameof(Details), new { id });
-            }
-
-            if (board.Participants.Any(p => p.UserId == userId))
-            {
-                TempData["Error"] = "You are already a participant.";
-                return RedirectToAction(nameof(Details), new { id });
-            }
-
-            if (board.Applicants.Any(a => a.UserId == userId))
-            {
-                TempData["Error"] = "You have already applied.";
-                return RedirectToAction(nameof(Details), new { id });
-            }
-
-            if (board.DeniedUsers.Any(d => d.UserId == userId))
-            {
-                TempData["Error"] = "You have been denied access to this board.";
-                return RedirectToAction(nameof(Details), new { id });
-            }
-
-            if (board.CurrentStatus != BoardStatus.Open)
-            {
-                TempData["Error"] = "This board is not accepting applications.";
-                return RedirectToAction(nameof(Details), new { id });
-            }
-
-            if (board.Deadline <= DateTime.UtcNow)
-            {
-                TempData["Error"] = "The registration deadline has passed.";
-                return RedirectToAction(nameof(Details), new { id });
-            }
-
-            var currentOccupied = _boardService.GetOccupiedSeatCount(board);
-            if (currentOccupied >= board.MaxParticipants)
-            {
-                if (board.JoinPolicy == BoardJoinPolicy.FirstComeFirstServe &&
-                    board.GroupManagementOption != GroupManagement.AllowOverbooking)
-                {
-                    TempData["Error"] = "Board is full. Cannot accept more participants.";
-                    return RedirectToAction(nameof(Details), new { id });
-                }
-            }
-
-            if (board.JoinPolicy == BoardJoinPolicy.FirstComeFirstServe)
-            {
-                var occupiedBeforeAdd = _boardService.GetOccupiedSeatCount(board);
-
-                var participant = new BoardParticipant
-                {
-                    BoardId = id,
-                    UserId = userId,
-                    JoinedAt = DateTime.UtcNow
-                };
-
-                _context.BoardParticipants.Add(participant);
-                _boardService.UpdateBoardStatusByCapacity(board, occupiedBeforeAdd + 1);
-                await _context.SaveChangesAsync();
-
-                // Notify the board author about the new participant
-                await _notificationsService.CreateNotificationAsync(
-                    board.AuthorId,
-                    $"New Participant: {board.Title}",
-                    $"A new user has joined your board.",
-                    NotificationType.NewRequest,
-                    boardId: id,
-                    relatedUserId: userId);
-
-                TempData["Success"] = "You joined this board successfully.";
-                return RedirectToAction(nameof(Details), new { id });
-            }
-
-            var applicant = new BoardApplicant
-            {
-                BoardId = id,
-                UserId = userId,
-                AppliedAt = DateTime.UtcNow
-            };
-
-            _context.BoardApplicants.Add(applicant);
-            await _context.SaveChangesAsync();
-
-            // Notify the board author about the new application
-            await _notificationsService.CreateNotificationAsync(
-                board.AuthorId,
-                $"New Application: {board.Title}",
-                $"A new user has applied to join your board.",
-                NotificationType.NewRequest,
-                boardId: id,
-                relatedUserId: userId);
-
-            TempData["Success"] = "Your application has been submitted successfully.";
-            return RedirectToAction(nameof(Details), new { id });
+            var result = await _boardMembershipService.ApplyAsync(id, userId);
+            return ToDetailsResult(result, id);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CancelMyApplication(int id)
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrWhiteSpace(userId))
+            if (!TryGetCurrentUserId(out var userId))
             {
                 return Unauthorized();
             }
 
-            var board = await _context.Boards
-                .Include(b => b.Participants)
-                .Include(b => b.ExternalParticipants)
-                .Include(b => b.Applicants)
-                .FirstOrDefaultAsync(b => b.Id == id);
-
-            if (board == null)
-            {
-                return NotFound();
-            }
-
-            if (board.AuthorId == userId)
-            {
-                TempData["Error"] = "Board owner cannot use this action.";
-                return RedirectToAction(nameof(Details), new { id });
-            }
-
-            var applicant = board.Applicants.FirstOrDefault(a => a.UserId == userId);
-            if (applicant != null)
-            {
-                _context.BoardApplicants.Remove(applicant);
-                await _context.SaveChangesAsync();
-
-                TempData["Success"] = "Your application has been cancelled.";
-                return RedirectToAction(nameof(Details), new { id });
-            }
-
-            var participant = board.Participants.FirstOrDefault(p => p.UserId == userId);
-            if (participant != null)
-            {
-                var occupiedBeforeRemoval = _boardService.GetOccupiedSeatCount(board);
-
-                _context.BoardParticipants.Remove(participant);
-
-                var occupiedAfterRemoval = Math.Max(occupiedBeforeRemoval - 1, 0);
-                _boardService.UpdateBoardStatusByCapacity(board, occupiedAfterRemoval);
-
-                await _context.SaveChangesAsync();
-
-                TempData["Success"] = "You left the board successfully.";
-                return RedirectToAction(nameof(Details), new { id });
-            }
-
-            TempData["Error"] = "You have no active application or participation in this board.";
-            return RedirectToAction(nameof(Details), new { id });
+            var result = await _boardMembershipService.CancelMyApplicationAsync(id, userId);
+            return ToDetailsResult(result, id);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ApproveApplicant(int boardId, string applicantId)
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrWhiteSpace(userId))
+            if (!TryGetCurrentUserId(out var userId))
             {
                 return Unauthorized();
             }
 
-            var board = await _context.Boards
-                .Include(b => b.Participants)
-                .Include(b => b.ExternalParticipants)
-                .Include(b => b.Applicants)
-                .FirstOrDefaultAsync(b => b.Id == boardId);
-
-            if (board == null)
-            {
-                return NotFound();
-            }
-
-            if (board.AuthorId != userId)
-            {
-                return Forbid();
-            }
-
-            var applicant = board.Applicants.FirstOrDefault(a => a.UserId == applicantId);
-            if (applicant == null)
-            {
-                TempData["Error"] = "Applicant not found.";
-                return RedirectToAction(nameof(Details), new { id = boardId });
-            }
-
-            if (_boardService.GetOccupiedSeatCount(board) >= board.MaxParticipants &&
-                board.GroupManagementOption != GroupManagement.AllowOverbooking)
-            {
-                TempData["Error"] = "Board is full. Cannot approve more participants.";
-                return RedirectToAction(nameof(Details), new { id = boardId });
-            }
-
-            var occupiedBeforeAdd = _boardService.GetOccupiedSeatCount(board);
-
-            _context.BoardApplicants.Remove(applicant);
-
-            var participant = new BoardParticipant
-            {
-                BoardId = boardId,
-                UserId = applicantId,
-                JoinedAt = DateTime.UtcNow
-            };
-
-            _context.BoardParticipants.Add(participant);
-            _boardService.UpdateBoardStatusByCapacity(board, occupiedBeforeAdd + 1);
-
-            await _context.SaveChangesAsync();
-
-            // Notify the applicant that they have been accepted
-            await _notificationsService.CreateNotificationAsync(
-                applicantId,
-                $"Accepted: {board.Title}",
-                $"Congratulations! You have been accepted to join '{board.Title}'.",
-                NotificationType.IsAccepted,
-                boardId: boardId);
-
-            TempData["Success"] = "Applicant approved successfully.";
-            return RedirectToAction(nameof(Details), new { id = boardId });
+            var result = await _boardMembershipService.ApproveApplicantAsync(boardId, applicantId, userId);
+            return ToDetailsResult(result, boardId);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DenyParticipant(int boardId, string participantId)
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrWhiteSpace(userId))
+            if (!TryGetCurrentUserId(out var userId))
             {
                 return Unauthorized();
             }
 
-            var board = await _context.Boards
-                .Include(b => b.Participants)
-                .Include(b => b.ExternalParticipants)
-                .Include(b => b.DeniedUsers)
-                .FirstOrDefaultAsync(b => b.Id == boardId);
-
-            if (board == null)
-            {
-                return NotFound();
-            }
-
-            if (board.AuthorId != userId)
-            {
-                return Forbid();
-            }
-
-            var participant = board.Participants.FirstOrDefault(p => p.UserId == participantId);
-            if (participant == null)
-            {
-                TempData["Error"] = "Participant not found.";
-                return RedirectToAction(nameof(Details), new { id = boardId });
-            }
-
-            var occupiedBeforeRemoval = _boardService.GetOccupiedSeatCount(board);
-
-            _context.BoardParticipants.Remove(participant);
-
-            if (!board.DeniedUsers.Any(d => d.UserId == participantId))
-            {
-                _context.BoardDenied.Add(new BoardDenied
-                {
-                    BoardId = boardId,
-                    UserId = participantId,
-                    DeniedAt = DateTime.UtcNow
-                });
-            }
-
-            var occupiedAfterRemoval = Math.Max(occupiedBeforeRemoval - 1, 0);
-            _boardService.UpdateBoardStatusByCapacity(board, occupiedAfterRemoval);
-
-            await _context.SaveChangesAsync();
-
-            // Notify the user they were removed and denied
-            await _notificationsService.CreateNotificationAsync(
-                participantId,
-                $"Removed from Board: {board.Title}",
-                $"You have been removed from '{board.Title}' and are no longer able to rejoin.",
-                NotificationType.IsRejected,
-                boardId: boardId);
-
-            TempData["Success"] = "Participant removed and denied.";
-            return RedirectToAction(nameof(Details), new { id = boardId });
+            var result = await _boardMembershipService.DenyParticipantAsync(boardId, participantId, userId);
+            return ToDetailsResult(result, boardId);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AddExternalParticipant(int boardId, string externalName, string? externalNote)
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrWhiteSpace(userId))
+            if (!TryGetCurrentUserId(out var userId))
             {
                 return Unauthorized();
             }
 
-            var board = await _context.Boards
-                .Include(b => b.Participants)
-                .Include(b => b.ExternalParticipants)
-                .FirstOrDefaultAsync(b => b.Id == boardId);
-
-            if (board == null)
-            {
-                return NotFound();
-            }
-
-            if (board.AuthorId != userId)
-            {
-                return Forbid();
-            }
-
-            var normalizedName = externalName?.Trim();
-            if (string.IsNullOrWhiteSpace(normalizedName))
-            {
-                TempData["Error"] = "External participant name is required.";
-                return RedirectToAction(nameof(Details), new { id = boardId });
-            }
-
-            if (normalizedName.Length > 120)
-            {
-                TempData["Error"] = "External participant name is too long.";
-                return RedirectToAction(nameof(Details), new { id = boardId });
-            }
-
-            if (_boardService.GetOccupiedSeatCount(board) >= board.MaxParticipants &&
-                board.GroupManagementOption != GroupManagement.AllowOverbooking)
-            {
-                TempData["Error"] = "Board is full. Cannot add external participant.";
-                return RedirectToAction(nameof(Details), new { id = boardId });
-            }
-
-            var occupiedBeforeAdd = _boardService.GetOccupiedSeatCount(board);
-
-            var participant = new BoardExternalParticipant
-            {
-                BoardId = boardId,
-                Name = normalizedName,
-                Note = string.IsNullOrWhiteSpace(externalNote) ? null : externalNote.Trim(),
-                AddedAt = DateTime.UtcNow
-            };
-
-            _context.BoardExternalParticipants.Add(participant);
-            _boardService.UpdateBoardStatusByCapacity(board, occupiedBeforeAdd + 1);
-
-            await _context.SaveChangesAsync();
-
-            TempData["Success"] = "External participant added.";
-            return RedirectToAction(nameof(Details), new { id = boardId });
+            var result = await _boardMembershipService.AddExternalParticipantAsync(boardId, userId, externalName, externalNote);
+            return ToDetailsResult(result, boardId);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> RemoveExternalParticipant(int boardId, int externalParticipantId)
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrWhiteSpace(userId))
+            if (!TryGetCurrentUserId(out var userId))
             {
                 return Unauthorized();
             }
 
-            var board = await _context.Boards
-                .Include(b => b.Participants)
-                .Include(b => b.ExternalParticipants)
-                .FirstOrDefaultAsync(b => b.Id == boardId);
-
-            if (board == null)
-            {
-                return NotFound();
-            }
-
-            if (board.AuthorId != userId)
-            {
-                return Forbid();
-            }
-
-            var externalParticipant = board.ExternalParticipants.FirstOrDefault(e => e.Id == externalParticipantId);
-            if (externalParticipant == null)
-            {
-                TempData["Error"] = "External participant not found.";
-                return RedirectToAction(nameof(Details), new { id = boardId });
-            }
-
-            var occupiedBeforeRemoval = _boardService.GetOccupiedSeatCount(board);
-
-            _context.BoardExternalParticipants.Remove(externalParticipant);
-
-            var occupiedAfterRemoval = Math.Max(occupiedBeforeRemoval - 1, 0);
-            _boardService.UpdateBoardStatusByCapacity(board, occupiedAfterRemoval);
-
-            await _context.SaveChangesAsync();
-
-            TempData["Success"] = "External participant removed.";
-            return RedirectToAction(nameof(Details), new { id = boardId });
+            var result = await _boardMembershipService.RemoveExternalParticipantAsync(boardId, externalParticipantId, userId);
+            return ToDetailsResult(result, boardId);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DenyApplicant(int boardId, string applicantId)
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrWhiteSpace(userId))
+            if (!TryGetCurrentUserId(out var userId))
             {
                 return Unauthorized();
             }
 
-            var board = await _context.Boards
-                .Include(b => b.Applicants)
-                .Include(b => b.DeniedUsers)
-                .FirstOrDefaultAsync(b => b.Id == boardId);
-
-            if (board == null)
-            {
-                return NotFound();
-            }
-
-            if (board.AuthorId != userId)
-            {
-                return Forbid();
-            }
-
-            var applicant = board.Applicants.FirstOrDefault(a => a.UserId == applicantId);
-            if (applicant == null)
-            {
-                TempData["Error"] = "Applicant not found.";
-                return RedirectToAction(nameof(Details), new { id = boardId });
-            }
-
-            _context.BoardApplicants.Remove(applicant);
-
-            var denied = new BoardDenied
-            {
-                BoardId = boardId,
-                UserId = applicantId,
-                DeniedAt = DateTime.UtcNow
-            };
-
-            _context.BoardDenied.Add(denied);
-            await _context.SaveChangesAsync();
-
-            // Notify the applicant they were rejected
-            await _notificationsService.CreateNotificationAsync(
-                applicantId,
-                $"Application Rejected: {board.Title}",
-                $"Your application for '{board.Title}' has been rejected.",
-                NotificationType.IsRejected,
-                boardId: boardId);
-
-            TempData["Success"] = "Applicant denied.";
-            return RedirectToAction(nameof(Details), new { id = boardId });
+            var result = await _boardMembershipService.DenyApplicantAsync(boardId, applicantId, userId);
+            return ToDetailsResult(result, boardId);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> RemoveDenial(int boardId, string deniedUserId)
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrWhiteSpace(userId))
+            if (!TryGetCurrentUserId(out var userId))
             {
                 return Unauthorized();
             }
 
-            var board = await _context.Boards
-                .Include(b => b.DeniedUsers)
-                .FirstOrDefaultAsync(b => b.Id == boardId);
-
-            if (board == null)
-            {
-                return NotFound();
-            }
-
-            if (board.AuthorId != userId)
-            {
-                return Forbid();
-            }
-
-            var deniedUser = board.DeniedUsers.FirstOrDefault(d => d.UserId == deniedUserId);
-            if (deniedUser == null)
-            {
-                TempData["Error"] = "Denied user not found.";
-                return RedirectToAction(nameof(Details), new { id = boardId });
-            }
-
-            _context.BoardDenied.Remove(deniedUser);
-            await _context.SaveChangesAsync();
-
-            TempData["Success"] = "User removed from deny list.";
-            return RedirectToAction(nameof(Details), new { id = boardId });
+            var result = await _boardMembershipService.RemoveDenialAsync(boardId, deniedUserId, userId);
+            return ToDetailsResult(result, boardId);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Archive(int id)
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrWhiteSpace(userId))
+            if (!TryGetCurrentUserId(out var userId))
             {
                 return Unauthorized();
             }
@@ -1067,7 +593,6 @@ namespace WebDevProject.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            // Optional: Check if event date has passed
             if (board.EventDate > DateTime.UtcNow)
             {
                 TempData["Error"] = "You can only archive boards after the event date has passed.";
@@ -1080,6 +605,28 @@ namespace WebDevProject.Controllers
 
             TempData["Success"] = "Board has been archived successfully.";
             return RedirectToAction(nameof(Index));
+        }
+
+        private bool TryGetCurrentUserId(out string userId)
+        {
+            userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
+            return !string.IsNullOrWhiteSpace(userId);
+        }
+
+        private IActionResult ToDetailsResult(BoardWorkflowResult result, int boardId)
+        {
+            if (result.Status == BoardWorkflowStatus.NotFound)
+            {
+                return NotFound();
+            }
+
+            if (result.Status == BoardWorkflowStatus.Forbid)
+            {
+                return Forbid();
+            }
+
+            TempData[result.Status == BoardWorkflowStatus.Success ? "Success" : "Error"] = result.Message;
+            return RedirectToAction(nameof(Details), new { id = boardId });
         }
     }
 }

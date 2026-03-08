@@ -282,6 +282,85 @@ namespace WebDevProject.Services
             }
         }
 
+        public List<string> AutoApproveApplicantsOnJoinPolicyChange(Board board, int boardId, BoardJoinPolicy oldJoinPolicy)
+        {
+            var approvedApplicantIds = new List<string>();
+
+            if (oldJoinPolicy != BoardJoinPolicy.Application || board.JoinPolicy != BoardJoinPolicy.FirstComeFirstServe)
+            {
+                return approvedApplicantIds;
+            }
+
+            var occupiedSeats = GetOccupiedSeatCount(board);
+            var applicantsToApprove = board.Applicants.ToList();
+
+            foreach (var applicant in applicantsToApprove)
+            {
+                if (occupiedSeats >= board.MaxParticipants && board.GroupManagementOption != GroupManagement.AllowOverbooking)
+                {
+                    continue;
+                }
+
+                _context.BoardApplicants.Remove(applicant);
+
+                var participant = new BoardParticipant
+                {
+                    BoardId = boardId,
+                    UserId = applicant.UserId,
+                    JoinedAt = DateTime.UtcNow
+                };
+
+                _context.BoardParticipants.Add(participant);
+                approvedApplicantIds.Add(applicant.UserId);
+                occupiedSeats++;
+            }
+
+            UpdateBoardStatusByCapacity(board, occupiedSeats);
+            return approvedApplicantIds;
+        }
+
+        public void RecalculateStatusAfterBoardSettingChanges(Board board, GroupManagement oldGroupManagement, int oldMaxParticipants)
+        {
+            if (oldGroupManagement == GroupManagement.CloseOnFull &&
+                board.GroupManagementOption != GroupManagement.CloseOnFull &&
+                board.CurrentStatus == BoardStatus.Full)
+            {
+                board.CurrentStatus = BoardStatus.Open;
+            }
+
+            if (oldGroupManagement != GroupManagement.CloseOnFull &&
+                board.GroupManagementOption == GroupManagement.CloseOnFull)
+            {
+                var currentOccupied = GetOccupiedSeatCount(board);
+                if (currentOccupied >= board.MaxParticipants && board.CurrentStatus == BoardStatus.Open)
+                {
+                    board.CurrentStatus = BoardStatus.Full;
+                }
+            }
+
+            if (oldMaxParticipants != board.MaxParticipants)
+            {
+                var currentOccupied = GetOccupiedSeatCount(board);
+
+                if (board.MaxParticipants > oldMaxParticipants && board.CurrentStatus == BoardStatus.Full)
+                {
+                    if (currentOccupied < board.MaxParticipants)
+                    {
+                        board.CurrentStatus = BoardStatus.Open;
+                    }
+                }
+                else if (board.MaxParticipants < oldMaxParticipants && board.GroupManagementOption == GroupManagement.CloseOnFull)
+                {
+                    if (currentOccupied >= board.MaxParticipants && board.CurrentStatus == BoardStatus.Open)
+                    {
+                        board.CurrentStatus = BoardStatus.Full;
+                    }
+                }
+            }
+
+            UpdateBoardStatusByCapacity(board, GetOccupiedSeatCount(board));
+        }
+
         private static bool IsValidTag(string tag)
         {
             if (tag.StartsWith('-') || tag.EndsWith('-'))

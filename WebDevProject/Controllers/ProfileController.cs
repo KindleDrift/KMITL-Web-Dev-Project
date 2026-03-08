@@ -3,13 +3,21 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebDevProject.Models;
 using WebDevProject.Filters;
+using WebDevProject.Services;
 
 namespace WebDevProject.Controllers
 {
     [RequireOnboarding]
-    public class ProfileController(UserManager<Users> userManager) : Controller
+    public class ProfileController : Controller
     {
-        private readonly UserManager<Users> _userManager = userManager;
+        private readonly UserManager<Users> _userManager;
+        private readonly ProfileImageService _profileImageService;
+
+        public ProfileController(UserManager<Users> userManager, ProfileImageService profileImageService)
+        {
+            _userManager = userManager;
+            _profileImageService = profileImageService;
+        }
 
         [HttpGet("/Profile")]
         public async Task<IActionResult> Index()
@@ -119,24 +127,12 @@ namespace WebDevProject.Controllers
                 user.Bio = model.Bio;
 
                 // Update user profile picture
-                if (model.ProfileImage != null && model.ProfileImage.Length > 0)
+                var profileImageResult = await _profileImageService.SaveProfileImageAsync(model.ProfileImage, user.Id, user.ProfilePictureUrl);
+                user.ProfilePictureUrl = profileImageResult.ImageUrl;
+                if (!profileImageResult.Success)
                 {
-                    var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "profiles");
-                    if (!Directory.Exists(uploadsFolder))
-                    {
-                        Directory.CreateDirectory(uploadsFolder);
-                    }
-
-                    var sanitizedFileName = Path.GetFileName(model.ProfileImage.FileName);
-                    var uniqueFileName = $"{user.Id}_{Guid.NewGuid()}_{sanitizedFileName}";
-                    var filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-                    using (var fileStream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await model.ProfileImage.CopyToAsync(fileStream);
-                    }
-
-                    user.ProfilePictureUrl = $"/uploads/profiles/{uniqueFileName}";
+                    ModelState.AddModelError(nameof(model.ProfileImage), profileImageResult.ErrorMessage!);
+                    return View(model);
                 }
 
                 var result = await _userManager.UpdateAsync(user);

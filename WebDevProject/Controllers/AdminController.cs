@@ -15,13 +15,20 @@ namespace WebDevProject.Controllers
         private readonly UserManager<Users> _userManager;
         private readonly NotificationsService _notificationsService;
         private readonly BoardService _boardService;
+        private readonly ProfileImageService _profileImageService;
 
-        public AdminController(ApplicationDbContext context, UserManager<Users> userManager, NotificationsService notificationsService, BoardService boardService)
+        public AdminController(
+            ApplicationDbContext context,
+            UserManager<Users> userManager,
+            NotificationsService notificationsService,
+            BoardService boardService,
+            ProfileImageService profileImageService)
         {
             _context = context;
             _userManager = userManager;
             _notificationsService = notificationsService;
             _boardService = boardService;
+            _profileImageService = profileImageService;
         }
 
         public ActionResult Index()
@@ -87,48 +94,12 @@ namespace WebDevProject.Controllers
             }
 
             // Handle profile image upload
-            if (ProfileImage != null && ProfileImage.Length > 0)
+            var profileImageResult = await _profileImageService.SaveProfileImageAsync(ProfileImage, id, user.ProfilePictureUrl);
+            user.ProfilePictureUrl = profileImageResult.ImageUrl;
+            if (!profileImageResult.Success)
             {
-                var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
-                var fileExtension = Path.GetExtension(ProfileImage.FileName).ToLowerInvariant();
-
-                if (!allowedExtensions.Contains(fileExtension))
-                {
-                    ModelState.AddModelError("ProfileImage", "Only image files are allowed (.jpg, .jpeg, .png, .gif, .webp).");
-                    return View(model);
-                }
-
-                if (ProfileImage.Length > 5 * 1024 * 1024) // 5MB limit
-                {
-                    ModelState.AddModelError("ProfileImage", "Image file size must not exceed 5MB.");
-                    return View(model);
-                }
-
-                var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "profiles");
-                if (!Directory.Exists(uploadsFolder))
-                {
-                    Directory.CreateDirectory(uploadsFolder);
-                }
-
-                // Delete old image if exists
-                if (!string.IsNullOrEmpty(user.ProfilePictureUrl))
-                {
-                    var oldImagePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", user.ProfilePictureUrl.TrimStart('/'));
-                    if (System.IO.File.Exists(oldImagePath))
-                    {
-                        System.IO.File.Delete(oldImagePath);
-                    }
-                }
-
-                var uniqueFileName = $"{id}_{Guid.NewGuid()}{fileExtension}";
-                var filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-                using (var fileStream = new FileStream(filePath, FileMode.Create))
-                {
-                    await ProfileImage.CopyToAsync(fileStream);
-                }
-
-                user.ProfilePictureUrl = $"/uploads/profiles/{uniqueFileName}";
+                ModelState.AddModelError("ProfileImage", profileImageResult.ErrorMessage!);
+                return View(model);
             }
 
             user.DisplayName = model.DisplayName;
@@ -271,91 +242,20 @@ namespace WebDevProject.Controllers
 
             // Edge Case 1: Join Policy changed from Application to FirstComeFirstServe
             // Auto-approve all pending applicants
-            if (oldJoinPolicy == BoardJoinPolicy.Application && board.JoinPolicy == BoardJoinPolicy.FirstComeFirstServe)
+            var approvedApplicantIds = _boardService.AutoApproveApplicantsOnJoinPolicyChange(board, id, oldJoinPolicy);
+
+            // Notify all approved applicants
+            if (approvedApplicantIds.Any())
             {
-                var applicantsToApprove = board.Applicants.ToList();
-                var approvedApplicantIds = new List<string>();
-                
-                foreach (var applicant in applicantsToApprove)
-                {
-                    var currentOccupied = _boardService.GetOccupiedSeatCount(board);
-                    
-                    // Only approve if there's space OR if AllowOverbooking is enabled
-                    if (currentOccupied < board.MaxParticipants || board.GroupManagementOption == GroupManagement.AllowOverbooking)
-                    {
-                        _context.BoardApplicants.Remove(applicant);
-                        
-                        var participant = new BoardParticipant
-                        {
-                            BoardId = id,
-                            UserId = applicant.UserId,
-                            JoinedAt = DateTime.UtcNow
-                        };
-                        
-                        _context.BoardParticipants.Add(participant);
-                        approvedApplicantIds.Add(applicant.UserId);
-                    }
-                }
-                
-                // Notify all approved applicants
-                if (approvedApplicantIds.Any())
-                {
-                    await _notificationsService.CreateNotificationsForMultipleUsersAsync(
-                        approvedApplicantIds,
-                        $"Accepted: {board.Title}",
-                        "An admin changed the board settings and you have been automatically accepted.",
-                        NotificationType.AdminAction,
-                        boardId: id);
-                }
+                await _notificationsService.CreateNotificationsForMultipleUsersAsync(
+                    approvedApplicantIds,
+                    $"Accepted: {board.Title}",
+                    "An admin changed the board settings and you have been automatically accepted.",
+                    NotificationType.AdminAction,
+                    boardId: id);
             }
 
-            // Edge Case 2: GroupManagement changed from CloseOnFull to AllowOverbooking/KeepOpenWhenFull
-            // If board is currently Full, reconsider the status
-            if (oldGroupManagement == GroupManagement.CloseOnFull && 
-                board.GroupManagementOption != GroupManagement.CloseOnFull &&
-                board.CurrentStatus == BoardStatus.Full)
-            {
-                // Set back to Open since we're no longer using CloseOnFull
-                board.CurrentStatus = BoardStatus.Open;
-            }
-
-            // Edge Case 3: GroupManagement changed to CloseOnFull from something else
-            // If currently at or over capacity, set to Full
-            if (oldGroupManagement != GroupManagement.CloseOnFull &&
-                board.GroupManagementOption == GroupManagement.CloseOnFull)
-            {
-                var currentOccupied = _boardService.GetOccupiedSeatCount(board);
-                if (currentOccupied >= board.MaxParticipants && board.CurrentStatus == BoardStatus.Open)
-                {
-                    board.CurrentStatus = BoardStatus.Full;
-                }
-            }
-
-            // Edge Case 4: MaxParticipants changed - recalculate status
-            if (oldMaxParticipants != board.MaxParticipants)
-            {
-                var currentOccupied = _boardService.GetOccupiedSeatCount(board);
-                
-                // If capacity increased and was Full, might need to reopen
-                if (board.MaxParticipants > oldMaxParticipants && board.CurrentStatus == BoardStatus.Full)
-                {
-                    if (currentOccupied < board.MaxParticipants)
-                    {
-                        board.CurrentStatus = BoardStatus.Open;
-                    }
-                }
-                // If capacity decreased and now over capacity
-                else if (board.MaxParticipants < oldMaxParticipants && board.GroupManagementOption == GroupManagement.CloseOnFull)
-                {
-                    if (currentOccupied >= board.MaxParticipants && board.CurrentStatus == BoardStatus.Open)
-                    {
-                        board.CurrentStatus = BoardStatus.Full;
-                    }
-                }
-            }
-
-            // Final status update based on current capacity
-            _boardService.UpdateBoardStatusByCapacity(board, _boardService.GetOccupiedSeatCount(board));
+            _boardService.RecalculateStatusAfterBoardSettingChanges(board, oldGroupManagement, oldMaxParticipants);
 
             try
             {
