@@ -1,5 +1,5 @@
 /* Search Area Styles */
-.main-container {
+.search-div {
     max-width: 1400px;
     margin: 0 auto;
     padding: 20px;
@@ -272,13 +272,13 @@
 #postarea {
     margin: 20px;
 }
-
+/*
 .container {
     display: grid;
     grid-template-columns: 6fr 3fr;
     gap: 10px;
     min-height: 80vh;
-}
+}*/
 #postbox {
     background-color: #eaeaea;
     border-radius: 10px;
