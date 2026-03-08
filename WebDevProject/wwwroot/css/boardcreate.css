@@ -2,12 +2,12 @@
     margin: 20px;
 }
 
-.container {
+/*.container {
     display: grid;
     grid-template-columns: 6fr 3fr;
     gap: 10px;
     min-height: 80vh;
-}
+}*/
 
 /* Board Create Form Styles */
 #boardCreateContainer {
