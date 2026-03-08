@@ -5,23 +5,21 @@
 }
 
 @section Styles {
-    <link rel="stylesheet" href="~/css/search.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/boardcreate.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/board.css" asp-append-version="true" />
 }
 
 <div class="search-div">
-    <h1 class="post_list">Search Boards</h1>
+    <h1>Search Boards</h1>
 
-    <section class="search-area">
+    <div class="card">
         <div class="search-form">
             <div class="search-field">
                 <label for="searchName">Search by Name</label>
                 <input type="text" id="searchName" name="searchName" placeholder="Search board title..." />
-                <button type="button" id="hideOptionButton" class="btn-hide">Show / Hide serach options</button>
+                <button type="button" id="hideOptionButton" class="btn-hide">Show / Hide search options</button>
             </div>
 
-            <div class="search-field hidden" id="moreOption">
+            <div class="search-field hidden">
                 <label for="tagInput">Filter by Tags</label>
                 <div class="tag-input-row">
                     <input type="text" id="tagInput" placeholder="Add tag (e.g., Sports, Outdoor)..." />
@@ -30,7 +28,7 @@
                 <div id="tagContainer" class="tag-container"></div>
             </div>
 
-            <div class="search-row hidden" id="moreOption">
+            <div class="search-row hidden">
                 <div class="search-field">
                     <label for="eventDateFrom">Event Date From</label>
                     <input type="date" id="eventDateFrom" name="eventDateFrom" />
@@ -42,7 +40,7 @@
                 </div>
             </div>
 
-            <div class="search-field hidden" id="moreOption">
+            <div class="search-field hidden">
                 <label>Filter by Status</label>
                 <div class="checkbox-group">
                     <label class="checkbox-label">
@@ -60,7 +58,7 @@
                 </div>
             </div>
 
-            <div class="search-field hidden" id="moreOption">
+            <div class="search-field hidden">
                 <label>Filter by Join Policy</label>
                 <div class="checkbox-group">
                     <label class="checkbox-label">
@@ -79,9 +77,9 @@
                 <button type="button" id="clearButton" class="btn-clear">Clear</button>
             </div>
         </div>
-    </section>
+    </div>
 
-    <div id="searchResults" class="board-list board-grid search-results-container">
+    <div id="searchResults" class="board-grid search-results-container">
         <p class="loading-message">Use the filters above to search for boards.</p>
     </div>
 </div>

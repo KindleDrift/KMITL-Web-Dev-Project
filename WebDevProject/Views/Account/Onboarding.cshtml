@@ -15,19 +15,19 @@
             <fieldset>
                 <legend>Tell us about yourself</legend>
 
-                <div asp-validation-summary="ModelOnly"></div>
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
                 <div class="form-input">
                     <label asp-for="ProfileImage">Profile Picture:</label>
                     <img id="profile-pic-preview" src="~/images/default-profile.png" alt="Profile Picture Preview" class="profile-pic-preview" />
                     <input asp-for="ProfileImage" type="file" accept="image/*" />
-                    <span asp-validation-for="ProfileImage"></span>
+                    <span asp-validation-for="ProfileImage" class="text-danger"></span>
                 </div>
 
                 <div class="form-input">
                     <label asp-for="DateOfBirth">Birthdate:</label>
                     <input asp-for="DateOfBirth" type="date"/>
-                    <span asp-validation-for="DateOfBirth"></span>
+                    <span asp-validation-for="DateOfBirth" class="text-danger"></span>
                 </div>
 
                 <div class="form-input">
@@ -49,13 +49,13 @@
                             <span>Other</span>
                         </label>
                     </div>
-                    <span asp-validation-for="UserGender"></span>
+                    <span asp-validation-for="UserGender" class="text-danger"></span>
                 </div>
 
                 <div class="form-input">
                     <label asp-for="Bio">Bio:</label>
                     <textarea asp-for="Bio" rows="4" placeholder="Tell us about yourself..."></textarea>
-                    <span asp-validation-for="Bio"></span>
+                    <span asp-validation-for="Bio" class="text-danger"></span>
                 </div>
 
                 <input asp-for="SkipOnboarding" type="hidden" value="false" />
