@@ -157,13 +157,11 @@
 <script>
     async function markAsRead(notificationId) {
         try {
-            const response = await fetch('@Url.Action("MarkAsRead", "Notifications")', {
+            const response = await fetch('@Url.Action("MarkAsRead", "Notifications")' + '?notificationId=' + notificationId, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
                     'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
-                },
-                body: JSON.stringify({ notificationId: notificationId })
+                }
             });
 
             if (response.ok) {
@@ -172,6 +170,8 @@
                 const badge = element.querySelector('.badge.bg-primary');
                 if (badge) badge.remove();
                 updateUnreadCount();
+            } else {
+                console.error('Failed to mark as read:', response.status);
             }
         } catch (error) {
             console.error('Error marking notification as read:', error);
@@ -189,6 +189,8 @@
 
             if (response.ok) {
                 location.reload();
+            } else {
+                console.error('Failed to mark all as read:', response.status);
             }
         } catch (error) {
             console.error('Error marking all as read:', error);
@@ -201,19 +203,19 @@
         }
 
         try {
-            const response = await fetch('@Url.Action("Delete", "Notifications")', {
+            const response = await fetch('@Url.Action("Delete", "Notifications")' + '?notificationId=' + notificationId, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
                     'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
-                },
-                body: JSON.stringify({ notificationId: notificationId })
+                }
             });
 
             if (response.ok) {
                 const element = document.getElementById(`notification-${notificationId}`);
                 element.remove();
                 updateUnreadCount();
+            } else {
+                console.error('Failed to delete notification:', response.status);
             }
         } catch (error) {
             console.error('Error deleting notification:', error);
