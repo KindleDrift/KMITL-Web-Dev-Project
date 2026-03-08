@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using WebDevProject.Data;
 using WebDevProject.Models;
+using WebDevProject.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -70,6 +71,9 @@ builder.Services.AddAuthorizationBuilder()
     {
         policy.RequireRole("Admin");
     });
+
+// Add NotificationsService
+builder.Services.AddScoped<NotificationsService>();
 
 var app = builder.Build();
 

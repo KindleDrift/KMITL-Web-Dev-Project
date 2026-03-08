@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebDevProject.Data;
 using WebDevProject.Models;
+using WebDevProject.Services;
 
 namespace WebDevProject.Controllers
 {
@@ -12,11 +13,13 @@ namespace WebDevProject.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<Users> _userManager;
+        private readonly NotificationsService _notificationsService;
 
-        public AdminController(ApplicationDbContext context, UserManager<Users> userManager)
+        public AdminController(ApplicationDbContext context, UserManager<Users> userManager, NotificationsService notificationsService)
         {
             _context = context;
             _userManager = userManager;
+            _notificationsService = notificationsService;
         }
 
         public ActionResult Index()
@@ -363,6 +366,8 @@ namespace WebDevProject.Controllers
             if (oldJoinPolicy == BoardJoinPolicy.Application && board.JoinPolicy == BoardJoinPolicy.FirstComeFirstServe)
             {
                 var applicantsToApprove = board.Applicants.ToList();
+                var approvedApplicantIds = new List<string>();
+                
                 foreach (var applicant in applicantsToApprove)
                 {
                     var currentOccupied = GetOccupiedSeatCount(board);
@@ -380,7 +385,18 @@ namespace WebDevProject.Controllers
                         };
                         
                         _context.BoardParticipants.Add(participant);
+                        approvedApplicantIds.Add(applicant.UserId);
                     }
+                }
+                
+                // Notify all approved applicants
+                if (approvedApplicantIds.Any())
+                {
+                    await _notificationsService.CreateNotificationsForMultipleUsersAsync(
+                        approvedApplicantIds,
+                        $"Accepted: {board.Title}",
+                        "An admin changed the board settings and you have been automatically accepted.",
+                        NotificationType.AdminAction);
                 }
             }
 
@@ -443,6 +459,32 @@ namespace WebDevProject.Controllers
                     return NotFound();
                 }
                 throw;
+            }
+
+            // Notify participants and author if board status changed significantly
+            if (model.CurrentStatus == BoardStatus.Cancelled)
+            {
+                // Notify all participants
+                var participantIds = board.Participants.Select(p => p.UserId).ToList();
+                if (participantIds.Any())
+                {
+                    await _notificationsService.CreateNotificationsForMultipleUsersAsync(
+                        participantIds,
+                        $"Board Cancelled: {board.Title}",
+                        "The board you were participating in has been cancelled by an administrator.",
+                        NotificationType.IsRejected);
+                }
+
+                // Notify all applicants
+                var applicantIds = board.Applicants.Select(a => a.UserId).ToList();
+                if (applicantIds.Any())
+                {
+                    await _notificationsService.CreateNotificationsForMultipleUsersAsync(
+                        applicantIds,
+                        $"Board Cancelled: {board.Title}",
+                        "The board you applied to has been cancelled by an administrator.",
+                        NotificationType.IsRejected);
+                }
             }
 
             return RedirectToAction(nameof(Boards));
