@@ -135,6 +135,64 @@
     background-color: #fff454;
 }
 
+/* Tag Input Row - Input and Button Side by Side */
+.tag-input-row {
+    display: flex;
+    gap: 8px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.tag-input-row input {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 16px;
+    box-sizing: border-box;
+}
+
+.tag-input-row input:focus {
+    outline: none;
+    border-color: #8ec4e9;
+}
+
+.tag-input-row .btn-tag {
+    flex-shrink: 0;
+    padding: 10px 20px;
+    white-space: nowrap;
+}
+
+/* Tag Container Styles */
+.tag-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 10px;
+    background-color: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    min-height: auto;
+    align-items: center;
+}
+
+.tag .btn-remove {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #666;
+    font-size: 18px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.tag .btn-remove:hover {
+    color: #e02424;
+}
+
 /* Results Container */
 .search-results-container {
     min-height: 300px;
@@ -151,6 +209,19 @@
 
 .error-message {
     color: #ef4444;
+}
+
+/* Override board.css tag styles for search filter tags */
+.tag-container .tag {
+    display: inline-flex !important;
+    background-color: #e8f1f8;
+    border: 1px solid #8ec4e9;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 14px;
+    color: #333;
+    white-space: nowrap;
+    flex-wrap: nowrap;
 }
 
 /* Responsive Design */
@@ -174,9 +245,26 @@
 
     .btn-hide,
     .btn-search,
-    .btn-clear,
-    .btn-tag {
+    .btn-clear {
         width: 100%;
+    }
+
+    .tag-input-row {
+        flex-direction: column;
+    }
+
+    .tag-input-row input,
+    .tag-input-row .btn-tag {
+        width: 100%;
+    }
+
+    .tag-container {
+        gap: 6px;
+    }
+
+    .tag {
+        font-size: 13px;
+        padding: 5px 10px;
     }
 }
 
