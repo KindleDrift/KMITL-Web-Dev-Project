@@ -1,5 +1,7 @@
 document.addEventListener('DOMContentLoaded', function () {
     const searchNameInput = document.getElementById('searchName');
+    const hideOptionButton = document.getElementById('hideOptionButton');
+    const hidden_items = document.querySelectorAll(".hidden");
     const tagInput = document.getElementById('tagInput');
     const addTagButton = document.getElementById('addTagButton');
     const tagContainer = document.getElementById('tagContainer');
@@ -12,6 +14,13 @@ document.addEventListener('DOMContentLoaded', function () {
     const policyFilters = document.querySelectorAll('.policy-filter');
 
     const selectedTags = [];
+
+    // Hide/Show more search option
+    hideOptionButton.addEventListener('click', function (e) {
+        hidden_items.forEach(item => {
+            item.classList.toggle("hidden");
+        });
+    });
 
     // Tag validation and formatting functions (reused from boardcreate.js)
     function isValidTag(tag) {
