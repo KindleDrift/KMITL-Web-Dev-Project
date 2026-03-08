@@ -74,6 +74,7 @@ builder.Services.AddAuthorizationBuilder()
 
 // Add NotificationsService
 builder.Services.AddScoped<NotificationsService>();
+builder.Services.AddScoped<BoardService>();
 
 var app = builder.Build();
 

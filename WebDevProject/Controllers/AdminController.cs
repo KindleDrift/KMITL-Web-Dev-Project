@@ -14,12 +14,14 @@ namespace WebDevProject.Controllers
         private readonly ApplicationDbContext _context;
         private readonly UserManager<Users> _userManager;
         private readonly NotificationsService _notificationsService;
+        private readonly BoardService _boardService;
 
-        public AdminController(ApplicationDbContext context, UserManager<Users> userManager, NotificationsService notificationsService)
+        public AdminController(ApplicationDbContext context, UserManager<Users> userManager, NotificationsService notificationsService, BoardService boardService)
         {
             _context = context;
             _userManager = userManager;
             _notificationsService = notificationsService;
+            _boardService = boardService;
         }
 
         public ActionResult Index()
@@ -240,113 +242,19 @@ namespace WebDevProject.Controllers
             var oldGroupManagement = board.GroupManagementOption;
             var oldMaxParticipants = board.MaxParticipants;
 
-            // Handle board image upload
-            if (BoardImage != null && BoardImage.Length > 0)
+            var boardImageResult = await _boardService.SaveBoardImageAsync(BoardImage, board.AuthorId, board.ImageUrl);
+            board.ImageUrl = boardImageResult.ImageUrl;
+            if (!boardImageResult.Success)
             {
-                var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
-                var fileExtension = Path.GetExtension(BoardImage.FileName).ToLowerInvariant();
-
-                if (!allowedExtensions.Contains(fileExtension))
-                {
-                    ModelState.AddModelError("BoardImage", "Only image files are allowed (.jpg, .jpeg, .png, .gif, .webp).");
-                    return View(model);
-                }
-
-                if (BoardImage.Length > 5 * 1024 * 1024) // 5MB limit
-                {
-                    ModelState.AddModelError("BoardImage", "Image file size must not exceed 5MB.");
-                    return View(model);
-                }
-
-                var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "boards");
-                if (!Directory.Exists(uploadsFolder))
-                {
-                    Directory.CreateDirectory(uploadsFolder);
-                }
-
-                // Delete old image if exists
-                if (!string.IsNullOrEmpty(board.ImageUrl))
-                {
-                    var oldImagePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", board.ImageUrl.TrimStart('/'));
-                    if (System.IO.File.Exists(oldImagePath))
-                    {
-                        System.IO.File.Delete(oldImagePath);
-                    }
-                }
-
-                var uniqueFileName = $"{board.AuthorId}_{Guid.NewGuid()}{fileExtension}";
-                var filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-                using (var fileStream = new FileStream(filePath, FileMode.Create))
-                {
-                    await BoardImage.CopyToAsync(fileStream);
-                }
-
-                board.ImageUrl = $"/uploads/boards/{uniqueFileName}";
+                ModelState.AddModelError("BoardImage", boardImageResult.ErrorMessage!);
+                return View(model);
             }
 
-            // Handle tags
-            if (Tags != null && Tags.Any())
+            var tagsResult = await _boardService.ApplyTagsToBoardAsync(board, Tags);
+            if (!tagsResult.Success)
             {
-                var validatedTags = new List<string>();
-                
-                foreach (var tag in Tags)
-                {
-                    var trimmedTag = tag?.Trim();
-                    if (string.IsNullOrWhiteSpace(trimmedTag))
-                        continue;
-
-                    // Validate and format tag
-                    if (!IsValidTag(trimmedTag))
-                    {
-                        ModelState.AddModelError("Tags", $"Invalid tag '{trimmedTag}'. Tags must contain only letters and single hyphens (not at start or end).");
-                        return View(model);
-                    }
-
-                    var formattedTag = FormatTag(trimmedTag);
-                    if (!validatedTags.Contains(formattedTag, StringComparer.OrdinalIgnoreCase))
-                    {
-                        validatedTags.Add(formattedTag);
-                    }
-                }
-
-                if (validatedTags.Any())
-                {
-                    var existingTags = await _context.Tags
-                        .Where(t => validatedTags.Contains(t.Name))
-                        .ToListAsync();
-
-                    var existingNames = new HashSet<string>(existingTags.Select(t => t.Name), StringComparer.OrdinalIgnoreCase);
-
-                    // Add new tags
-                    foreach (var name in validatedTags)
-                    {
-                        if (!existingNames.Contains(name))
-                        {
-                            var newTag = new Tag { Name = name };
-                            _context.Tags.Add(newTag);
-                            existingTags.Add(newTag);
-                        }
-                    }
-
-                    await _context.SaveChangesAsync();
-
-                    // Clear existing tags and add new ones
-                    board.Tags.Clear();
-                    foreach (var tag in existingTags)
-                    {
-                        board.Tags.Add(tag);
-                    }
-                }
-                else
-                {
-                    board.Tags.Clear();
-                }
-            }
-            else
-            {
-                // If no tags provided, clear existing tags
-                board.Tags.Clear();
+                ModelState.AddModelError("Tags", tagsResult.ErrorMessage!);
+                return View(model);
             }
 
             // Update only the allowed properties
@@ -370,7 +278,7 @@ namespace WebDevProject.Controllers
                 
                 foreach (var applicant in applicantsToApprove)
                 {
-                    var currentOccupied = GetOccupiedSeatCount(board);
+                    var currentOccupied = _boardService.GetOccupiedSeatCount(board);
                     
                     // Only approve if there's space OR if AllowOverbooking is enabled
                     if (currentOccupied < board.MaxParticipants || board.GroupManagementOption == GroupManagement.AllowOverbooking)
@@ -416,7 +324,7 @@ namespace WebDevProject.Controllers
             if (oldGroupManagement != GroupManagement.CloseOnFull &&
                 board.GroupManagementOption == GroupManagement.CloseOnFull)
             {
-                var currentOccupied = GetOccupiedSeatCount(board);
+                var currentOccupied = _boardService.GetOccupiedSeatCount(board);
                 if (currentOccupied >= board.MaxParticipants && board.CurrentStatus == BoardStatus.Open)
                 {
                     board.CurrentStatus = BoardStatus.Full;
@@ -426,7 +334,7 @@ namespace WebDevProject.Controllers
             // Edge Case 4: MaxParticipants changed - recalculate status
             if (oldMaxParticipants != board.MaxParticipants)
             {
-                var currentOccupied = GetOccupiedSeatCount(board);
+                var currentOccupied = _boardService.GetOccupiedSeatCount(board);
                 
                 // If capacity increased and was Full, might need to reopen
                 if (board.MaxParticipants > oldMaxParticipants && board.CurrentStatus == BoardStatus.Full)
@@ -447,7 +355,7 @@ namespace WebDevProject.Controllers
             }
 
             // Final status update based on current capacity
-            UpdateBoardStatusByCapacity(board, GetOccupiedSeatCount(board));
+            _boardService.UpdateBoardStatusByCapacity(board, _boardService.GetOccupiedSeatCount(board));
 
             try
             {
@@ -489,83 +397,6 @@ namespace WebDevProject.Controllers
             }
 
             return RedirectToAction(nameof(Boards));
-        }
-
-        // Tag validation
-        private static bool IsValidTag(string tag)
-        {
-            // Check if tag starts or ends with hyphen
-            if (tag.StartsWith('-') || tag.EndsWith('-'))
-                return false;
-
-            // Check if tag contains numbers
-            if (tag.Any(char.IsDigit))
-                return false;
-
-            // Check if tag contains only letters and single hyphens
-            for (int i = 0; i < tag.Length; i++)
-            {
-                char c = tag[i];
-                
-                // Allow letters
-                if (char.IsLetter(c))
-                    continue;
-
-                // Allow single hyphen (not consecutive)
-                if (c == '-')
-                {
-                    if (i > 0 && tag[i - 1] == '-')
-                        return false; // Consecutive hyphens not allowed
-                    continue;
-                }
-
-                // Any other character is invalid
-                return false;
-            }
-
-            return true;
-        }
-
-        private static string FormatTag(string tag)
-        {
-            // Convert to lowercase first
-            tag = tag.ToLowerInvariant();
-
-            // Capitalize first letter
-            if (tag.Length > 0)
-            {
-                tag = char.ToUpperInvariant(tag[0]) + tag.Substring(1);
-            }
-
-            return tag;
-        }
-
-        private static int GetOccupiedSeatCount(Board board)
-        {
-            return board.Participants.Count(p => p.UserId != board.AuthorId) + board.ExternalParticipants.Count;
-        }
-
-        private static void UpdateBoardStatusByCapacity(Board board, int occupiedSeats)
-        {
-            if (board.CurrentStatus is BoardStatus.Closed or BoardStatus.Cancelled or BoardStatus.Archived)
-            {
-                return;
-            }
-
-            if (occupiedSeats >= board.MaxParticipants)
-            {
-                if (board.GroupManagementOption == GroupManagement.CloseOnFull)
-                {
-                    board.CurrentStatus = BoardStatus.Full;
-                }
-
-                return;
-            }
-
-            if (board.CurrentStatus == BoardStatus.Full)
-            {
-                board.CurrentStatus = BoardStatus.Open;
-            }
         }
     }
 }
