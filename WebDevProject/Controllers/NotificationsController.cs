@@ -97,5 +97,35 @@ namespace WebDevProject.Controllers
             var unreadCount = await _notificationsService.GetUnreadNotificationCountAsync(userId);
             return Json(new { count = unreadCount });
         }
+
+        [HttpGet]
+        public async Task<IActionResult> GetRecentNotifications(int limit = 5)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                return Unauthorized();
+            }
+
+            var notifications = await _notificationsService.GetUserNotificationsAsync(userId, 1, limit);
+            var unreadCount = await _notificationsService.GetUnreadNotificationCountAsync(userId);
+
+            return Json(new 
+            { 
+                notifications = notifications.Select(n => new
+                {
+                    n.Id,
+                    n.Title,
+                    n.Description,
+                    n.IsRead,
+                    n.Type,
+                    n.CreatedDate,
+                    n.BoardId,
+                    BoardTitle = n.Board?.Title,
+                    RelatedUserDisplayName = n.RelatedUser?.DisplayName
+                }).ToList(),
+                unreadCount = unreadCount
+            });
+        }
     }
 }
