@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="~/css/editprofile.css" asp-append-version="true" />
 }
 
-<form class="profile" id="editprofile-form" asp-action="Edit" method="post" enctype="multipart/form-data"> 
+<form class="main-container" id="editprofile-form" asp-action="Edit" method="post" enctype="multipart/form-data"> 
     @Html.AntiForgeryToken()
     <div class="edit-picture">
         <img class="profile-picture" id="preview" src="@(Model.CurrentProfilePictureUrl ?? "/images/default-profile.png")" alt="Profile Picture">
@@ -16,7 +16,7 @@
         <button id="changePicBtn" type="button">Change Picture</button>
         <span asp-validation-for="ProfileImage"></span>
     </div>
-    <div class="profile-data">
+    <div class="card" id="profile-data">
         <div class="data-menu">
             <div class="row">
                 <span class="label">Username :</span>
@@ -50,7 +50,7 @@
                 <textarea asp-for="Bio" id="bioInput" rows="4" placeholder="Tell us about yourself..."></textarea>
                 <span asp-validation-for="Bio"></span>
             </div>
-            <button type="submit" id="save">save change</button>
+            <button type="submit" class="large-button" id="save">save change</button>
         </div>
     </div>
 </form>
