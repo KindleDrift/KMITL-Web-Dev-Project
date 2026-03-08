@@ -297,7 +297,10 @@ document.addEventListener('DOMContentLoaded', function () {
             const participantsHtml = board.previewParticipants.length > 0
                 ? `<div class="participant-bubbles">
                     ${board.previewParticipants.map(p => 
-                        `<img src="${p.profilePictureUrl}" alt="${escapeHtml(p.displayName)}" title="${escapeHtml(p.displayName)}" />`
+                        `<img src="${p.profilePictureUrl || '/images/default-profile.png'}" 
+                              alt="${escapeHtml(p.displayName)}" 
+                              title="${escapeHtml(p.displayName)}"
+                              onerror="this.src='/images/default-profile.png'" />`
                     ).join('')}
                    </div>
                    ${board.currentParticipants > board.previewParticipants.length 
@@ -309,7 +312,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 <div class="board-card">
                     <div class="board-card-layout">
                         <div class="board-image-wrap">
-                            <img class="board-image" src="${board.imageUrl}" alt="${escapeHtml(board.title)}" />
+                            <img class="board-image" 
+                                 src="${board.imageUrl || '/images/default-board.png'}" 
+                                 alt="${escapeHtml(board.title)}"
+                                 onerror="this.src='/images/default-board.png'" />
                             <div class="board-side-meta">
                                 <div><strong>Event:</strong> ${board.eventDate}</div>
                                 <div><strong>Time:</strong> ${board.eventTime}</div>
@@ -326,7 +332,9 @@ document.addEventListener('DOMContentLoaded', function () {
                             <div class="users-list">
                                 <div class="author">
                                     By
-                                    <img src="${board.author.profilePictureUrl}" alt="${escapeHtml(board.author.displayName)}" />
+                                    <img src="${board.author.profilePictureUrl || '/images/default-profile.png'}" 
+                                         alt="${escapeHtml(board.author.displayName)}"
+                                         onerror="this.src='/images/default-profile.png'" />
                                     ${escapeHtml(board.author.displayName)}
                                 </div>
                                 <div class="participants participant-row">

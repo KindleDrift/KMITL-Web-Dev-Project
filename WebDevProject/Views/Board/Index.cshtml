@@ -15,8 +15,8 @@
     <h1>Dashboard</h1>
     <div class="card">
         <h2>Your active boards</h2>
-        <a class="create-board-link" asp-action="Create">Create New Board</a>
-        <div class="board-list board-grid">
+        <a class="btn btn-primary" asp-action="Create">Create New Board</a>
+        <div class="board-grid">
             @if (activeBoards.Count > 0)
             {
                 @foreach (var board in activeBoards)
@@ -40,7 +40,10 @@
                     <div class="board-card">
                         <div class="board-card-layout">
                             <div class="board-image-wrap">
-                                <img class="board-image" src="@(string.IsNullOrWhiteSpace(board.ImageUrl) ? Url.Content("~/images/default-board.png") : board.ImageUrl)" alt="@board.Title" />
+                                <img class="board-image" 
+                                     src="@(string.IsNullOrWhiteSpace(board.ImageUrl) ? "/images/default-board.png" : board.ImageUrl)" 
+                                     alt="@board.Title"
+                                     onerror="this.src='/images/default-board.png'" />
                                 <div class="board-side-meta">
                                     <div><strong>Event:</strong> @board.EventDate.ToString("dd MMM yyyy")</div>
                                     <div><strong>Time:</strong> @board.EventDate.ToString("HH:mm")</div>
@@ -53,7 +56,9 @@
                                 <div class="users-list">
                                     <div class="author">
                                         By
-                                        <img src="@(board.Author?.ProfilePictureUrl ?? Url.Content("~/images/default-profile.png"))" alt="@(board.Author?.DisplayName ?? "Author")" />
+                                        <img src="@(board.Author?.ProfilePictureUrl ?? "/images/default-profile.png")" 
+                                             alt="@(board.Author?.DisplayName ?? "Author")"
+                                             onerror="this.src='/images/default-profile.png'" />
                                         @(board.Author?.DisplayName ?? "Unknown")
                                     </div>
                                     <div class="participants participant-row">
@@ -64,7 +69,10 @@
                                             <div class="participant-bubbles">
                                                 @foreach (var participant in previewParticipants)
                                                 {
-                                                    <img src="@(participant.User?.ProfilePictureUrl ?? Url.Content("~/images/default-profile.png"))" alt="@(participant.User?.DisplayName ?? "Participant")" title="@(participant.User?.DisplayName ?? "Participant")" />
+                                                    <img src="@(participant.User?.ProfilePictureUrl ?? "/images/default-profile.png")" 
+                                                         alt="@(participant.User?.DisplayName ?? "Participant")" 
+                                                         title="@(participant.User?.DisplayName ?? "Participant")"
+                                                         onerror="this.src='/images/default-profile.png'" />
                                                 }
                                             </div>
 
@@ -108,7 +116,7 @@
         </div>
 
         <h2>Participating Boards</h2>
-        <div class="board-list board-grid">
+        <div class="board-grid">
             @if (participatingBoards.Count > 0)
             {
                 @foreach (var board in participatingBoards)
@@ -132,7 +140,10 @@
                     <div class="board-card">
                         <div class="board-card-layout">
                             <div class="board-image-wrap">
-                                <img class="board-image" src="@(string.IsNullOrWhiteSpace(board.ImageUrl) ? Url.Content("~/images/default-board.png") : board.ImageUrl)" alt="@board.Title" />
+                                <img class="board-image" 
+                                     src="@(string.IsNullOrWhiteSpace(board.ImageUrl) ? "/images/default-board.png" : board.ImageUrl)" 
+                                     alt="@board.Title"
+                                     onerror="this.src='/images/default-board.png'" />
                                 <div class="board-side-meta">
                                     <div><strong>Event:</strong> @board.EventDate.ToString("dd MMM yyyy")</div>
                                     <div><strong>Time:</strong> @board.EventDate.ToString("HH:mm")</div>
@@ -152,7 +163,10 @@
                                             <div class="participant-bubbles">
                                                 @foreach (var participant in previewParticipants)
                                                 {
-                                                    <img src="@(participant.User?.ProfilePictureUrl ?? Url.Content("~/images/default-profile.png"))" alt="@(participant.User?.DisplayName ?? "Participant")" title="@(participant.User?.DisplayName ?? "Participant")" />
+                                                    <img src="@(participant.User?.ProfilePictureUrl ?? "/images/default-profile.png")" 
+                                                         alt="@(participant.User?.DisplayName ?? "Participant")" 
+                                                         title="@(participant.User?.DisplayName ?? "Participant")"
+                                                         onerror="this.src='/images/default-profile.png'" />
                                                 }
                                             </div>
 

@@ -8,52 +8,65 @@
     <link rel="stylesheet" href="~/css/editprofile.css" asp-append-version="true" />
 }
 
-<form class="main-container" id="editprofile-form" asp-action="Edit" method="post" enctype="multipart/form-data"> 
-    @Html.AntiForgeryToken()
-    <div class="edit-picture">
-        <img class="profile-picture" id="preview" src="@(Model.CurrentProfilePictureUrl ?? "/images/default-profile.png")" alt="Profile Picture">
-        <input asp-for="ProfileImage" type="file" id="imageInput" accept="image/*" hidden>
-        <button id="changePicBtn" type="button">Change Picture</button>
-        <span asp-validation-for="ProfileImage"></span>
-    </div>
-    <div class="card" id="profile-data">
-        <div class="data-menu">
-            <div class="row">
-                <span class="label">Username :</span>
+<div class="main-container">
+    <h1>Edit Profile</h1>
+    
+    <form id="editprofile-form" asp-action="Edit" method="post" enctype="multipart/form-data"> 
+        @Html.AntiForgeryToken()
+        
+        <div class="edit-picture">
+            <img class="profile-picture" id="preview" src="@(Model.CurrentProfilePictureUrl ?? "/images/default-profile.png")" alt="Profile Picture">
+            <input asp-for="ProfileImage" type="file" id="imageInput" accept="image/*" hidden>
+            <button id="changePicBtn" type="button" class="btn btn-secondary">Change Picture</button>
+            <span asp-validation-for="ProfileImage" class="text-danger"></span>
+        </div>
+        
+        <div class="card" id="profile-data">
+            <div class="form-group">
+                <label asp-for="UserName">Username</label>
                 <input asp-for="UserName" id="usernameInput" required>
                 <span asp-validation-for="UserName" class="text-danger"></span>
                 <span id="nameError" class="text-danger"></span>
             </div>
-            <div class="row">
-                <span class="label">Gender :</span>
-                <span>
-                    <input asp-for="UserGender" type="radio" id="male" value="0" checked="@(Model.UserGender == WebDevProject.Models.Users.Gender.Male ? "checked" : null)">
-                    <label for="male">male</label>
-                </span>
-                <span>
-                    <input asp-for="UserGender" type="radio" id="female" value="1" checked="@(Model.UserGender == WebDevProject.Models.Users.Gender.Female ? "checked" : null)">
-                    <label for="female">female</label>
-                </span>
-                <span>
-                    <input asp-for="UserGender" type="radio" id="other" value="2" checked="@(Model.UserGender == WebDevProject.Models.Users.Gender.Other ? "checked" : null)">
-                    <label for="other">other</label>
-                </span>
-                <span asp-validation-for="UserGender"></span>
+            
+            <div class="form-group">
+                <label asp-for="UserGender">Gender</label>
+                <div class="gender-options">
+                    <label>
+                        <input asp-for="UserGender" type="radio" id="male" value="0" />
+                        <span class="material-symbols-outlined">male</span>
+                        <span>Male</span>
+                    </label>
+                    <label>
+                        <input asp-for="UserGender" type="radio" id="female" value="1" />
+                        <span class="material-symbols-outlined">female</span>
+                        <span>Female</span>
+                    </label>
+                    <label>
+                        <input asp-for="UserGender" type="radio" id="other" value="2" />
+                        <span class="material-symbols-outlined">transgender</span>
+                        <span>Other</span>
+                    </label>
+                </div>
+                <span asp-validation-for="UserGender" class="text-danger"></span>
             </div>
-            <div class="row">
-                <span class="label">Birth Date :</span>
+            
+            <div class="form-group">
+                <label asp-for="DateOfBirth">Birth Date</label>
                 <input asp-for="DateOfBirth" type="date" id="birthdateInput"/>
-                <span asp-validation-for="DateOfBirth"></span>
+                <span asp-validation-for="DateOfBirth" class="text-danger"></span>
             </div>
-            <div class="row">
-                <span class="label">Bio :</span>
+            
+            <div class="form-group">
+                <label asp-for="Bio">Bio</label>
                 <textarea asp-for="Bio" id="bioInput" rows="4" placeholder="Tell us about yourself..."></textarea>
-                <span asp-validation-for="Bio"></span>
+                <span asp-validation-for="Bio" class="text-danger"></span>
             </div>
-            <button type="submit" class="large-button" id="save">save change</button>
+            
+            <button type="submit" class="large-button">Save Changes</button>
         </div>
-    </div>
-</form>
+    </form>
+</div>
 
 @section Scripts {
     <script src="~/js/editprofile.js" asp-append-version="true"></script>

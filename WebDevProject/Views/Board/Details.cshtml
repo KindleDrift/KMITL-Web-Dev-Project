@@ -7,7 +7,6 @@
 
 @section Styles {
     <link rel="stylesheet" href="~/css/board.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/boarddetails.css" asp-append-version="true" />
 }
 
 <div class="main-container">
@@ -26,12 +25,12 @@
             @if (Model.IsAuthor)
             {
                 <div style="display: flex; gap: 10px;">
-                    <a class="button" asp-action="Edit" asp-route-id="@Model.Board.Id">Edit Board</a>
+                    <a class="btn btn-primary" asp-action="Edit" asp-route-id="@Model.Board.Id">Edit Board</a>
                     @if (Model.Board.CurrentStatus != BoardStatus.Archived && Model.Board.EventDate <= DateTime.UtcNow)
                     {
                         <form asp-action="Archive" asp-route-id="@Model.Board.Id" method="post" style="display: inline;" onsubmit="return confirm('Are you sure you want to archive this board? This action will hide the board from active listings.');">
                             @Html.AntiForgeryToken()
-                            <button type="submit" class="button button-warning">Archive Board</button>
+                            <button type="submit" class="btn btn-warning">Archive Board</button>
                         </form>
                     }
                 </div>
@@ -58,7 +57,9 @@
             @if (!string.IsNullOrWhiteSpace(Model.Board.ImageUrl))
             {
                 <div class="board-details-image">
-                    <img src="@Model.Board.ImageUrl" alt="@Model.Board.Title" />
+                    <img src="@Model.Board.ImageUrl" 
+                         alt="@Model.Board.Title"
+                         onerror="this.src='/images/default-board.png'" />
                 </div>
             }
 
@@ -103,7 +104,7 @@
                         {
                             <form asp-action="Apply" asp-route-id="@Model.Board.Id" method="post">
                                 @Html.AntiForgeryToken()
-                                <button type="submit" class="button button-primary">@(Model.Board.JoinPolicy == BoardJoinPolicy.FirstComeFirstServe ? "Join Now" : "Apply to Join")</button>
+                                <button type="submit" class="btn btn-info">@(Model.Board.JoinPolicy == BoardJoinPolicy.FirstComeFirstServe ? "Join Now" : "Apply to Join")</button>
                             </form>
                         }
                         else
@@ -116,7 +117,7 @@
                         <p class="status-message status-pending">Your application is pending approval.</p>
                         <form asp-action="CancelMyApplication" asp-route-id="@Model.Board.Id" method="post" style="margin-top: 8px;">
                             @Html.AntiForgeryToken()
-                            <button type="submit" class="button button-secondary">Cancel My Application</button>
+                            <button type="submit" class="btn btn-secondary">Cancel My Application</button>
                         </form>
                     }
                     else if (Model.UserApplicationStatus == WebDevProject.Models.ApplicationStatus.Approved)
@@ -124,7 +125,7 @@
                         <p class="status-message status-approved">You are a participant in this board.</p>
                         <form asp-action="CancelMyApplication" asp-route-id="@Model.Board.Id" method="post" style="margin-top: 8px;">
                             @Html.AntiForgeryToken()
-                            <button type="submit" class="button button-secondary">Leave Board</button>
+                            <button type="submit" class="btn btn-secondary">Leave Board</button>
                         </form>
                     }
                     else if (Model.UserApplicationStatus == WebDevProject.Models.ApplicationStatus.Denied)
@@ -151,9 +152,9 @@
                                     @if (Model.IsAuthor)
                                     {
                                         <div class="user-actions">
-                                            <form asp-action="DenyParticipant" asp-route-boardId="@Model.Board.Id" asp-route-participantId="@participant.UserId" method="post" style="display: inline;">
+                                            <form asp-action="DenyParticipant" asp-route-boardId="@Model.Board.Id" asp-route-participantId="@participant.UserId" method="post" class="inline-form">
                                                 @Html.AntiForgeryToken()
-                                                <button type="submit" class="button button-danger">Deny</button>
+                                                <button type="submit" class="btn btn-danger btn-sm">Deny</button>
                                             </form>
                                         </div>
                                     }
@@ -184,9 +185,9 @@
                                     @if (Model.IsAuthor)
                                     {
                                         <div class="user-actions">
-                                            <form asp-action="RemoveExternalParticipant" asp-route-boardId="@Model.Board.Id" asp-route-externalParticipantId="@external.Id" method="post" style="display: inline;">
+                                            <form asp-action="RemoveExternalParticipant" asp-route-boardId="@Model.Board.Id" asp-route-externalParticipantId="@external.Id" method="post" class="inline-form">
                                                 @Html.AntiForgeryToken()
-                                                <button type="submit" class="button button-secondary">Remove</button>
+                                                <button type="submit" class="btn btn-secondary btn-sm">Remove</button>
                                             </form>
                                         </div>
                                     }
@@ -208,7 +209,7 @@
                             <div class="form-group">
                                 <input type="text" name="externalNote" placeholder="Optional note (e.g. contact)" maxlength="200" />
                             </div>
-                            <button type="submit" class="button button-primary">Add External Participant</button>
+                            <button type="submit" class="btn btn-success">Add External Participant</button>
                         </form>
                     </div>
 
@@ -228,13 +229,13 @@
                                                 <div class="user-meta">Applied: @applicant.AppliedAt.ToString("dd MMM yyyy, HH:mm")</div>
                                             </div>
                                             <div class="user-actions">
-                                                <form asp-action="ApproveApplicant" asp-route-boardId="@Model.Board.Id" asp-route-applicantId="@applicant.UserId" method="post" style="display: inline;">
+                                                <form asp-action="ApproveApplicant" asp-route-boardId="@Model.Board.Id" asp-route-applicantId="@applicant.UserId" method="post" class="inline-form">
                                                     @Html.AntiForgeryToken()
-                                                    <button type="submit" class="button button-success">Approve</button>
+                                                    <button type="submit" class="btn btn-success btn-sm">Approve</button>
                                                 </form>
-                                                <form asp-action="DenyApplicant" asp-route-boardId="@Model.Board.Id" asp-route-applicantId="@applicant.UserId" method="post" style="display: inline;">
+                                                <form asp-action="DenyApplicant" asp-route-boardId="@Model.Board.Id" asp-route-applicantId="@applicant.UserId" method="post" class="inline-form">
                                                     @Html.AntiForgeryToken()
-                                                    <button type="submit" class="button button-danger">Deny</button>
+                                                    <button type="submit" class="btn btn-danger btn-sm">Deny</button>
                                                 </form>
                                             </div>
                                         </div>
@@ -262,9 +263,9 @@
                                             <div class="user-meta">Denied: @denied.DeniedAt.ToString("dd MMM yyyy, HH:mm")</div>
                                         </div>
                                         <div class="user-actions">
-                                            <form asp-action="RemoveDenial" asp-route-boardId="@Model.Board.Id" asp-route-deniedUserId="@denied.UserId" method="post" style="display: inline;">
+                                            <form asp-action="RemoveDenial" asp-route-boardId="@Model.Board.Id" asp-route-deniedUserId="@denied.UserId" method="post" class="inline-form">
                                                 @Html.AntiForgeryToken()
-                                                <button type="submit" class="button button-secondary">Remove from List</button>
+                                                <button type="submit" class="btn btn-secondary btn-sm">Remove from List</button>
                                             </form>
                                         </div>
                                     </div>
