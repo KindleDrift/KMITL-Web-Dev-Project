@@ -73,8 +73,10 @@
                     <div><strong>Participants:</strong> @visibleOccupiedSlots / @Model.Board.MaxParticipants</div>
                     <div><strong>Join System:</strong> @(Model.Board.JoinPolicy == BoardJoinPolicy.FirstComeFirstServe ? "First-Come-First-Serve" : "Application System")</div>
                     <div><strong>Author:</strong> 
-                        <img src="@(Model.Board.Author?.ProfilePictureUrl ?? Url.Content("~/images/default-profile.png"))" alt="@(Model.Board.Author?.DisplayName ?? "Author")" class="small-avatar" />
-                        @(Model.Board.Author?.DisplayName ?? "Unknown")
+                        <a href="/Profile/u/@Uri.EscapeDataString(Model.Board.Author?.DisplayName ?? "Unknown")" style="display: inline-flex; align-items: center; gap: 5px; text-decoration: none; color: inherit;">
+                            <img src="@(Model.Board.Author?.ProfilePictureUrl ?? Url.Content("~/images/default-profile.png"))" alt="@(Model.Board.Author?.DisplayName ?? "Author")" class="small-avatar" />
+                            <span>@(Model.Board.Author?.DisplayName ?? "Unknown")</span>
+                        </a>
                     </div>
                 </div>
 
@@ -144,11 +146,13 @@
                             @foreach (var participant in visibleParticipants)
                             {
                                 <div class="user-item">
-                                    <img src="@(participant.User?.ProfilePictureUrl ?? Url.Content("~/images/default-profile.png"))" alt="@(participant.User?.DisplayName ?? "Participant")" class="user-avatar" />
-                                    <div class="user-info">
-                                        <div class="user-name">@(participant.User?.DisplayName ?? "Unknown")</div>
-                                        <div class="user-meta">Joined: @participant.JoinedAt.ToString("dd MMM yyyy, HH:mm")</div>
-                                    </div>
+                                    <a href="/Profile/u/@Uri.EscapeDataString(participant.User?.DisplayName ?? "Unknown")" style="display: flex; align-items: center; gap: 10px; text-decoration: none; color: inherit; flex: 1;">
+                                        <img src="@(participant.User?.ProfilePictureUrl ?? Url.Content("~/images/default-profile.png"))" alt="@(participant.User?.DisplayName ?? "Participant")" class="user-avatar" />
+                                        <div class="user-info">
+                                            <div class="user-name">@(participant.User?.DisplayName ?? "Unknown")</div>
+                                            <div class="user-meta">Joined: @participant.JoinedAt.ToString("dd MMM yyyy, HH:mm")</div>
+                                        </div>
+                                    </a>
                                     @if (Model.IsAuthor)
                                     {
                                         <div class="user-actions">
@@ -223,11 +227,13 @@
                                     @foreach (var applicant in Model.Applicants)
                                     {
                                         <div class="user-item applicant-item">
-                                            <img src="@(applicant.User?.ProfilePictureUrl ?? Url.Content("~/images/default-profile.png"))" alt="@(applicant.User?.DisplayName ?? "Applicant")" class="user-avatar" />
-                                            <div class="user-info">
-                                                <div class="user-name">@(applicant.User?.DisplayName ?? "Unknown")</div>
-                                                <div class="user-meta">Applied: @applicant.AppliedAt.ToString("dd MMM yyyy, HH:mm")</div>
-                                            </div>
+                                            <a href="/Profile/u/@Uri.EscapeDataString(applicant.User?.DisplayName ?? "Unknown")" style="display: flex; align-items: center; gap: 10px; text-decoration: none; color: inherit; flex: 1;">
+                                                <img src="@(applicant.User?.ProfilePictureUrl ?? Url.Content("~/images/default-profile.png"))" alt="@(applicant.User?.DisplayName ?? "Applicant")" class="user-avatar" />
+                                                <div class="user-info">
+                                                    <div class="user-name">@(applicant.User?.DisplayName ?? "Unknown")</div>
+                                                    <div class="user-meta">Applied: @applicant.AppliedAt.ToString("dd MMM yyyy, HH:mm")</div>
+                                                </div>
+                                            </a>
                                             <div class="user-actions">
                                                 <form asp-action="ApproveApplicant" asp-route-boardId="@Model.Board.Id" asp-route-applicantId="@applicant.UserId" method="post" class="inline-form">
                                                     @Html.AntiForgeryToken()
@@ -257,15 +263,17 @@
                                 @foreach (var denied in Model.DeniedUsers)
                                 {
                                     <div class="user-item">
-                                        <img src="@(denied.User?.ProfilePictureUrl ?? Url.Content("~/images/default-profile.png"))" alt="@(denied.User?.DisplayName ?? "Denied User")" class="user-avatar" />
-                                        <div class="user-info">
-                                            <div class="user-name">@(denied.User?.DisplayName ?? "Unknown")</div>
-                                            <div class="user-meta">Denied: @denied.DeniedAt.ToString("dd MMM yyyy, HH:mm")</div>
-                                        </div>
+                                        <a href="/Profile/u/@Uri.EscapeDataString(denied.User?.DisplayName ?? "Unknown")" style="display: flex; align-items: center; gap: 10px; text-decoration: none; color: inherit; flex: 1;">
+                                            <img src="@(denied.User?.ProfilePictureUrl ?? Url.Content("~/images/default-profile.png"))" alt="@(denied.User?.DisplayName ?? "Denied User")" class="user-avatar" />
+                                            <div class="user-info">
+                                                <div class="user-name">@(denied.User?.DisplayName ?? "Unknown")</div>
+                                                <div class="user-meta">Denied: @denied.DeniedAt.ToString("dd MMM yyyy, HH:mm")</div>
+                                            </div>
+                                        </a>
                                         <div class="user-actions">
                                             <form asp-action="RemoveDenial" asp-route-boardId="@Model.Board.Id" asp-route-deniedUserId="@denied.UserId" method="post" class="inline-form">
                                                 @Html.AntiForgeryToken()
-                                                <button type="submit" class="btn btn-secondary btn-sm">Remove from List</button>
+                                                <button type="submit" class="btn btn-secondary btn-sm">Remove Denial</button>
                                             </form>
                                         </div>
                                     </div>

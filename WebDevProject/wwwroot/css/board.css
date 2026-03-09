@@ -48,6 +48,14 @@
     color: #721c24; 
 }
 
+/* Status badge inside board-meta should be inline without extra padding */
+.board-meta .status-badge {
+    padding: 0;
+    border-radius: 0;
+    background-color: transparent !important;
+    display: inline;
+}
+
 /* === STATUS DOTS === */
 .status-dot {
     width: 11px;
@@ -88,6 +96,12 @@
     font-size: 0.75rem;
     font-weight: 600;
     display: inline-block;
+}
+
+/* Prevent tags from stretching in grid layout */
+.board-meta .tag {
+    width: fit-content;
+    max-width: max-content;
 }
 
 /* === BOARD CARD COMPONENT === */
@@ -184,10 +198,10 @@
 }
 
 .board-meta > div {
-    display: flex;
+    display: grid;
+    grid-template-columns: auto 1fr;
     gap: 8px;
-    align-items: flex-start;
-    flex-wrap: wrap;
+    align-items: center;
     line-height: 1.5;
     word-break: break-word;
 }
@@ -195,6 +209,21 @@
 .board-meta strong {
     font-weight: 600;
     flex-shrink: 0;
+    white-space: nowrap;
+}
+
+/* Container for inline tags */
+.board-meta .tags-container {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+}
+
+/* Reduce tag padding in board-meta */
+.board-meta .tag {
+    padding: 2px 8px;
+    font-size: 0.75rem;
 }
 
 .board-meta-grid {

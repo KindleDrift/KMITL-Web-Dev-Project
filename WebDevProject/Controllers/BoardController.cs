@@ -55,10 +55,18 @@ namespace WebDevProject.Controllers
                     .OrderBy(b => b.EventDate)
                     .ToListAsync();
 
+            var applyingBoards = string.IsNullOrWhiteSpace(userId)
+                ? new List<Board>()
+                : await boardQuery
+                    .Where(b => b.AuthorId != userId && b.Applicants.Any(a => a.UserId == userId))
+                    .OrderBy(b => b.EventDate)
+                    .ToListAsync();
+
             var model = new BoardIndexViewModel
             {
                 ActiveBoards = activeBoards,
-                ParticipatingBoards = participatingBoards
+                ParticipatingBoards = participatingBoards,
+                ApplyingBoards = applyingBoards
             };
 
             return View(model);

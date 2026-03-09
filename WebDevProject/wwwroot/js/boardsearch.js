@@ -291,7 +291,7 @@ document.addEventListener('DOMContentLoaded', function () {
         let html = '';
         boards.forEach(board => {
             const tagsHtml = board.tags.length > 0 
-                ? board.tags.map(tag => `<span class="tag">${escapeHtml(tag)}</span>`).join('')
+                ? `<span class="tags-container">${board.tags.map(tag => `<span class="tag">${escapeHtml(tag)}</span>`).join('')}</span>`
                 : '<span>None</span>';
 
             const participantsHtml = board.previewParticipants.length > 0
