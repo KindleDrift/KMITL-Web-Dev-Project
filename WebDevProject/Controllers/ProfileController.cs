@@ -11,11 +11,16 @@ namespace WebDevProject.Controllers
     public class ProfileController : Controller
     {
         private readonly UserManager<Users> _userManager;
+        private readonly SignInManager<Users> _signInManager;
         private readonly ProfileImageService _profileImageService;
 
-        public ProfileController(UserManager<Users> userManager, ProfileImageService profileImageService)
+        public ProfileController(
+            UserManager<Users> userManager, 
+            SignInManager<Users> signInManager,
+            ProfileImageService profileImageService)
         {
             _userManager = userManager;
+            _signInManager = signInManager;
             _profileImageService = profileImageService;
         }
 
@@ -156,6 +161,50 @@ namespace WebDevProject.Controllers
                         }
                     }
                 }
+            }
+
+            return View(model);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ChangePassword()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return RedirectToAction("SignIn", "Account");
+            }
+
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ChangePassword(ChangePasswordViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return RedirectToAction("SignIn", "Account");
+            }
+
+            var result = await _userManager.ChangePasswordAsync(user, model.CurrentPassword, model.NewPassword);
+
+            if (result.Succeeded)
+            {
+                await _signInManager.RefreshSignInAsync(user);
+                TempData["Success"] = "Your password has been changed successfully.";
+                return RedirectToAction("Index", "Profile");
+            }
+
+            foreach (var error in result.Errors)
+            {
+                ModelState.AddModelError(string.Empty, error.Description);
             }
 
             return View(model);

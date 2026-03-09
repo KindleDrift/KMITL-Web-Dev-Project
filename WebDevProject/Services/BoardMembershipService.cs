@@ -72,7 +72,7 @@ namespace WebDevProject.Services
                 return BoardWorkflowResult.Error("This board is not accepting applications.");
             }
 
-            if (board.Deadline <= DateTime.UtcNow)
+            if (board.Deadline <= DateTimeOffset.UtcNow.UtcDateTime)
             {
                 return BoardWorkflowResult.Error("The registration deadline has passed.");
             }
@@ -91,11 +91,16 @@ namespace WebDevProject.Services
                 {
                     BoardId = boardId,
                     UserId = userId,
-                    JoinedAt = DateTime.UtcNow
+                    JoinedAt = DateTimeOffset.UtcNow.UtcDateTime
                 };
 
                 _context.BoardParticipants.Add(participant);
-                _boardService.UpdateBoardStatusByCapacity(board, currentOccupied + 1);
+                
+                var newOccupiedCount = currentOccupied + 1;
+                var wasFull = currentOccupied >= board.MaxParticipants;
+                var isNowFull = newOccupiedCount >= board.MaxParticipants;
+                
+                _boardService.UpdateBoardStatusByCapacity(board, newOccupiedCount);
                 await _context.SaveChangesAsync();
 
                 await _notificationsService.CreateNotificationAsync(
@@ -106,6 +111,17 @@ namespace WebDevProject.Services
                     boardId: boardId,
                     relatedUserId: userId);
 
+                // Check if board just became full and author wants notification
+                if (!wasFull && isNowFull && board.NotifyAuthorOnFull)
+                {
+                    await _notificationsService.CreateNotificationAsync(
+                        board.AuthorId,
+                        $"Board Full: {board.Title}",
+                        $"Your board '{board.Title}' is now full!",
+                        NotificationType.BoardFull,
+                        boardId: boardId);
+                }
+
                 return BoardWorkflowResult.Success("You joined this board successfully.");
             }
 
@@ -113,7 +129,7 @@ namespace WebDevProject.Services
             {
                 BoardId = boardId,
                 UserId = userId,
-                AppliedAt = DateTime.UtcNow
+                AppliedAt = DateTimeOffset.UtcNow.UtcDateTime
             });
 
             await _context.SaveChangesAsync();
@@ -186,6 +202,11 @@ namespace WebDevProject.Services
                 return BoardWorkflowResult.Forbid("Forbidden.");
             }
 
+            if (board.CurrentStatus == BoardStatus.Cancelled || board.CurrentStatus == BoardStatus.Archived)
+            {
+                return BoardWorkflowResult.Error("Cannot modify participants for cancelled or archived boards.");
+            }
+
             var applicant = board.Applicants.FirstOrDefault(a => a.UserId == applicantId);
             if (applicant == null)
             {
@@ -203,10 +224,14 @@ namespace WebDevProject.Services
             {
                 BoardId = boardId,
                 UserId = applicantId,
-                JoinedAt = DateTime.UtcNow
+                JoinedAt = DateTimeOffset.UtcNow.UtcDateTime
             });
 
-            _boardService.UpdateBoardStatusByCapacity(board, occupiedBeforeAdd + 1);
+            var newOccupiedCount = occupiedBeforeAdd + 1;
+            var wasFull = occupiedBeforeAdd >= board.MaxParticipants;
+            var isNowFull = newOccupiedCount >= board.MaxParticipants;
+            
+            _boardService.UpdateBoardStatusByCapacity(board, newOccupiedCount);
             await _context.SaveChangesAsync();
 
             await _notificationsService.CreateNotificationAsync(
@@ -215,6 +240,17 @@ namespace WebDevProject.Services
                 $"Congratulations! You have been accepted to join '{board.Title}'.",
                 NotificationType.IsAccepted,
                 boardId: boardId);
+
+            // Check if board just became full and author wants notification
+            if (!wasFull && isNowFull && board.NotifyAuthorOnFull)
+            {
+                await _notificationsService.CreateNotificationAsync(
+                    board.AuthorId,
+                    $"Board Full: {board.Title}",
+                    $"Your board '{board.Title}' is now full!",
+                    NotificationType.BoardFull,
+                    boardId: boardId);
+            }
 
             return BoardWorkflowResult.Success("Applicant approved successfully.");
         }
@@ -237,6 +273,11 @@ namespace WebDevProject.Services
                 return BoardWorkflowResult.Forbid("Forbidden.");
             }
 
+            if (board.CurrentStatus == BoardStatus.Cancelled || board.CurrentStatus == BoardStatus.Archived)
+            {
+                return BoardWorkflowResult.Error("Cannot modify participants for cancelled or archived boards.");
+            }
+
             var participant = board.Participants.FirstOrDefault(p => p.UserId == participantId);
             if (participant == null)
             {
@@ -252,7 +293,7 @@ namespace WebDevProject.Services
                 {
                     BoardId = boardId,
                     UserId = participantId,
-                    DeniedAt = DateTime.UtcNow
+                    DeniedAt = DateTimeOffset.UtcNow.UtcDateTime
                 });
             }
 
@@ -286,6 +327,11 @@ namespace WebDevProject.Services
                 return BoardWorkflowResult.Forbid("Forbidden.");
             }
 
+            if (board.CurrentStatus == BoardStatus.Cancelled || board.CurrentStatus == BoardStatus.Archived)
+            {
+                return BoardWorkflowResult.Error("Cannot add participants to cancelled or archived boards.");
+            }
+
             var normalizedName = externalName?.Trim();
             if (string.IsNullOrWhiteSpace(normalizedName))
             {
@@ -308,7 +354,7 @@ namespace WebDevProject.Services
                 BoardId = boardId,
                 Name = normalizedName,
                 Note = string.IsNullOrWhiteSpace(externalNote) ? null : externalNote.Trim(),
-                AddedAt = DateTime.UtcNow
+                AddedAt = DateTimeOffset.UtcNow.UtcDateTime
             });
 
             _boardService.UpdateBoardStatusByCapacity(board, occupiedBeforeAdd + 1);
@@ -332,6 +378,11 @@ namespace WebDevProject.Services
             if (board.AuthorId != userId)
             {
                 return BoardWorkflowResult.Forbid("Forbidden.");
+            }
+
+            if (board.CurrentStatus == BoardStatus.Cancelled || board.CurrentStatus == BoardStatus.Archived)
+            {
+                return BoardWorkflowResult.Error("Cannot modify participants for cancelled or archived boards.");
             }
 
             var externalParticipant = board.ExternalParticipants.FirstOrDefault(e => e.Id == externalParticipantId);
@@ -365,6 +416,11 @@ namespace WebDevProject.Services
                 return BoardWorkflowResult.Forbid("Forbidden.");
             }
 
+            if (board.CurrentStatus == BoardStatus.Cancelled || board.CurrentStatus == BoardStatus.Archived)
+            {
+                return BoardWorkflowResult.Error("Cannot modify applicants for cancelled or archived boards.");
+            }
+
             var applicant = board.Applicants.FirstOrDefault(a => a.UserId == applicantId);
             if (applicant == null)
             {
@@ -376,7 +432,7 @@ namespace WebDevProject.Services
             {
                 BoardId = boardId,
                 UserId = applicantId,
-                DeniedAt = DateTime.UtcNow
+                DeniedAt = DateTimeOffset.UtcNow.UtcDateTime
             });
 
             await _context.SaveChangesAsync();
@@ -407,6 +463,11 @@ namespace WebDevProject.Services
                 return BoardWorkflowResult.Forbid("Forbidden.");
             }
 
+            if (board.CurrentStatus == BoardStatus.Cancelled || board.CurrentStatus == BoardStatus.Archived)
+            {
+                return BoardWorkflowResult.Error("Cannot modify denied users for cancelled or archived boards.");
+            }
+
             var deniedUser = board.DeniedUsers.FirstOrDefault(d => d.UserId == deniedUserId);
             if (deniedUser == null)
             {
@@ -417,6 +478,64 @@ namespace WebDevProject.Services
             await _context.SaveChangesAsync();
 
             return BoardWorkflowResult.Success("User removed from deny list.");
+        }
+
+        public async Task<(BoardWorkflowResult Result, List<string> AffectedUserIds)> CancelBoardAsync(int boardId, string userId)
+        {
+            var board = await _context.Boards
+                .Include(b => b.Participants)
+                .Include(b => b.ExternalParticipants)
+                .Include(b => b.Applicants)
+                .FirstOrDefaultAsync(b => b.Id == boardId);
+
+            if (board == null)
+            {
+                return (BoardWorkflowResult.NotFound("Board not found."), new List<string>());
+            }
+
+            if (board.AuthorId != userId)
+            {
+                return (BoardWorkflowResult.Forbid("Forbidden."), new List<string>());
+            }
+
+            if (board.CurrentStatus == BoardStatus.Cancelled)
+            {
+                return (BoardWorkflowResult.Error("Board is already cancelled."), new List<string>());
+            }
+
+            var affectedUserIds = new List<string>();
+
+            // Collect all participant IDs (excluding author)
+            affectedUserIds.AddRange(board.Participants.Where(p => p.UserId != board.AuthorId).Select(p => p.UserId));
+
+            // Collect all applicant IDs
+            affectedUserIds.AddRange(board.Applicants.Select(a => a.UserId));
+
+            // Remove all participants (excluding author)
+            var participantsToRemove = board.Participants.Where(p => p.UserId != board.AuthorId).ToList();
+            _context.BoardParticipants.RemoveRange(participantsToRemove);
+
+            // Remove all external participants
+            _context.BoardExternalParticipants.RemoveRange(board.ExternalParticipants);
+
+            // Deny all applicants
+            foreach (var applicant in board.Applicants.ToList())
+            {
+                _context.BoardApplicants.Remove(applicant);
+                _context.BoardDenied.Add(new BoardDenied
+                {
+                    BoardId = boardId,
+                    UserId = applicant.UserId,
+                    DeniedAt = DateTimeOffset.UtcNow.UtcDateTime
+                });
+            }
+
+            // Set board status to Cancelled
+            board.CurrentStatus = BoardStatus.Cancelled;
+
+            await _context.SaveChangesAsync();
+
+            return (BoardWorkflowResult.Success("Board cancelled successfully."), affectedUserIds.Distinct().ToList());
         }
     }
 }

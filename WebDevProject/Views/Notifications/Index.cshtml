@@ -3,125 +3,85 @@
 @{
     ViewData["Title"] = "Notifications";
     int unreadCount = (int?)ViewData["UnreadCount"] ?? 0;
-    int currentPage = (int?)ViewData["CurrentPage"] ?? 1;
-    int pageSize = (int?)ViewData["PageSize"] ?? 15;
 }
 
 @section Styles {
     <link rel="stylesheet" href="~/css/notifications.css" asp-append-version="true" />
 }
 
-<div class="container py-5">
-    <div class="row">
-        <div class="col-md-8 offset-md-2">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h2>Notifications</h2>
-                <div>
-                    <span class="badge bg-primary me-2">
-                        <span id="unread-count">@unreadCount</span> Unread
-                    </span>
-                    @if (unreadCount > 0)
-                    {
-                        <button class="btn btn-sm btn-outline-primary" onclick="markAllAsRead()">
-                            Mark all as read
-                        </button>
-                    }
-                </div>
-            </div>
-
-            @if (!Model.Any())
-            {
-                <div class="alert alert-info">
-                    <p class="mb-0">You have no notifications yet.</p>
-                </div>
-            }
-            else
-            {
-                <div class="notifications-list">
-                    @foreach (var notification in Model)
-                    {
-                        <div class="notification-item card mb-3 @(!notification.IsRead ? "border-primary" : "")" id="notification-@notification.Id">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between align-items-start">
-                                    <div class="flex-grow-1">
-                                        <div class="d-flex align-items-center gap-2 mb-2">
-                                            <h5 class="card-title mb-0">@notification.Title</h5>
-                                            @if (!notification.IsRead)
-                                            {
-                                                <span class="badge bg-primary">New</span>
-                                            }
-                                        </div>
-                                        @if (!string.IsNullOrEmpty(notification.Description))
-                                        {
-                                            <p class="card-text text-muted">@Html.Raw(FormatNotificationDescription(notification))</p>
-                                        }
-                                        <small class="text-muted">
-                                            @{
-                                                var timeAgo = GetTimeAgoString(notification.CreatedDate);
-                                            }
-                                            @timeAgo
-                                        </small>
-                                        <div class="notification-type mt-2">
-                                            <span class="badge @GetNotificationBadgeClass(notification.Type)">
-                                                @GetNotificationTypeDisplay(notification.Type)
-                                            </span>
-                                            @if (notification.Board != null)
-                                            {
-                                                <a href="@Url.Action("Details", "Board", new { id = notification.BoardId })" class="badge bg-secondary text-decoration-none ms-2">
-                                                    <i class="bi bi-grid-3x3-gap"></i> View Board
-                                                </a>
-                                            }
-                                            @if (notification.RelatedUser != null)
-                                            {
-                                                <a href="@Url.Action("Details", "Profile", new { displayName = notification.RelatedUser.DisplayName })" class="badge bg-info text-decoration-none ms-2">
-                                                    <i class="bi bi-person"></i> @notification.RelatedUser.DisplayName
-                                                </a>
-                                            }
-                                        </div>
-                                    </div>
-                                    <div class="notification-actions">
-                                        @if (!notification.IsRead)
-                                        {
-                                            <button class="btn btn-sm btn-outline-secondary" onclick="markAsRead(@notification.Id)" title="Mark as read">
-                                                <i class="bi bi-check-circle"></i>
-                                            </button>
-                                        }
-                                        <button class="btn btn-sm btn-outline-danger" onclick="deleteNotification(@notification.Id)" title="Delete">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    }
-                </div>
-
-                @if (currentPage > 1 || Model.Count == pageSize)
+<div class="main-container">
+    <div class="notifications-page">
+        <div class="notifications-header">
+            <h2>Notifications</h2>
+            <div class="notifications-header-actions">
+                <span class="unread-badge">
+                    <span id="unread-count">@unreadCount</span> Unread
+                </span>
+                @if (unreadCount > 0)
                 {
-                    <nav aria-label="Page navigation">
-                        <ul class="pagination justify-content-center">
-                            @if (currentPage > 1)
-                            {
-                                <li class="page-item">
-                                    <a class="page-link" href="@Url.Action("Index", new { pageNumber = currentPage - 1 })">Previous</a>
-                                </li>
-                            }
-
-                            <li class="page-item active">
-                                <span class="page-link">Page @currentPage</span>
-                            </li>
-
-                            @if (Model.Count == pageSize)
-                            {
-                                <li class="page-item">
-                                    <a class="page-link" href="@Url.Action("Index", new { pageNumber = currentPage + 1 })">Next</a>
-                                </li>
-                            }
-                        </ul>
-                    </nav>
+                    <button class="btn-mark-all" onclick="markAllAsRead()">
+                        Mark all as read
+                    </button>
                 }
-            }
+                @if (Model.Any())
+                {
+                    <button class="btn-delete-all" onclick="deleteAllNotifications()">
+                        Delete all
+                    </button>
+                }
+            </div>
         </div>
+
+        @if (!Model.Any())
+        {
+            <div class="no-notifications">
+                <p>You have no notifications yet.</p>
+            </div>
+        }
+        else
+        {
+            <div class="notifications-list">
+                @foreach (var notification in Model)
+                {
+                    <div class="notification-item @(!notification.IsRead ? "unread" : "")" id="notification-@notification.Id">
+                        <div class="notification-content">
+                            <div class="notification-header">
+                                <h3 class="notification-title">@notification.Title</h3>
+                                @if (!notification.IsRead)
+                                {
+                                    <span class="badge-new">New</span>
+                                }
+                            </div>
+                            <div class="notification-type-badge">
+                                <span class="badge @GetNotificationBadgeClass(notification.Type)">
+                                    @GetNotificationTypeDisplay(notification.Type)
+                                </span>
+                            </div>
+                            <p class="notification-description">@Html.Raw(FormatNotificationDescription(notification))</p>
+                            <small class="notification-time">
+                                @{
+                                    var timeAgo = GetTimeAgoString(notification.CreatedDate);
+                                }
+                                @timeAgo
+                            </small>
+                        </div>
+                        <div class="notification-actions">
+                            @if (!notification.IsRead)
+                            {
+                                <button class="btn-action btn-mark-read" onclick="markAsRead(@notification.Id)" title="Mark as read">
+                                    <span class="material-symbols-outlined">check_circle</span>
+                                    <span class="btn-text">Mark Read</span>
+                                </button>
+                            }
+                            <button class="btn-action btn-delete" onclick="deleteNotification(@notification.Id)" title="Delete">
+                                <span class="material-symbols-outlined">close</span>
+                                <span class="btn-text">Delete</span>
+                            </button>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
     </div>
 </div>
 
@@ -134,7 +94,7 @@
 @functions {
     string GetTimeAgoString(DateTime dateTime)
     {
-        var timeSpan = DateTime.UtcNow - dateTime;
+        var timeSpan = DateTimeOffset.UtcNow - new DateTimeOffset(DateTime.SpecifyKind(dateTime, DateTimeKind.Utc));
         
         if (timeSpan.TotalSeconds < 60)
             return "just now";
@@ -155,11 +115,12 @@
     {
         return type switch
         {
-            NotificationType.NewRequest => "bg-info",
-            NotificationType.IsAccepted => "bg-success",
-            NotificationType.IsRejected => "bg-danger",
-            NotificationType.AdminAction => "bg-warning text-dark",
-            _ => "bg-secondary"
+            NotificationType.NewRequest => "badge-info",
+            NotificationType.IsAccepted => "badge-success",
+            NotificationType.IsRejected => "badge-danger",
+            NotificationType.AdminAction => "badge-warning",
+            NotificationType.BoardFull => "badge-warning",
+            _ => "badge-secondary"
         };
     }
 
@@ -171,34 +132,52 @@
             NotificationType.IsAccepted => "Accepted",
             NotificationType.IsRejected => "Rejected",
             NotificationType.AdminAction => "Admin Action",
+            NotificationType.BoardFull => "Board Full",
             _ => "Notification"
         };
     }
 
     string FormatNotificationDescription(Notification notification)
     {
-        if (string.IsNullOrEmpty(notification.Description))
-            return string.Empty;
+        var relatedUserName = notification.RelatedUser?.DisplayName;
+        var boardTitle = notification.Board?.Title;
+        var boardId = notification.BoardId;
+        var relatedUserDisplayName = notification.RelatedUser?.DisplayName;
 
-        var description = notification.Description;
+        // Build links
+        var userLink = !string.IsNullOrEmpty(relatedUserName) 
+            ? $"<a href=\"{Url.Action("Details", "Profile", new { displayName = relatedUserDisplayName })}\" class=\"notification-link\">{Html.Encode(relatedUserName)}</a>"
+            : "A new user";
 
-        // Highlight board name if Board exists
-        if (notification.Board != null)
+        var boardLink = !string.IsNullOrEmpty(boardTitle) && boardId.HasValue
+            ? $"<a href=\"{Url.Action("Details", "Board", new { id = boardId.Value })}\" class=\"notification-link\">{Html.Encode(boardTitle)}</a>"
+            : "your board";
+
+        // Generate description based on notification type
+        return notification.Type switch
         {
-            var boardTitle = notification.Board.Title;
-            var boardLink = $"<a href=\"{Url.Action("Details", "Board", new { id = notification.BoardId })}\" class=\"notification-highlight\">{Html.Encode(boardTitle)}</a>";
-            description = description.Replace($"'{boardTitle}'", boardLink);
-        }
-
-        // Highlight related user if RelatedUser exists
-        if (notification.RelatedUser != null)
-        {
-            var displayName = notification.RelatedUser.DisplayName;
-            var userLink = $"<a href=\"{Url.Action("Details", "Profile", new { displayName = displayName })}\" class=\"notification-highlight\">{Html.Encode(displayName)}</a>";
-            // This would need the actual username in the description text for replacement
-            // For now, we're showing the user badge separately
-        }
-
-        return description;
+            NotificationType.NewRequest when notification.Board != null => 
+                notification.Description?.Contains("joined") == true
+                    ? $"{userLink} has joined {boardLink}."
+                    : $"{userLink} has applied to join {boardLink}.",
+            
+            NotificationType.IsAccepted when notification.Board != null => 
+                $"Your application to join {boardLink} has been accepted.",
+            
+            NotificationType.IsRejected when notification.Board != null => 
+                $"Your application to join {boardLink} has been rejected.",
+            
+            NotificationType.BoardFull when notification.Board != null =>
+                $"Your board {boardLink} is now full!",
+            
+            NotificationType.AdminAction => 
+                !string.IsNullOrEmpty(notification.Description) 
+                    ? Html.Encode(notification.Description) 
+                    : "An admin action was performed on your account.",
+            
+            _ => !string.IsNullOrEmpty(notification.Description) 
+                ? Html.Encode(notification.Description) 
+                : $"{userLink} interacted with {boardLink}."
+        };
     }
 }

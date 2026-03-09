@@ -40,7 +40,7 @@
                         <td>@user.UserName</td>
                         <td>@user.DateOfBirth?.ToString("yyyy-MM-dd")</td>
                         <td>@user.UserGender?.ToString()</td>
-                        <td>@user.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
+                        <td><span data-utc-datetime="@user.CreatedAt.ToString("yyyy-MM-ddTHH:mm:ss")" data-utc-format="datetime">@user.CreatedAt.ToString("yyyy-MM-dd HH:mm")</span></td>
                         <td>
                             @if (user.LockoutEnd.HasValue && user.LockoutEnd > DateTimeOffset.UtcNow)
                             {

@@ -61,7 +61,10 @@
                 <span asp-validation-for="Bio" class="text-danger"></span>
             </div>
             
-            <button type="submit" class="large-button">Save Changes</button>
+            <div class="button-group">
+                <button type="submit" class="large-button">Save Changes</button>
+                <a asp-action="ChangePassword" class="large-button btn-secondary">Change Password</a>
+            </div>
         </div>
     </form>
 </div>

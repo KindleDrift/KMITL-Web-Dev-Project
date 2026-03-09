@@ -35,8 +35,8 @@
                         <td>@board.Title</td>
                         <td>@board.Author?.DisplayName</td>
                         <td>@board.Location</td>
-                        <td>@board.EventDate.ToString("yyyy-MM-dd HH:mm")</td>
-                        <td>@board.Deadline.ToString("yyyy-MM-dd HH:mm")</td>
+                        <td><span data-utc-datetime="@board.EventDate.ToString("yyyy-MM-ddTHH:mm:ss")" data-utc-format="datetime">@board.EventDate.ToString("yyyy-MM-dd HH:mm")</span></td>
+                        <td><span data-utc-datetime="@board.Deadline.ToString("yyyy-MM-ddTHH:mm:ss")" data-utc-format="datetime">@board.Deadline.ToString("yyyy-MM-dd HH:mm")</span></td>
                         <td>@board.MaxParticipants</td>
                         <td>
                             @switch (board.CurrentStatus)
@@ -58,7 +58,7 @@
                                     break;
                             }
                         </td>
-                        <td>@board.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
+                        <td><span data-utc-datetime="@board.CreatedAt.ToString("yyyy-MM-ddTHH:mm:ss")" data-utc-format="datetime">@board.CreatedAt.ToString("yyyy-MM-dd HH:mm")</span></td>
                         <td>
                             <a asp-controller="Admin" asp-action="EditBoard" asp-route-id="@board.Id" class="btn btn-sm btn-primary">Edit</a>
                         </td>

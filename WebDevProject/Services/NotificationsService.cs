@@ -20,7 +20,7 @@ namespace WebDevProject.Services
                 UserId = userId,
                 Title = title,
                 Description = description,
-                CreatedDate = DateTime.UtcNow,
+                CreatedDate = DateTimeOffset.UtcNow.UtcDateTime,
                 Type = type,
                 IsRead = false,
                 BoardId = boardId,
@@ -39,7 +39,7 @@ namespace WebDevProject.Services
                 UserId = userId,
                 Title = title,
                 Description = description,
-                CreatedDate = DateTime.UtcNow,
+                CreatedDate = DateTimeOffset.UtcNow.UtcDateTime,
                 Type = type,
                 IsRead = false,
                 BoardId = boardId,
@@ -62,9 +62,19 @@ namespace WebDevProject.Services
 
         public async Task MarkAllAsReadAsync(string userId)
         {
-            await _context.Notifications
+            var unreadNotifications = await _context.Notifications
                 .Where(n => n.UserId == userId && !n.IsRead)
-                .ExecuteUpdateAsync(setters => setters.SetProperty(n => n.IsRead, true));
+                .ToListAsync();
+            
+            foreach (var notification in unreadNotifications)
+            {
+                notification.IsRead = true;
+            }
+            
+            if (unreadNotifications.Any())
+            {
+                await _context.SaveChangesAsync();
+            }
         }
 
         public async Task<List<Notification>> GetUserNotificationsAsync(string userId, int pageNumber = 1, int pageSize = 10)
@@ -110,7 +120,22 @@ namespace WebDevProject.Services
                 query = query.Where(n => n.Type == type.Value);
             }
 
-            await query.ExecuteDeleteAsync();
+            var notificationsToDelete = await query.ToListAsync();
+            _context.Notifications.RemoveRange(notificationsToDelete);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task DeleteAllUserNotificationsAsync(string userId)
+        {
+            var notifications = await _context.Notifications
+                .Where(n => n.UserId == userId)
+                .ToListAsync();
+            
+            if (notifications.Any())
+            {
+                _context.Notifications.RemoveRange(notifications);
+                await _context.SaveChangesAsync();
+            }
         }
     }
 }

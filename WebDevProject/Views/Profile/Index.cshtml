@@ -15,7 +15,7 @@
         {
             <div class="profile-actions">
                 <a class="btn btn-primary profile-action-btn profile-action-edit" href="@Url.Action("Edit", "Profile")">Edit Profile</a>
-                <a class="btn btn-primary profile-action-btn profile-action-reset" href="@Url.Action("ChangePassword", "Account")">Reset Password</a>
+                <a class="btn btn-primary profile-action-btn profile-action-reset" href="@Url.Action("ChangePassword", "Profile")">Reset Password</a>
                 <form asp-action="SignOut" asp-controller="Account" method="post" class="inline-form profile-action-signout-form">
                     <button type="submit" class="btn btn-primary profile-action-btn profile-action-signout">Sign Out</button>
                 </form>
@@ -74,7 +74,7 @@
 
             <div class="row">
                 <span class="label">Member Since :</span>
-                <span>@Model.CreatedAt.ToString("MMMM dd, yyyy")</span>
+                <span data-utc-datetime="@Model.CreatedAt.ToString("yyyy-MM-ddTHH:mm:ss")" data-utc-format="date">@Model.CreatedAt.ToString("MMMM dd, yyyy")</span>
             </div>
 
             <div class="row">

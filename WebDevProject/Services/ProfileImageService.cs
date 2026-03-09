@@ -41,7 +41,14 @@ namespace WebDevProject.Services
                 var oldImagePath = Path.Combine(_environment.WebRootPath, oldRelativePath);
                 if (System.IO.File.Exists(oldImagePath))
                 {
-                    System.IO.File.Delete(oldImagePath);
+                    try
+                    {
+                        System.IO.File.Delete(oldImagePath);
+                    }
+                    catch (Exception)
+                    {
+                        // Ignore file deletion errors to prevent crashing the upload process
+                    }
                 }
             }
 

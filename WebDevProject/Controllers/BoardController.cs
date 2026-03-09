@@ -1,13 +1,16 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using WebDevProject.Data;
 using WebDevProject.Filters;
+using WebDevProject.Helpers;
 using WebDevProject.Models;
 using WebDevProject.Services;
 
 namespace WebDevProject.Controllers
 {
+    [Authorize]
     [RequireOnboarding]
     public class BoardController : Controller
     {
@@ -31,6 +34,7 @@ namespace WebDevProject.Controllers
 
             var boardQuery = _context.Boards
                 .AsNoTracking()
+                .AsSplitQuery()
                 .Include(b => b.Author)
                 .Include(b => b.Participants)
                     .ThenInclude(bp => bp.User)
@@ -55,22 +59,32 @@ namespace WebDevProject.Controllers
                     .OrderBy(b => b.EventDate)
                     .ToListAsync();
 
+            var applyingBoards = string.IsNullOrWhiteSpace(userId)
+                ? new List<Board>()
+                : await boardQuery
+                    .Where(b => b.AuthorId != userId && b.Applicants.Any(a => a.UserId == userId))
+                    .OrderBy(b => b.EventDate)
+                    .ToListAsync();
+
             var model = new BoardIndexViewModel
             {
                 ActiveBoards = activeBoards,
-                ParticipatingBoards = participatingBoards
+                ParticipatingBoards = participatingBoards,
+                ApplyingBoards = applyingBoards
             };
 
             return View(model);
         }
 
+        [AllowAnonymous]
         public async Task<IActionResult> Search(string name)
         {
             return View();
         }
 
         [HttpGet]
-        public async Task<IActionResult> SearchBoards(string searchName, string tags, DateTime? eventDateFrom, DateTime? eventDateTo, string statuses, string joinPolicies)
+        [AllowAnonymous]
+        public async Task<IActionResult> SearchBoards(string searchName, string tags, DateTime? eventDateFrom, DateTime? eventDateTo, string statuses, string joinPolicies, int? clientTimeZoneOffsetMinutes)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             
@@ -112,14 +126,14 @@ namespace WebDevProject.Controllers
             // Filter by event date range
             if (eventDateFrom.HasValue)
             {
-                boardQuery = boardQuery.Where(b => b.EventDate >= eventDateFrom.Value);
+                var eventDateFromUtc = TimeZoneHelper.FromClientLocalToUtc(eventDateFrom.Value.Date, clientTimeZoneOffsetMinutes);
+                boardQuery = boardQuery.Where(b => b.EventDate >= eventDateFromUtc);
             }
 
             if (eventDateTo.HasValue)
             {
-                // Add one day to include boards on the "to" date
-                var eventDateToInclusive = eventDateTo.Value.AddDays(1);
-                boardQuery = boardQuery.Where(b => b.EventDate < eventDateToInclusive);
+                var eventDateToInclusiveUtc = TimeZoneHelper.FromClientLocalToUtc(eventDateTo.Value.Date.AddDays(1), clientTimeZoneOffsetMinutes);
+                boardQuery = boardQuery.Where(b => b.EventDate < eventDateToInclusiveUtc);
             }
 
             // Filter by status
@@ -204,13 +218,16 @@ namespace WebDevProject.Controllers
                 return View(model);
             }
 
-            if (model.Deadline > model.EventDate)
+            var eventDateUtc = TimeZoneHelper.FromClientLocalToUtc(model.EventDate, model.ClientTimeZoneOffsetMinutes);
+            var deadlineUtc = TimeZoneHelper.FromClientLocalToUtc(model.Deadline, model.ClientTimeZoneOffsetMinutes);
+
+            if (deadlineUtc > eventDateUtc)
             {
                 ModelState.AddModelError(nameof(model.Deadline), "Deadline must be before the event date.");
                 return View(model);
             }
 
-            if (model.Deadline < DateTime.UtcNow)
+            if (deadlineUtc < TimeZoneHelper.UtcNow.UtcDateTime)
             {
                 ModelState.AddModelError(nameof(model.Deadline), "Deadline must be in the future.");
                 return View(model);
@@ -221,13 +238,13 @@ namespace WebDevProject.Controllers
                 Title = model.Title,
                 Description = model.Description,
                 Location = model.Location,
-                EventDate = model.EventDate,
-                Deadline = model.Deadline,
+                EventDate = eventDateUtc,
+                Deadline = deadlineUtc,
                 MaxParticipants = model.MaxParticipants,
                 AuthorId = userId,
                 NotifyAuthorOnFull = model.NotifyAuthorOnFull,
                 CurrentStatus = BoardStatus.Open,
-                CreatedAt = DateTime.UtcNow,
+                CreatedAt = TimeZoneHelper.UtcNow.UtcDateTime,
                 GroupManagementOption = _boardService.ParseGroupManagementOption(model.GroupManagementOption),
                 JoinPolicy = _boardService.ParseJoinPolicyOption(model.JoinPolicyOption)
             };
@@ -302,6 +319,7 @@ namespace WebDevProject.Controllers
 
             ViewBag.BoardId = board.Id;
             ViewBag.CurrentImageUrl = board.ImageUrl;
+            ViewBag.IsCancelledOrArchived = board.CurrentStatus == BoardStatus.Cancelled || board.CurrentStatus == BoardStatus.Archived;
             return View(model);
         }
 
@@ -332,6 +350,28 @@ namespace WebDevProject.Controllers
                 return Forbid();
             }
 
+            // Check if board is Cancelled or Archived - only allow status change
+            var isCancelledOrArchived = board.CurrentStatus == BoardStatus.Cancelled || board.CurrentStatus == BoardStatus.Archived;
+            if (isCancelledOrArchived)
+            {
+                // Only allow status update for Cancelled/Archived boards
+                if (model.CurrentStatus.HasValue && model.CurrentStatus.Value != board.CurrentStatus)
+                {
+                    board.CurrentStatus = model.CurrentStatus.Value;
+                    await _context.SaveChangesAsync();
+                    TempData["Success"] = "Board status updated successfully.";
+                    return RedirectToAction(nameof(Details), new { id = board.Id });
+                }
+                else
+                {
+                    TempData["Error"] = "This board is cancelled or archived. Only status changes are allowed in edit mode.";
+                    ViewBag.BoardId = board.Id;
+                    ViewBag.CurrentImageUrl = board.ImageUrl;
+                    ViewBag.IsCancelledOrArchived = true;
+                    return View(model);
+                }
+            }
+
             if (!ModelState.IsValid)
             {
                 ViewBag.BoardId = board.Id;
@@ -339,7 +379,10 @@ namespace WebDevProject.Controllers
                 return View(model);
             }
 
-            if (model.Deadline > model.EventDate)
+            var eventDateUtc = TimeZoneHelper.FromClientLocalToUtc(model.EventDate, model.ClientTimeZoneOffsetMinutes);
+            var deadlineUtc = TimeZoneHelper.FromClientLocalToUtc(model.Deadline, model.ClientTimeZoneOffsetMinutes);
+
+            if (deadlineUtc > eventDateUtc)
             {
                 ModelState.AddModelError(nameof(model.Deadline), "Deadline must be before the event date.");
                 ViewBag.BoardId = board.Id;
@@ -354,8 +397,8 @@ namespace WebDevProject.Controllers
             board.Title = model.Title;
             board.Description = model.Description;
             board.Location = model.Location;
-            board.EventDate = model.EventDate;
-            board.Deadline = model.Deadline;
+            board.EventDate = eventDateUtc;
+            board.Deadline = deadlineUtc;
             board.MaxParticipants = model.MaxParticipants;
             board.NotifyAuthorOnFull = model.NotifyAuthorOnFull;
             board.GroupManagementOption = _boardService.ParseGroupManagementOption(model.GroupManagementOption);
@@ -593,9 +636,10 @@ namespace WebDevProject.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            if (board.EventDate > DateTime.UtcNow)
+            // Allow archiving if board is Cancelled OR if event date has passed
+            if (board.CurrentStatus != BoardStatus.Cancelled && board.EventDate > TimeZoneHelper.UtcNow.UtcDateTime)
             {
-                TempData["Error"] = "You can only archive boards after the event date has passed.";
+                TempData["Error"] = "You can only archive boards after the event date has passed or if the board has been cancelled.";
                 return RedirectToAction(nameof(Details), new { id });
             }
 
@@ -604,6 +648,53 @@ namespace WebDevProject.Controllers
             await _context.SaveChangesAsync();
 
             TempData["Success"] = "Board has been archived successfully.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Cancel(int id)
+        {
+            if (!TryGetCurrentUserId(out var userId))
+            {
+                return Unauthorized();
+            }
+
+            var (result, affectedUserIds) = await _boardMembershipService.CancelBoardAsync(id, userId);
+
+            if (result.Status == BoardWorkflowStatus.NotFound)
+            {
+                return NotFound();
+            }
+
+            if (result.Status == BoardWorkflowStatus.Forbid)
+            {
+                return Forbid();
+            }
+
+            if (result.Status == BoardWorkflowStatus.Error)
+            {
+                TempData["Error"] = result.Message;
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
+            // Send notifications to all affected users
+            var board = await _context.Boards
+                .AsNoTracking()
+                .FirstOrDefaultAsync(b => b.Id == id);
+
+            if (board != null && affectedUserIds.Any())
+            {
+                var notificationsService = HttpContext.RequestServices.GetRequiredService<NotificationsService>();
+                await notificationsService.CreateNotificationsForMultipleUsersAsync(
+                    affectedUserIds,
+                    $"Board Cancelled: {board.Title}",
+                    $"The board '{board.Title}' has been cancelled by the author.",
+                    NotificationType.IsRejected,
+                    boardId: id);
+            }
+
+            TempData["Success"] = result.Message;
             return RedirectToAction(nameof(Index));
         }
 
