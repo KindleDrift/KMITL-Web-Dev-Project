@@ -10,8 +10,11 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 builder.Services.AddHttpContextAccessor();
+
+// Configure Entity Framework with SQL Server
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseInMemoryDatabase("InMemoryDb"));
+    options.UseSqlServer(connectionString));
 
 builder.Services.AddIdentity<Users, IdentityRole>(options =>
 {
@@ -82,6 +85,7 @@ builder.Services.AddScoped<BoardDisplayService>();
 
 var app = builder.Build();
 
+// Seed database if needed
 await DbSeeder.SeedAsync(app.Services);
 
 // Configure the HTTP request pipeline.

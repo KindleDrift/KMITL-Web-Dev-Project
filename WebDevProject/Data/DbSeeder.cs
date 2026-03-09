@@ -21,6 +21,13 @@ namespace WebDevProject.Data
                 logger.LogInformation("Starting database seeding...");
                 await context.Database.EnsureCreatedAsync();
 
+                // Check if data already exists
+                if (await context.Users.AnyAsync() || await context.Boards.AnyAsync())
+                {
+                    logger.LogInformation("Database already contains data. Skipping seed.");
+                    return;
+                }
+
                 logger.LogInformation("Seeding roles...");
                 foreach (var role in roles)
                 {
