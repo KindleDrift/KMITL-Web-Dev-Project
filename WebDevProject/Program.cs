@@ -72,11 +72,13 @@ builder.Services.AddAuthorizationBuilder()
         policy.RequireRole("Admin");
     });
 
-// Add NotificationsService
+// Add custom services
 builder.Services.AddScoped<NotificationsService>();
 builder.Services.AddScoped<BoardService>();
 builder.Services.AddScoped<BoardMembershipService>();
 builder.Services.AddScoped<ProfileImageService>();
+builder.Services.AddScoped<NotificationFormattingService>();
+builder.Services.AddScoped<BoardDisplayService>();
 
 var app = builder.Build();
 

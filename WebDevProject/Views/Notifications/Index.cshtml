@@ -1,4 +1,6 @@
 @model List<Notification>
+@using WebDevProject.Services
+@inject NotificationFormattingService FormattingService
 
 @{
     ViewData["Title"] = "Notifications";
@@ -53,16 +55,19 @@
                                 }
                             </div>
                             <div class="notification-type-badge">
-                                <span class="badge @GetNotificationBadgeClass(notification.Type)">
-                                    @GetNotificationTypeDisplay(notification.Type)
+                                <span class="badge @FormattingService.GetNotificationBadgeClass(notification.Type)">
+                                    @FormattingService.GetNotificationTypeDisplay(notification.Type)
                                 </span>
                             </div>
-                            <p class="notification-description">@Html.Raw(FormatNotificationDescription(notification))</p>
+                            <p class="notification-description">
+                                @Html.Raw(FormattingService.FormatNotificationDescription(
+                                    notification,
+                                    displayName => Url.Action("Details", "Profile", new { displayName = displayName }) ?? "#",
+                                    boardId => Url.Action("Details", "Board", new { id = boardId }) ?? "#"
+                                ))
+                            </p>
                             <small class="notification-time">
-                                @{
-                                    var timeAgo = GetTimeAgoString(notification.CreatedDate);
-                                }
-                                @timeAgo
+                                @FormattingService.GetTimeAgoString(notification.CreatedDate)
                             </small>
                         </div>
                         <div class="notification-actions">
@@ -89,95 +94,4 @@
 
 @section Scripts {
     <script src="~/js/notifications.js" asp-append-version="true"></script>
-}
-
-@functions {
-    string GetTimeAgoString(DateTime dateTime)
-    {
-        var timeSpan = DateTimeOffset.UtcNow - new DateTimeOffset(DateTime.SpecifyKind(dateTime, DateTimeKind.Utc));
-        
-        if (timeSpan.TotalSeconds < 60)
-            return "just now";
-        
-        if (timeSpan.TotalMinutes < 60)
-            return $"{(int)timeSpan.TotalMinutes}m ago";
-        
-        if (timeSpan.TotalHours < 24)
-            return $"{(int)timeSpan.TotalHours}h ago";
-        
-        if (timeSpan.TotalDays < 7)
-            return $"{(int)timeSpan.TotalDays}d ago";
-        
-        return dateTime.ToString("MMM d, yyyy");
-    }
-
-    string GetNotificationBadgeClass(NotificationType type)
-    {
-        return type switch
-        {
-            NotificationType.NewRequest => "badge-info",
-            NotificationType.IsAccepted => "badge-success",
-            NotificationType.IsRejected => "badge-danger",
-            NotificationType.AdminAction => "badge-warning",
-            NotificationType.BoardFull => "badge-warning",
-            _ => "badge-secondary"
-        };
-    }
-
-    string GetNotificationTypeDisplay(NotificationType type)
-    {
-        return type switch
-        {
-            NotificationType.NewRequest => "New Request",
-            NotificationType.IsAccepted => "Accepted",
-            NotificationType.IsRejected => "Rejected",
-            NotificationType.AdminAction => "Admin Action",
-            NotificationType.BoardFull => "Board Full",
-            _ => "Notification"
-        };
-    }
-
-    string FormatNotificationDescription(Notification notification)
-    {
-        var relatedUserName = notification.RelatedUser?.DisplayName;
-        var boardTitle = notification.Board?.Title;
-        var boardId = notification.BoardId;
-        var relatedUserDisplayName = notification.RelatedUser?.DisplayName;
-
-        // Build links
-        var userLink = !string.IsNullOrEmpty(relatedUserName) 
-            ? $"<a href=\"{Url.Action("Details", "Profile", new { displayName = relatedUserDisplayName })}\" class=\"notification-link\">{Html.Encode(relatedUserName)}</a>"
-            : "A new user";
-
-        var boardLink = !string.IsNullOrEmpty(boardTitle) && boardId.HasValue
-            ? $"<a href=\"{Url.Action("Details", "Board", new { id = boardId.Value })}\" class=\"notification-link\">{Html.Encode(boardTitle)}</a>"
-            : "your board";
-
-        // Generate description based on notification type
-        return notification.Type switch
-        {
-            NotificationType.NewRequest when notification.Board != null => 
-                notification.Description?.Contains("joined") == true
-                    ? $"{userLink} has joined {boardLink}."
-                    : $"{userLink} has applied to join {boardLink}.",
-            
-            NotificationType.IsAccepted when notification.Board != null => 
-                $"Your application to join {boardLink} has been accepted.",
-            
-            NotificationType.IsRejected when notification.Board != null => 
-                $"Your application to join {boardLink} has been rejected.",
-            
-            NotificationType.BoardFull when notification.Board != null =>
-                $"Your board {boardLink} is now full!",
-            
-            NotificationType.AdminAction => 
-                !string.IsNullOrEmpty(notification.Description) 
-                    ? Html.Encode(notification.Description) 
-                    : "An admin action was performed on your account.",
-            
-            _ => !string.IsNullOrEmpty(notification.Description) 
-                ? Html.Encode(notification.Description) 
-                : $"{userLink} interacted with {boardLink}."
-        };
-    }
 }

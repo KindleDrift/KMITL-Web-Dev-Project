@@ -1,5 +1,7 @@
 @using WebDevProject.Models;
+@using WebDevProject.Services;
 @model WebDevProject.Models.BoardDetailsViewModel
+@inject BoardDisplayService DisplayService
 
 @{
     ViewData["Title"] = Model.Board.Title;
@@ -45,19 +47,10 @@
         </div>
 
         @{
-            var isOpenPastDeadline = Model.Board.CurrentStatus == WebDevProject.Models.BoardStatus.Open && Model.Board.Deadline <= DateTimeOffset.UtcNow.UtcDateTime;
-            var visibleParticipants = Model.Participants.Where(p => p.UserId != Model.Board.AuthorId).ToList();
-            var visibleOccupiedSlots = visibleParticipants.Count + Model.ExternalParticipants.Count;
-            var statusClass = Model.Board.CurrentStatus switch
-            {
-                WebDevProject.Models.BoardStatus.Open => isOpenPastDeadline ? "status-closed" : "status-open",
-                WebDevProject.Models.BoardStatus.Full => "status-full",
-                WebDevProject.Models.BoardStatus.Closed => "status-closed",
-                WebDevProject.Models.BoardStatus.Cancelled => "status-cancelled",
-                WebDevProject.Models.BoardStatus.Archived => "status-archived",
-                _ => "status-open"
-            };
-            var displayStatus = isOpenPastDeadline ? "Open (Deadline Passed)" : Model.Board.CurrentStatus.ToString();
+            var visibleParticipants = DisplayService.GetVisibleParticipants(Model.Board);
+            var visibleOccupiedSlots = DisplayService.GetVisibleParticipantCount(Model.Board);
+            var statusClass = DisplayService.GetBoardStatusClass(Model.Board);
+            var displayStatus = DisplayService.GetBoardDisplayStatus(Model.Board);
         }
 
         <div class="board-details-content">
