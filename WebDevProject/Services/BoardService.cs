@@ -180,6 +180,11 @@ namespace WebDevProject.Services
                     continue;
                 }
 
+                if (trimmedTag.Length > 50)
+                {
+                    return (false, $"Tag '{trimmedTag.Substring(0, Math.Min(50, trimmedTag.Length))}...' is too long. Tags must be 50 characters or less.");
+                }
+
                 if (!IsValidTag(trimmedTag))
                 {
                     return (false, $"Invalid tag '{trimmedTag}'. Tags must contain only letters and single hyphens (not at start or end).");
