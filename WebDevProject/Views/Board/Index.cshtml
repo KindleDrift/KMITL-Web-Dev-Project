@@ -26,7 +26,7 @@
                     var participantCount = visibleParticipants.Count + board.ExternalParticipants.Count;
                     var spotsLeft = Math.Max(board.MaxParticipants - participantCount, 0);
                     var previewParticipants = visibleParticipants.Take(5).ToList();
-                    var isOpenPastDeadline = board.CurrentStatus == WebDevProject.Models.BoardStatus.Open && board.Deadline <= DateTime.UtcNow;
+                    var isOpenPastDeadline = board.CurrentStatus == WebDevProject.Models.BoardStatus.Open && board.Deadline <= DateTimeOffset.UtcNow.UtcDateTime;
                     var statusClass = board.CurrentStatus switch
                     {
                         WebDevProject.Models.BoardStatus.Open => isOpenPastDeadline ? "status-closed" : "status-open",
@@ -46,8 +46,8 @@
                                      alt="@board.Title"
                                      onerror="this.src='/images/default-board.png'" />
                                 <div class="board-side-meta">
-                                    <div><strong>Event:</strong> @board.EventDate.ToString("dd MMM yyyy")</div>
-                                    <div><strong>Time:</strong> @board.EventDate.ToString("HH:mm")</div>
+                                    <div><strong>Event:</strong> <span data-utc-datetime="@board.EventDate.ToString("yyyy-MM-ddTHH:mm:ss")" data-utc-format="date">@board.EventDate.ToString("dd MMM yyyy")</span></div>
+                                    <div><strong>Time:</strong> <span data-utc-datetime="@board.EventDate.ToString("yyyy-MM-ddTHH:mm:ss")" data-utc-format="time">@board.EventDate.ToString("HH:mm")</span></div>
                                     <div><strong>Location:</strong> @board.Location</div>
                                 </div>
                             </div>
@@ -102,7 +102,7 @@
                                             }
                                         </span>
                                     </div>
-                                    <div><strong>Join deadline:</strong> @board.Deadline.ToString("dd MMM yyyy, HH:mm")</div>
+                                    <div><strong>Join deadline:</strong> <span data-utc-datetime="@board.Deadline.ToString("yyyy-MM-ddTHH:mm:ss")" data-utc-format="datetime">@board.Deadline.ToString("dd MMM yyyy, HH:mm")</span></div>
                                 </div>
 
                                 <p class="description">@board.Description</p>
@@ -128,7 +128,7 @@
                     var participantCount = visibleParticipants.Count + board.ExternalParticipants.Count;
                     var spotsLeft = Math.Max(board.MaxParticipants - participantCount, 0);
                     var previewParticipants = visibleParticipants.Take(5).ToList();
-                    var isOpenPastDeadline = board.CurrentStatus == WebDevProject.Models.BoardStatus.Open && board.Deadline <= DateTime.UtcNow;
+                    var isOpenPastDeadline = board.CurrentStatus == WebDevProject.Models.BoardStatus.Open && board.Deadline <= DateTimeOffset.UtcNow.UtcDateTime;
                     var statusClass = board.CurrentStatus switch
                     {
                         WebDevProject.Models.BoardStatus.Open => isOpenPastDeadline ? "status-closed" : "status-open",
@@ -148,8 +148,8 @@
                                      alt="@board.Title"
                                      onerror="this.src='/images/default-board.png'" />
                                 <div class="board-side-meta">
-                                    <div><strong>Event:</strong> @board.EventDate.ToString("dd MMM yyyy")</div>
-                                    <div><strong>Time:</strong> @board.EventDate.ToString("HH:mm")</div>
+                                    <div><strong>Event:</strong> <span data-utc-datetime="@board.EventDate.ToString("yyyy-MM-ddTHH:mm:ss")" data-utc-format="date">@board.EventDate.ToString("dd MMM yyyy")</span></div>
+                                    <div><strong>Time:</strong> <span data-utc-datetime="@board.EventDate.ToString("yyyy-MM-ddTHH:mm:ss")" data-utc-format="time">@board.EventDate.ToString("HH:mm")</span></div>
                                     <div><strong>Location:</strong> @board.Location</div>
                                 </div>
                             </div>
@@ -199,7 +199,7 @@
                                             }
                                         </span>
                                     </div>
-                                    <div><strong>Join deadline:</strong> @board.Deadline.ToString("dd MMM yyyy, HH:mm")</div>
+                                    <div><strong>Join deadline:</strong> <span data-utc-datetime="@board.Deadline.ToString("yyyy-MM-ddTHH:mm:ss")" data-utc-format="datetime">@board.Deadline.ToString("dd MMM yyyy, HH:mm")</span></div>
                                 </div>
 
                                 <p class="description">@board.Description</p>
@@ -225,7 +225,7 @@
                     var participantCount = visibleParticipants.Count + board.ExternalParticipants.Count;
                     var spotsLeft = Math.Max(board.MaxParticipants - participantCount, 0);
                     var previewParticipants = visibleParticipants.Take(5).ToList();
-                    var isOpenPastDeadline = board.CurrentStatus == WebDevProject.Models.BoardStatus.Open && board.Deadline <= DateTime.UtcNow;
+                    var isOpenPastDeadline = board.CurrentStatus == WebDevProject.Models.BoardStatus.Open && board.Deadline <= DateTimeOffset.UtcNow.UtcDateTime;
                     var statusClass = board.CurrentStatus switch
                     {
                         WebDevProject.Models.BoardStatus.Open => isOpenPastDeadline ? "status-closed" : "status-open",
@@ -245,8 +245,8 @@
                                      alt="@board.Title"
                                      onerror="this.src='/images/default-board.png'" />
                                 <div class="board-side-meta">
-                                    <div><strong>Event:</strong> @board.EventDate.ToString("dd MMM yyyy")</div>
-                                    <div><strong>Time:</strong> @board.EventDate.ToString("HH:mm")</div>
+                                    <div><strong>Event:</strong> <span data-utc-datetime="@board.EventDate.ToString("yyyy-MM-ddTHH:mm:ss")" data-utc-format="date">@board.EventDate.ToString("dd MMM yyyy")</span></div>
+                                    <div><strong>Time:</strong> <span data-utc-datetime="@board.EventDate.ToString("yyyy-MM-ddTHH:mm:ss")" data-utc-format="time">@board.EventDate.ToString("HH:mm")</span></div>
                                     <div><strong>Location:</strong> @board.Location</div>
                                 </div>
                             </div>
@@ -295,7 +295,7 @@
                                             }
                                         </span>
                                     </div>
-                                    <div><strong>Join deadline:</strong> @board.Deadline.ToString("dd MMM yyyy, HH:mm")</div>
+                                    <div><strong>Join deadline:</strong> <span data-utc-datetime="@board.Deadline.ToString("yyyy-MM-ddTHH:mm:ss")" data-utc-format="datetime">@board.Deadline.ToString("dd MMM yyyy, HH:mm")</span></div>
                                 </div>
 
                                 <p class="description">@board.Description</p>

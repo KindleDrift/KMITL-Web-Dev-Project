@@ -207,7 +207,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 statusClass: getXmlText(boardElement, 'StatusClass'),
                 eventDate: getXmlText(boardElement, 'EventDate'),
                 eventTime: getXmlText(boardElement, 'EventTime'),
+                eventDateUtc: getXmlText(boardElement, 'EventDateUtc'),
                 deadline: getXmlText(boardElement, 'Deadline'),
+                deadlineUtc: getXmlText(boardElement, 'DeadlineUtc'),
                 location: getXmlText(boardElement, 'Location'),
                 tags: tags,
                 joinPolicy: getXmlText(boardElement, 'JoinPolicy'),
@@ -226,6 +228,41 @@ document.addEventListener('DOMContentLoaded', function () {
         return boards;
     }
 
+    // Date formatting function
+    function formatUtcDate(utcValue, mode = 'datetime') {
+        if (!utcValue) {
+            return '';
+        }
+
+        const date = new Date(utcValue);
+        if (Number.isNaN(date.getTime())) {
+            return '';
+        }
+
+        if (mode === 'date') {
+            return new Intl.DateTimeFormat(undefined, {
+                year: 'numeric',
+                month: 'short',
+                day: '2-digit'
+            }).format(date);
+        }
+
+        if (mode === 'time') {
+            return new Intl.DateTimeFormat(undefined, {
+                hour: '2-digit',
+                minute: '2-digit'
+            }).format(date);
+        }
+
+        return new Intl.DateTimeFormat(undefined, {
+            year: 'numeric',
+            month: 'short',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit'
+        }).format(date);
+    }
+
     // Search function using XMLHttpRequest
     function performSearch() {
         const searchName = searchNameInput.value.trim();
@@ -234,6 +271,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const eventDateTo = eventDateToInput.value;
         const statuses = getSelectedStatuses();
         const joinPolicies = getSelectedPolicies();
+        const clientTimeZoneOffsetMinutes = new Date().getTimezoneOffset();
 
         // Build query parameters
         const params = new URLSearchParams();
@@ -243,6 +281,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (eventDateTo) params.append('eventDateTo', eventDateTo);
         if (statuses) params.append('statuses', statuses);
         if (joinPolicies) params.append('joinPolicies', joinPolicies);
+        params.append('clientTimeZoneOffsetMinutes', clientTimeZoneOffsetMinutes.toString());
 
         // Show loading state
         searchResults.innerHTML = '<p class="loading-message">Searching...</p>';
@@ -308,6 +347,10 @@ document.addEventListener('DOMContentLoaded', function () {
                        : ''}`
                 : '';
 
+            const eventDateText = formatUtcDate(board.eventDateUtc, 'date') || board.eventDate;
+            const eventTimeText = formatUtcDate(board.eventDateUtc, 'time') || board.eventTime;
+            const deadlineText = formatUtcDate(board.deadlineUtc, 'datetime') || board.deadline;
+
             html += `
                 <div class="board-card">
                     <div class="board-card-layout">
@@ -317,8 +360,8 @@ document.addEventListener('DOMContentLoaded', function () {
                                  alt="${escapeHtml(board.title)}"
                                  onerror="this.src='/images/default-board.png'" />
                             <div class="board-side-meta">
-                                <div><strong>Event:</strong> ${board.eventDate}</div>
-                                <div><strong>Time:</strong> ${board.eventTime}</div>
+                                <div><strong>Event:</strong> ${eventDateText}</div>
+                                <div><strong>Time:</strong> ${eventTimeText}</div>
                                 <div><strong>Location:</strong> ${escapeHtml(board.location)}</div>
                             </div>
                         </div>
@@ -347,7 +390,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                 <div><strong>Status:</strong> ${board.displayStatus}</div>
                                 <div><strong>Join Policy:</strong> ${board.joinPolicyDisplay}</div>
                                 <div><strong>Tags:</strong> ${tagsHtml}</div>
-                                <div><strong>Join deadline:</strong> ${board.deadline}</div>
+                                <div><strong>Join deadline:</strong> ${deadlineText}</div>
                             </div>
 
                             <p class="description">${escapeHtml(board.description)}</p>

@@ -37,7 +37,7 @@ namespace WebDevProject.Services
                     var visibleParticipants = b.Participants.Where(p => p.UserId != b.AuthorId).ToList();
                     var participantCount = visibleParticipants.Count + b.ExternalParticipants.Count;
                     var spotsLeft = Math.Max(b.MaxParticipants - participantCount, 0);
-                    var isOpenPastDeadline = b.CurrentStatus == BoardStatus.Open && b.Deadline <= DateTime.UtcNow;
+                    var isOpenPastDeadline = b.CurrentStatus == BoardStatus.Open && b.Deadline <= DateTimeOffset.UtcNow.UtcDateTime;
 
                     writer.WriteStartElement("Board");
 
@@ -61,7 +61,9 @@ namespace WebDevProject.Services
 
                     writer.WriteElementString("EventDate", b.EventDate.ToString("dd MMM yyyy"));
                     writer.WriteElementString("EventTime", b.EventDate.ToString("HH:mm"));
+                    writer.WriteElementString("EventDateUtc", b.EventDate.ToString("o"));
                     writer.WriteElementString("Deadline", b.Deadline.ToString("dd MMM yyyy, HH:mm"));
+                    writer.WriteElementString("DeadlineUtc", b.Deadline.ToString("o"));
                     writer.WriteElementString("Location", b.Location);
 
                     writer.WriteStartElement("Tags");
@@ -307,7 +309,7 @@ namespace WebDevProject.Services
                 {
                     BoardId = boardId,
                     UserId = applicant.UserId,
-                    JoinedAt = DateTime.UtcNow
+                    JoinedAt = DateTimeOffset.UtcNow.UtcDateTime
                 };
 
                 _context.BoardParticipants.Add(participant);

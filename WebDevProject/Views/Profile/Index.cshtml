@@ -74,7 +74,7 @@
 
             <div class="row">
                 <span class="label">Member Since :</span>
-                <span>@Model.CreatedAt.ToString("MMMM dd, yyyy")</span>
+                <span data-utc-datetime="@Model.CreatedAt.ToString("yyyy-MM-ddTHH:mm:ss")" data-utc-format="date">@Model.CreatedAt.ToString("MMMM dd, yyyy")</span>
             </div>
 
             <div class="row">

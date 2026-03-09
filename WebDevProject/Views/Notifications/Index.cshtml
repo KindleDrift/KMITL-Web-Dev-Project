@@ -94,7 +94,7 @@
 @functions {
     string GetTimeAgoString(DateTime dateTime)
     {
-        var timeSpan = DateTime.UtcNow - dateTime;
+        var timeSpan = DateTimeOffset.UtcNow - new DateTimeOffset(DateTime.SpecifyKind(dateTime, DateTimeKind.Utc));
         
         if (timeSpan.TotalSeconds < 60)
             return "just now";

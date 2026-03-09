@@ -41,5 +41,7 @@ namespace WebDevProject.Models
         public List<string> Tags { get; set; } = [];
 
         public BoardStatus? CurrentStatus { get; set; }
+
+        public int? ClientTimeZoneOffsetMinutes { get; set; }
     }
 }

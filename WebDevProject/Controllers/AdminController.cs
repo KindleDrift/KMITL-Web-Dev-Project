@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using WebDevProject.Data;
 using WebDevProject.Models;
 using WebDevProject.Services;
+using WebDevProject.Helpers;
 
 namespace WebDevProject.Controllers
 {
@@ -190,7 +191,7 @@ namespace WebDevProject.Controllers
         // Admin/EditBoard/{id} - POST: Update board
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<ActionResult> EditBoard(int id, [Bind("Id,Title,Description,MaxParticipants,Location,EventDate,Deadline,NotifyAuthorOnFull,GroupManagementOption,JoinPolicy,CurrentStatus")] Board model, IFormFile? BoardImage, List<string>? Tags)
+        public async Task<ActionResult> EditBoard(int id, [Bind("Id,Title,Description,MaxParticipants,Location,EventDate,Deadline,NotifyAuthorOnFull,GroupManagementOption,JoinPolicy,CurrentStatus")] Board model, IFormFile? BoardImage, List<string>? Tags, int? clientTimeZoneOffsetMinutes)
         {
             if (id != model.Id)
             {
@@ -228,13 +229,16 @@ namespace WebDevProject.Controllers
                 return View(model);
             }
 
+            var eventDateUtc = TimeZoneHelper.FromClientLocalToUtc(model.EventDate, clientTimeZoneOffsetMinutes);
+            var deadlineUtc = TimeZoneHelper.FromClientLocalToUtc(model.Deadline, clientTimeZoneOffsetMinutes);
+
             // Update only the allowed properties
             board.Title = model.Title;
             board.Description = model.Description;
             board.MaxParticipants = model.MaxParticipants;
             board.Location = model.Location;
-            board.EventDate = model.EventDate;
-            board.Deadline = model.Deadline;
+            board.EventDate = eventDateUtc;
+            board.Deadline = deadlineUtc;
             board.NotifyAuthorOnFull = model.NotifyAuthorOnFull;
             board.GroupManagementOption = model.GroupManagementOption;
             board.JoinPolicy = model.JoinPolicy;

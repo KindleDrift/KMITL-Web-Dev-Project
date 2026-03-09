@@ -123,3 +123,46 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 });
+
+// UTC datetime localization
+document.addEventListener('DOMContentLoaded', function() {
+    const dateTimeElements = document.querySelectorAll('[data-utc-datetime]');
+    if (!dateTimeElements.length) {
+        return;
+    }
+
+    const formatters = {
+        datetime: new Intl.DateTimeFormat(undefined, {
+            year: 'numeric',
+            month: 'short',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit'
+        }),
+        date: new Intl.DateTimeFormat(undefined, {
+            year: 'numeric',
+            month: 'short',
+            day: '2-digit'
+        }),
+        time: new Intl.DateTimeFormat(undefined, {
+            hour: '2-digit',
+            minute: '2-digit'
+        })
+    };
+
+    dateTimeElements.forEach(function(element) {
+        const rawUtc = element.getAttribute('data-utc-datetime');
+        if (!rawUtc) {
+            return;
+        }
+
+        const utcDate = new Date(rawUtc.endsWith('Z') ? rawUtc : `${rawUtc}Z`);
+        if (Number.isNaN(utcDate.getTime())) {
+            return;
+        }
+
+        const formatKey = element.getAttribute('data-utc-format') || 'datetime';
+        const formatter = formatters[formatKey] || formatters.datetime;
+        element.textContent = formatter.format(utcDate);
+    });
+});

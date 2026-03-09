@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using WebDevProject.Data;
 using WebDevProject.Filters;
+using WebDevProject.Helpers;
 using WebDevProject.Models;
 using WebDevProject.Services;
 
@@ -78,7 +79,7 @@ namespace WebDevProject.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> SearchBoards(string searchName, string tags, DateTime? eventDateFrom, DateTime? eventDateTo, string statuses, string joinPolicies)
+        public async Task<IActionResult> SearchBoards(string searchName, string tags, DateTime? eventDateFrom, DateTime? eventDateTo, string statuses, string joinPolicies, int? clientTimeZoneOffsetMinutes)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             
@@ -120,14 +121,14 @@ namespace WebDevProject.Controllers
             // Filter by event date range
             if (eventDateFrom.HasValue)
             {
-                boardQuery = boardQuery.Where(b => b.EventDate >= eventDateFrom.Value);
+                var eventDateFromUtc = TimeZoneHelper.FromClientLocalToUtc(eventDateFrom.Value.Date, clientTimeZoneOffsetMinutes);
+                boardQuery = boardQuery.Where(b => b.EventDate >= eventDateFromUtc);
             }
 
             if (eventDateTo.HasValue)
             {
-                // Add one day to include boards on the "to" date
-                var eventDateToInclusive = eventDateTo.Value.AddDays(1);
-                boardQuery = boardQuery.Where(b => b.EventDate < eventDateToInclusive);
+                var eventDateToInclusiveUtc = TimeZoneHelper.FromClientLocalToUtc(eventDateTo.Value.Date.AddDays(1), clientTimeZoneOffsetMinutes);
+                boardQuery = boardQuery.Where(b => b.EventDate < eventDateToInclusiveUtc);
             }
 
             // Filter by status
@@ -212,13 +213,16 @@ namespace WebDevProject.Controllers
                 return View(model);
             }
 
-            if (model.Deadline > model.EventDate)
+            var eventDateUtc = TimeZoneHelper.FromClientLocalToUtc(model.EventDate, model.ClientTimeZoneOffsetMinutes);
+            var deadlineUtc = TimeZoneHelper.FromClientLocalToUtc(model.Deadline, model.ClientTimeZoneOffsetMinutes);
+
+            if (deadlineUtc > eventDateUtc)
             {
                 ModelState.AddModelError(nameof(model.Deadline), "Deadline must be before the event date.");
                 return View(model);
             }
 
-            if (model.Deadline < DateTime.UtcNow)
+            if (deadlineUtc < TimeZoneHelper.UtcNow.UtcDateTime)
             {
                 ModelState.AddModelError(nameof(model.Deadline), "Deadline must be in the future.");
                 return View(model);
@@ -229,13 +233,13 @@ namespace WebDevProject.Controllers
                 Title = model.Title,
                 Description = model.Description,
                 Location = model.Location,
-                EventDate = model.EventDate,
-                Deadline = model.Deadline,
+                EventDate = eventDateUtc,
+                Deadline = deadlineUtc,
                 MaxParticipants = model.MaxParticipants,
                 AuthorId = userId,
                 NotifyAuthorOnFull = model.NotifyAuthorOnFull,
                 CurrentStatus = BoardStatus.Open,
-                CreatedAt = DateTime.UtcNow,
+                CreatedAt = TimeZoneHelper.UtcNow.UtcDateTime,
                 GroupManagementOption = _boardService.ParseGroupManagementOption(model.GroupManagementOption),
                 JoinPolicy = _boardService.ParseJoinPolicyOption(model.JoinPolicyOption)
             };
@@ -370,7 +374,10 @@ namespace WebDevProject.Controllers
                 return View(model);
             }
 
-            if (model.Deadline > model.EventDate)
+            var eventDateUtc = TimeZoneHelper.FromClientLocalToUtc(model.EventDate, model.ClientTimeZoneOffsetMinutes);
+            var deadlineUtc = TimeZoneHelper.FromClientLocalToUtc(model.Deadline, model.ClientTimeZoneOffsetMinutes);
+
+            if (deadlineUtc > eventDateUtc)
             {
                 ModelState.AddModelError(nameof(model.Deadline), "Deadline must be before the event date.");
                 ViewBag.BoardId = board.Id;
@@ -385,8 +392,8 @@ namespace WebDevProject.Controllers
             board.Title = model.Title;
             board.Description = model.Description;
             board.Location = model.Location;
-            board.EventDate = model.EventDate;
-            board.Deadline = model.Deadline;
+            board.EventDate = eventDateUtc;
+            board.Deadline = deadlineUtc;
             board.MaxParticipants = model.MaxParticipants;
             board.NotifyAuthorOnFull = model.NotifyAuthorOnFull;
             board.GroupManagementOption = _boardService.ParseGroupManagementOption(model.GroupManagementOption);
@@ -625,7 +632,7 @@ namespace WebDevProject.Controllers
             }
 
             // Allow archiving if board is Cancelled OR if event date has passed
-            if (board.CurrentStatus != BoardStatus.Cancelled && board.EventDate > DateTime.UtcNow)
+            if (board.CurrentStatus != BoardStatus.Cancelled && board.EventDate > TimeZoneHelper.UtcNow.UtcDateTime)
             {
                 TempData["Error"] = "You can only archive boards after the event date has passed or if the board has been cancelled.";
                 return RedirectToAction(nameof(Details), new { id });

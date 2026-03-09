@@ -1,6 +1,35 @@
 document.addEventListener('DOMContentLoaded', function () {
     const tags = [];
 
+    function toDateTimeLocalValue(date) {
+        const pad = (value) => String(value).padStart(2, '0');
+        return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+    }
+
+    function applyClientTimezoneToForm() {
+        const timezoneOffsetInput = document.getElementById('clientTimeZoneOffsetMinutes');
+        if (timezoneOffsetInput) {
+            timezoneOffsetInput.value = String(new Date().getTimezoneOffset());
+        }
+
+        const utcDateInputs = document.querySelectorAll('input[type="datetime-local"][data-utc-value]');
+        utcDateInputs.forEach(input => {
+            const utcValue = input.getAttribute('data-utc-value');
+            if (!utcValue) {
+                return;
+            }
+
+            const utcDate = new Date(`${utcValue}Z`);
+            if (Number.isNaN(utcDate.getTime())) {
+                return;
+            }
+
+            input.value = toDateTimeLocalValue(utcDate);
+        });
+    }
+
+    applyClientTimezoneToForm();
+
     // Tag validation and formatting functions
     function isValidTag(tag) {
         // Check if tag starts or ends with hyphen

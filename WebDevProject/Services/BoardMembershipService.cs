@@ -72,7 +72,7 @@ namespace WebDevProject.Services
                 return BoardWorkflowResult.Error("This board is not accepting applications.");
             }
 
-            if (board.Deadline <= DateTime.UtcNow)
+            if (board.Deadline <= DateTimeOffset.UtcNow.UtcDateTime)
             {
                 return BoardWorkflowResult.Error("The registration deadline has passed.");
             }
@@ -91,7 +91,7 @@ namespace WebDevProject.Services
                 {
                     BoardId = boardId,
                     UserId = userId,
-                    JoinedAt = DateTime.UtcNow
+                    JoinedAt = DateTimeOffset.UtcNow.UtcDateTime
                 };
 
                 _context.BoardParticipants.Add(participant);
@@ -129,7 +129,7 @@ namespace WebDevProject.Services
             {
                 BoardId = boardId,
                 UserId = userId,
-                AppliedAt = DateTime.UtcNow
+                AppliedAt = DateTimeOffset.UtcNow.UtcDateTime
             });
 
             await _context.SaveChangesAsync();
@@ -224,7 +224,7 @@ namespace WebDevProject.Services
             {
                 BoardId = boardId,
                 UserId = applicantId,
-                JoinedAt = DateTime.UtcNow
+                JoinedAt = DateTimeOffset.UtcNow.UtcDateTime
             });
 
             var newOccupiedCount = occupiedBeforeAdd + 1;
@@ -293,7 +293,7 @@ namespace WebDevProject.Services
                 {
                     BoardId = boardId,
                     UserId = participantId,
-                    DeniedAt = DateTime.UtcNow
+                    DeniedAt = DateTimeOffset.UtcNow.UtcDateTime
                 });
             }
 
@@ -354,7 +354,7 @@ namespace WebDevProject.Services
                 BoardId = boardId,
                 Name = normalizedName,
                 Note = string.IsNullOrWhiteSpace(externalNote) ? null : externalNote.Trim(),
-                AddedAt = DateTime.UtcNow
+                AddedAt = DateTimeOffset.UtcNow.UtcDateTime
             });
 
             _boardService.UpdateBoardStatusByCapacity(board, occupiedBeforeAdd + 1);
@@ -432,7 +432,7 @@ namespace WebDevProject.Services
             {
                 BoardId = boardId,
                 UserId = applicantId,
-                DeniedAt = DateTime.UtcNow
+                DeniedAt = DateTimeOffset.UtcNow.UtcDateTime
             });
 
             await _context.SaveChangesAsync();
@@ -526,7 +526,7 @@ namespace WebDevProject.Services
                 {
                     BoardId = boardId,
                     UserId = applicant.UserId,
-                    DeniedAt = DateTime.UtcNow
+                    DeniedAt = DateTimeOffset.UtcNow.UtcDateTime
                 });
             }
 

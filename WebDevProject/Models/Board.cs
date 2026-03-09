@@ -47,7 +47,7 @@ namespace WebDevProject.Models
         [Required]
         public DateTime Deadline { get; set; }
 
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime CreatedAt { get; set; } = DateTimeOffset.UtcNow.UtcDateTime;
 
         public bool NotifyAuthorOnFull { get; set; }
 
@@ -68,7 +68,7 @@ namespace WebDevProject.Models
 
         public Users? User { get; set; }
 
-        public DateTime JoinedAt { get; set; } = DateTime.UtcNow;
+        public DateTime JoinedAt { get; set; } = DateTimeOffset.UtcNow.UtcDateTime;
     }
 
     public class BoardExternalParticipant
@@ -86,7 +86,7 @@ namespace WebDevProject.Models
         [StringLength(200)]
         public string? Note { get; set; }
 
-        public DateTime AddedAt { get; set; } = DateTime.UtcNow;
+        public DateTime AddedAt { get; set; } = DateTimeOffset.UtcNow.UtcDateTime;
     }
 
     public class BoardApplicant
@@ -99,7 +99,7 @@ namespace WebDevProject.Models
 
         public Users? User { get; set; }
 
-        public DateTime AppliedAt { get; set; } = DateTime.UtcNow;
+        public DateTime AppliedAt { get; set; } = DateTimeOffset.UtcNow.UtcDateTime;
     }
 
     public class BoardDenied
@@ -112,7 +112,7 @@ namespace WebDevProject.Models
 
         public Users? User { get; set; }
 
-        public DateTime DeniedAt { get; set; } = DateTime.UtcNow;
+        public DateTime DeniedAt { get; set; } = DateTimeOffset.UtcNow.UtcDateTime;
     }
 
     public enum BoardStatus
