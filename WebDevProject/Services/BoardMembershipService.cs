@@ -202,6 +202,11 @@ namespace WebDevProject.Services
                 return BoardWorkflowResult.Forbid("Forbidden.");
             }
 
+            if (board.CurrentStatus == BoardStatus.Cancelled || board.CurrentStatus == BoardStatus.Archived)
+            {
+                return BoardWorkflowResult.Error("Cannot modify participants for cancelled or archived boards.");
+            }
+
             var applicant = board.Applicants.FirstOrDefault(a => a.UserId == applicantId);
             if (applicant == null)
             {
@@ -268,6 +273,11 @@ namespace WebDevProject.Services
                 return BoardWorkflowResult.Forbid("Forbidden.");
             }
 
+            if (board.CurrentStatus == BoardStatus.Cancelled || board.CurrentStatus == BoardStatus.Archived)
+            {
+                return BoardWorkflowResult.Error("Cannot modify participants for cancelled or archived boards.");
+            }
+
             var participant = board.Participants.FirstOrDefault(p => p.UserId == participantId);
             if (participant == null)
             {
@@ -315,6 +325,11 @@ namespace WebDevProject.Services
             if (board.AuthorId != userId)
             {
                 return BoardWorkflowResult.Forbid("Forbidden.");
+            }
+
+            if (board.CurrentStatus == BoardStatus.Cancelled || board.CurrentStatus == BoardStatus.Archived)
+            {
+                return BoardWorkflowResult.Error("Cannot add participants to cancelled or archived boards.");
             }
 
             var normalizedName = externalName?.Trim();
@@ -365,6 +380,11 @@ namespace WebDevProject.Services
                 return BoardWorkflowResult.Forbid("Forbidden.");
             }
 
+            if (board.CurrentStatus == BoardStatus.Cancelled || board.CurrentStatus == BoardStatus.Archived)
+            {
+                return BoardWorkflowResult.Error("Cannot modify participants for cancelled or archived boards.");
+            }
+
             var externalParticipant = board.ExternalParticipants.FirstOrDefault(e => e.Id == externalParticipantId);
             if (externalParticipant == null)
             {
@@ -394,6 +414,11 @@ namespace WebDevProject.Services
             if (board.AuthorId != userId)
             {
                 return BoardWorkflowResult.Forbid("Forbidden.");
+            }
+
+            if (board.CurrentStatus == BoardStatus.Cancelled || board.CurrentStatus == BoardStatus.Archived)
+            {
+                return BoardWorkflowResult.Error("Cannot modify applicants for cancelled or archived boards.");
             }
 
             var applicant = board.Applicants.FirstOrDefault(a => a.UserId == applicantId);
@@ -438,6 +463,11 @@ namespace WebDevProject.Services
                 return BoardWorkflowResult.Forbid("Forbidden.");
             }
 
+            if (board.CurrentStatus == BoardStatus.Cancelled || board.CurrentStatus == BoardStatus.Archived)
+            {
+                return BoardWorkflowResult.Error("Cannot modify denied users for cancelled or archived boards.");
+            }
+
             var deniedUser = board.DeniedUsers.FirstOrDefault(d => d.UserId == deniedUserId);
             if (deniedUser == null)
             {
@@ -448,6 +478,64 @@ namespace WebDevProject.Services
             await _context.SaveChangesAsync();
 
             return BoardWorkflowResult.Success("User removed from deny list.");
+        }
+
+        public async Task<(BoardWorkflowResult Result, List<string> AffectedUserIds)> CancelBoardAsync(int boardId, string userId)
+        {
+            var board = await _context.Boards
+                .Include(b => b.Participants)
+                .Include(b => b.ExternalParticipants)
+                .Include(b => b.Applicants)
+                .FirstOrDefaultAsync(b => b.Id == boardId);
+
+            if (board == null)
+            {
+                return (BoardWorkflowResult.NotFound("Board not found."), new List<string>());
+            }
+
+            if (board.AuthorId != userId)
+            {
+                return (BoardWorkflowResult.Forbid("Forbidden."), new List<string>());
+            }
+
+            if (board.CurrentStatus == BoardStatus.Cancelled)
+            {
+                return (BoardWorkflowResult.Error("Board is already cancelled."), new List<string>());
+            }
+
+            var affectedUserIds = new List<string>();
+
+            // Collect all participant IDs (excluding author)
+            affectedUserIds.AddRange(board.Participants.Where(p => p.UserId != board.AuthorId).Select(p => p.UserId));
+
+            // Collect all applicant IDs
+            affectedUserIds.AddRange(board.Applicants.Select(a => a.UserId));
+
+            // Remove all participants (excluding author)
+            var participantsToRemove = board.Participants.Where(p => p.UserId != board.AuthorId).ToList();
+            _context.BoardParticipants.RemoveRange(participantsToRemove);
+
+            // Remove all external participants
+            _context.BoardExternalParticipants.RemoveRange(board.ExternalParticipants);
+
+            // Deny all applicants
+            foreach (var applicant in board.Applicants.ToList())
+            {
+                _context.BoardApplicants.Remove(applicant);
+                _context.BoardDenied.Add(new BoardDenied
+                {
+                    BoardId = boardId,
+                    UserId = applicant.UserId,
+                    DeniedAt = DateTime.UtcNow
+                });
+            }
+
+            // Set board status to Cancelled
+            board.CurrentStatus = BoardStatus.Cancelled;
+
+            await _context.SaveChangesAsync();
+
+            return (BoardWorkflowResult.Success("Board cancelled successfully."), affectedUserIds.Distinct().ToList());
         }
     }
 }

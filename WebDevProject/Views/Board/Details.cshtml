@@ -26,7 +26,14 @@
             {
                 <div style="display: flex; gap: 10px;">
                     <a class="btn btn-primary" asp-action="Edit" asp-route-id="@Model.Board.Id">Edit Board</a>
-                    @if (Model.Board.CurrentStatus != BoardStatus.Archived && Model.Board.EventDate <= DateTime.UtcNow)
+                    @if (Model.Board.CurrentStatus != BoardStatus.Archived && Model.Board.CurrentStatus != BoardStatus.Cancelled)
+                    {
+                        <form asp-action="Cancel" asp-route-id="@Model.Board.Id" method="post" style="display: inline;" onsubmit="return confirm('Are you sure you want to cancel this board? This will remove all participants, deny all pending applications, and notify everyone. This action cannot be undone.');">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-danger">Cancel Board</button>
+                        </form>
+                    }
+                    @if (Model.Board.CurrentStatus != BoardStatus.Archived && (Model.Board.EventDate <= DateTime.UtcNow || Model.Board.CurrentStatus == BoardStatus.Cancelled))
                     {
                         <form asp-action="Archive" asp-route-id="@Model.Board.Id" method="post" style="display: inline;" onsubmit="return confirm('Are you sure you want to archive this board? This action will hide the board from active listings.');">
                             @Html.AntiForgeryToken()
@@ -153,7 +160,7 @@
                                             <div class="user-meta">Joined: @participant.JoinedAt.ToString("dd MMM yyyy, HH:mm")</div>
                                         </div>
                                     </a>
-                                    @if (Model.IsAuthor)
+                                    @if (Model.IsAuthor && Model.Board.CurrentStatus != BoardStatus.Cancelled && Model.Board.CurrentStatus != BoardStatus.Archived)
                                     {
                                         <div class="user-actions">
                                             <form asp-action="DenyParticipant" asp-route-boardId="@Model.Board.Id" asp-route-participantId="@participant.UserId" method="post" class="inline-form">
@@ -186,7 +193,7 @@
                                             <div class="user-meta">@external.Note</div>
                                         }
                                     </div>
-                                    @if (Model.IsAuthor)
+                                    @if (Model.IsAuthor && Model.Board.CurrentStatus != BoardStatus.Cancelled && Model.Board.CurrentStatus != BoardStatus.Archived)
                                     {
                                         <div class="user-actions">
                                             <form asp-action="RemoveExternalParticipant" asp-route-boardId="@Model.Board.Id" asp-route-externalParticipantId="@external.Id" method="post" class="inline-form">
@@ -203,21 +210,24 @@
 
                 @if (Model.IsAuthor)
                 {
-                    <div class="applicants-section status-section-column">
-                        <h3>Add External Participant</h3>
-                        <form asp-action="AddExternalParticipant" asp-route-boardId="@Model.Board.Id" method="post">
-                            @Html.AntiForgeryToken()
-                            <div class="form-group">
-                                <input type="text" name="externalName" placeholder="Name" maxlength="120" required />
-                            </div>
-                            <div class="form-group">
-                                <input type="text" name="externalNote" placeholder="Optional note (e.g. contact)" maxlength="200" />
-                            </div>
-                            <button type="submit" class="btn btn-success">Add External Participant</button>
-                        </form>
-                    </div>
+                    @if (Model.Board.CurrentStatus != BoardStatus.Cancelled && Model.Board.CurrentStatus != BoardStatus.Archived)
+                    {
+                        <div class="applicants-section status-section-column">
+                            <h3>Add External Participant</h3>
+                            <form asp-action="AddExternalParticipant" asp-route-boardId="@Model.Board.Id" method="post">
+                                @Html.AntiForgeryToken()
+                                <div class="form-group">
+                                    <input type="text" name="externalName" placeholder="Name" maxlength="120" required />
+                                </div>
+                                <div class="form-group">
+                                    <input type="text" name="externalNote" placeholder="Optional note (e.g. contact)" maxlength="200" />
+                                </div>
+                                <button type="submit" class="btn btn-success">Add External Participant</button>
+                            </form>
+                        </div>
+                    }
 
-                    @if (Model.Board.JoinPolicy == BoardJoinPolicy.Application)
+                    @if (Model.Board.JoinPolicy == BoardJoinPolicy.Application && Model.Board.CurrentStatus != BoardStatus.Cancelled && Model.Board.CurrentStatus != BoardStatus.Archived)
                     {
                         <div class="applicants-section status-section-column">
                             <h3>Pending Applications (@Model.Applicants.Count)</h3>
@@ -255,36 +265,39 @@
                         </div>
                     }
 
-                    <div class="denied-section status-section-column">
-                        <h3>Denied Users (@Model.DeniedUsers.Count)</h3>
-                        @if (Model.DeniedUsers.Any())
-                        {
-                            <div class="user-list">
-                                @foreach (var denied in Model.DeniedUsers)
-                                {
-                                    <div class="user-item">
-                                        <a href="/Profile/u/@Uri.EscapeDataString(denied.User?.DisplayName ?? "Unknown")" style="display: flex; align-items: center; gap: 10px; text-decoration: none; color: inherit; flex: 1;">
-                                            <img src="@(denied.User?.ProfilePictureUrl ?? Url.Content("~/images/default-profile.png"))" alt="@(denied.User?.DisplayName ?? "Denied User")" class="user-avatar" />
-                                            <div class="user-info">
-                                                <div class="user-name">@(denied.User?.DisplayName ?? "Unknown")</div>
-                                                <div class="user-meta">Denied: @denied.DeniedAt.ToString("dd MMM yyyy, HH:mm")</div>
+                    @if (Model.Board.CurrentStatus != BoardStatus.Cancelled && Model.Board.CurrentStatus != BoardStatus.Archived)
+                    {
+                        <div class="denied-section status-section-column">
+                            <h3>Denied Users (@Model.DeniedUsers.Count)</h3>
+                            @if (Model.DeniedUsers.Any())
+                            {
+                                <div class="user-list">
+                                    @foreach (var denied in Model.DeniedUsers)
+                                    {
+                                        <div class="user-item">
+                                            <a href="/Profile/u/@Uri.EscapeDataString(denied.User?.DisplayName ?? "Unknown")" style="display: flex; align-items: center; gap: 10px; text-decoration: none; color: inherit; flex: 1;">
+                                                <img src="@(denied.User?.ProfilePictureUrl ?? Url.Content("~/images/default-profile.png"))" alt="@(denied.User?.DisplayName ?? "Denied User")" class="user-avatar" />
+                                                <div class="user-info">
+                                                    <div class="user-name">@(denied.User?.DisplayName ?? "Unknown")</div>
+                                                    <div class="user-meta">Denied: @denied.DeniedAt.ToString("dd MMM yyyy, HH:mm")</div>
+                                                </div>
+                                            </a>
+                                            <div class="user-actions">
+                                                <form asp-action="RemoveDenial" asp-route-boardId="@Model.Board.Id" asp-route-deniedUserId="@denied.UserId" method="post" class="inline-form">
+                                                    @Html.AntiForgeryToken()
+                                                    <button type="submit" class="btn btn-secondary btn-sm">Remove Denial</button>
+                                                </form>
                                             </div>
-                                        </a>
-                                        <div class="user-actions">
-                                            <form asp-action="RemoveDenial" asp-route-boardId="@Model.Board.Id" asp-route-deniedUserId="@denied.UserId" method="post" class="inline-form">
-                                                @Html.AntiForgeryToken()
-                                                <button type="submit" class="btn btn-secondary btn-sm">Remove Denial</button>
-                                            </form>
                                         </div>
-                                    </div>
-                                }
-                            </div>
-                        }
-                        else
-                        {
-                            <p>No denied users.</p>
-                        }
-                    </div>
+                                    }
+                                </div>
+                            }
+                            else
+                            {
+                                <p>No denied users.</p>
+                            }
+                        </div>
+                    }
                 }
             </div>
         </div>

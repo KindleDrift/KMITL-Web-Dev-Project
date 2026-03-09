@@ -310,6 +310,7 @@ namespace WebDevProject.Controllers
 
             ViewBag.BoardId = board.Id;
             ViewBag.CurrentImageUrl = board.ImageUrl;
+            ViewBag.IsCancelledOrArchived = board.CurrentStatus == BoardStatus.Cancelled || board.CurrentStatus == BoardStatus.Archived;
             return View(model);
         }
 
@@ -338,6 +339,28 @@ namespace WebDevProject.Controllers
             if (board.AuthorId != userId)
             {
                 return Forbid();
+            }
+
+            // Check if board is Cancelled or Archived - only allow status change
+            var isCancelledOrArchived = board.CurrentStatus == BoardStatus.Cancelled || board.CurrentStatus == BoardStatus.Archived;
+            if (isCancelledOrArchived)
+            {
+                // Only allow status update for Cancelled/Archived boards
+                if (model.CurrentStatus.HasValue && model.CurrentStatus.Value != board.CurrentStatus)
+                {
+                    board.CurrentStatus = model.CurrentStatus.Value;
+                    await _context.SaveChangesAsync();
+                    TempData["Success"] = "Board status updated successfully.";
+                    return RedirectToAction(nameof(Details), new { id = board.Id });
+                }
+                else
+                {
+                    TempData["Error"] = "This board is cancelled or archived. Only status changes are allowed in edit mode.";
+                    ViewBag.BoardId = board.Id;
+                    ViewBag.CurrentImageUrl = board.ImageUrl;
+                    ViewBag.IsCancelledOrArchived = true;
+                    return View(model);
+                }
             }
 
             if (!ModelState.IsValid)
@@ -601,9 +624,10 @@ namespace WebDevProject.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            if (board.EventDate > DateTime.UtcNow)
+            // Allow archiving if board is Cancelled OR if event date has passed
+            if (board.CurrentStatus != BoardStatus.Cancelled && board.EventDate > DateTime.UtcNow)
             {
-                TempData["Error"] = "You can only archive boards after the event date has passed.";
+                TempData["Error"] = "You can only archive boards after the event date has passed or if the board has been cancelled.";
                 return RedirectToAction(nameof(Details), new { id });
             }
 
@@ -612,6 +636,53 @@ namespace WebDevProject.Controllers
             await _context.SaveChangesAsync();
 
             TempData["Success"] = "Board has been archived successfully.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Cancel(int id)
+        {
+            if (!TryGetCurrentUserId(out var userId))
+            {
+                return Unauthorized();
+            }
+
+            var (result, affectedUserIds) = await _boardMembershipService.CancelBoardAsync(id, userId);
+
+            if (result.Status == BoardWorkflowStatus.NotFound)
+            {
+                return NotFound();
+            }
+
+            if (result.Status == BoardWorkflowStatus.Forbid)
+            {
+                return Forbid();
+            }
+
+            if (result.Status == BoardWorkflowStatus.Error)
+            {
+                TempData["Error"] = result.Message;
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
+            // Send notifications to all affected users
+            var board = await _context.Boards
+                .AsNoTracking()
+                .FirstOrDefaultAsync(b => b.Id == id);
+
+            if (board != null && affectedUserIds.Any())
+            {
+                var notificationsService = HttpContext.RequestServices.GetRequiredService<NotificationsService>();
+                await notificationsService.CreateNotificationsForMultipleUsersAsync(
+                    affectedUserIds,
+                    $"Board Cancelled: {board.Title}",
+                    $"The board '{board.Title}' has been cancelled by the author.",
+                    NotificationType.IsRejected,
+                    boardId: id);
+            }
+
+            TempData["Success"] = result.Message;
             return RedirectToAction(nameof(Index));
         }
 
