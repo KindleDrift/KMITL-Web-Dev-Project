@@ -17,19 +17,22 @@ namespace WebDevProject.Controllers
         private readonly NotificationsService _notificationsService;
         private readonly BoardService _boardService;
         private readonly ProfileImageService _profileImageService;
+        private readonly IServiceProvider _serviceProvider;
 
         public AdminController(
             ApplicationDbContext context,
             UserManager<Users> userManager,
             NotificationsService notificationsService,
             BoardService boardService,
-            ProfileImageService profileImageService)
+            ProfileImageService profileImageService,
+            IServiceProvider serviceProvider)
         {
             _context = context;
             _userManager = userManager;
             _notificationsService = notificationsService;
             _boardService = boardService;
             _profileImageService = profileImageService;
+            _serviceProvider = serviceProvider;
         }
 
         public ActionResult Index()
@@ -301,6 +304,92 @@ namespace WebDevProject.Controllers
             }
 
             return RedirectToAction(nameof(Boards));
+        }
+
+        // Admin/ClearDatabase - POST: Delete all data except admin user
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<ActionResult> ClearDatabase()
+        {
+            try
+            {
+                var currentUser = await _userManager.GetUserAsync(User);
+                if (currentUser == null)
+                {
+                    return Unauthorized();
+                }
+
+                // Delete all boards and related data
+                var boards = await _context.Boards.Include(b => b.Tags).ToListAsync();
+                _context.Boards.RemoveRange(boards);
+
+                // Delete all notifications
+                var notifications = await _context.Notifications.ToListAsync();
+                _context.Notifications.RemoveRange(notifications);
+
+                // Delete all tags
+                var tags = await _context.Tags.ToListAsync();
+                _context.Tags.RemoveRange(tags);
+
+                // Delete all participants
+                var participants = await _context.BoardParticipants.ToListAsync();
+                _context.BoardParticipants.RemoveRange(participants);
+
+                // Delete all external participants
+                var externalParticipants = await _context.BoardExternalParticipants.ToListAsync();
+                _context.BoardExternalParticipants.RemoveRange(externalParticipants);
+
+                // Delete all applicants
+                var applicants = await _context.BoardApplicants.ToListAsync();
+                _context.BoardApplicants.RemoveRange(applicants);
+
+                // Delete all denied users
+                var deniedUsers = await _context.BoardDenied.ToListAsync();
+                _context.BoardDenied.RemoveRange(deniedUsers);
+
+                // Delete all users except current admin
+                var usersToDelete = await _context.Users.Where(u => u.Id != currentUser.Id).ToListAsync();
+                _context.Users.RemoveRange(usersToDelete);
+
+                await _context.SaveChangesAsync();
+
+                TempData["SuccessMessage"] = "Database cleared successfully. All data except admin user has been deleted.";
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = $"Error clearing database: {ex.Message}";
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        // Admin/ResetAndReseed - POST: Drop database and reseed
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<ActionResult> ResetAndReseed()
+        {
+            try
+            {
+                // Delete the database
+                await _context.Database.EnsureDeletedAsync();
+
+                // Recreate the database
+                await _context.Database.EnsureCreatedAsync();
+
+                // Run migrations to ensure schema is correct
+                await _context.Database.MigrateAsync();
+
+                // Reseed the database
+                await DbSeeder.SeedAsync(_serviceProvider);
+
+                TempData["SuccessMessage"] = "Database reset and reseeded successfully.";
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = $"Error resetting database: {ex.Message}";
+            }
+
+            return RedirectToAction(nameof(Index));
         }
     }
 }

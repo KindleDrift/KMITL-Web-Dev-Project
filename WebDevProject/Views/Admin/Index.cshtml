@@ -9,6 +9,20 @@
 <div class="main-container">
     <h1 class="header-1">Admin Dashboard</h1>
     
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success" style="background-color: #d4edda; color: #155724; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+            @TempData["SuccessMessage"]
+        </div>
+    }
+    
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger" style="background-color: #f8d7da; color: #721c24; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+            @TempData["ErrorMessage"]
+        </div>
+    }
+    
     <div class="admin-dashboard">
         <div class="admin-card">
             <h3>👥 User Management</h3>
@@ -23,15 +37,19 @@
         </div>
         
         <div class="admin-card">
-            <h3>⚙️ System Settings</h3>
-            <p>Configure system-wide settings and preferences.</p>
-            <a href="#" class="btn btn-secondary btn-sm card-link">Coming Soon</a>
+            <h3>🗑️ Clear Database</h3>
+            <p>Delete everything in the database except the admin user. CANNOT BE UNDONE.</p>
+            <form method="post" asp-controller="Admin" asp-action="ClearDatabase" onsubmit="return confirm('Are you sure you want to delete all data except the admin user? This cannot be undone!');">
+                <button type="submit" class="btn btn-danger btn-sm card-link">Clear Database</button>
+            </form>
         </div>
         
         <div class="admin-card">
-            <h3>📊 Analytics</h3>
-            <p>View system statistics and usage analytics.</p>
-            <a href="#" class="btn btn-secondary btn-sm card-link">Coming Soon</a>
+            <h3>🔄 Reset & Reseed</h3>
+            <p>Drop all tables and reseed the database with sample data. CANNOT BE UNDONE.</p>
+            <form method="post" asp-controller="Admin" asp-action="ResetAndReseed" onsubmit="return confirm('Are you sure you want to reset the entire database and reseed? This will delete ALL data including users (admin will be recreated)!');">
+                <button type="submit" class="btn btn-danger btn-sm card-link">Reset & Reseed</button>
+            </form>
         </div>
     </div>
 </div>
