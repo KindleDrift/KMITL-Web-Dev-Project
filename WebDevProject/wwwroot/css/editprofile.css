@@ -1,4 +1,5 @@
-﻿#editprofile-form {
+﻿#editprofile-form,
+#changepassword-form {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -33,9 +34,34 @@
     padding-top: 90px;
 }
 
+#changepassword-form #profile-data {
+    padding-top: 40px;
+}
+
+#changepassword-form #profile-data h2 {
+    margin-top: 0;
+    margin-bottom: 20px;
+}
+
 #profile-data .form-group > label {
     font-weight: bold;
     font-size: 18px;
+}
+
+.button-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 10px;
+    width: 100%;
+}
+
+.button-group .large-button {
+    margin: 0;
+}
+
+.button-group a.large-button {
+    box-sizing: border-box;
 }
 
 @media (max-width: 768px) {
@@ -51,5 +77,9 @@
     
     #profile-data {
         padding-top: 75px;
+    }
+
+    #changepassword-form #profile-data {
+        padding-top: 40px;
     }
 }
