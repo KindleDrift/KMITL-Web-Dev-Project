@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using WebDevProject.Data;
@@ -9,6 +10,7 @@ using WebDevProject.Services;
 
 namespace WebDevProject.Controllers
 {
+    [Authorize]
     [RequireOnboarding]
     public class BoardController : Controller
     {
@@ -32,6 +34,7 @@ namespace WebDevProject.Controllers
 
             var boardQuery = _context.Boards
                 .AsNoTracking()
+                .AsSplitQuery()
                 .Include(b => b.Author)
                 .Include(b => b.Participants)
                     .ThenInclude(bp => bp.User)
@@ -73,12 +76,14 @@ namespace WebDevProject.Controllers
             return View(model);
         }
 
+        [AllowAnonymous]
         public async Task<IActionResult> Search(string name)
         {
             return View();
         }
 
         [HttpGet]
+        [AllowAnonymous]
         public async Task<IActionResult> SearchBoards(string searchName, string tags, DateTime? eventDateFrom, DateTime? eventDateTo, string statuses, string joinPolicies, int? clientTimeZoneOffsetMinutes)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
