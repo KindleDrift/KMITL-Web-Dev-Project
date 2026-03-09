@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
 using WebDevProject.Models;
@@ -25,16 +26,16 @@ namespace WebDevProject.Controllers
         public IActionResult Error(int? id)
         {
             var statusCode = id ?? 500;
-            var originalPath = HttpContext.Request.Path.Value ?? "";
+            var originalPath = HttpContext.Features.Get<IStatusCodeReExecuteFeature>()?.OriginalPath
+                ?? HttpContext.Request.Path.Value
+                ?? string.Empty;
 
-            // Return 404 view for unauthorized/unauthenticated access to admin routes
-            if ((statusCode == 401 || statusCode == 403) && originalPath.StartsWith("/Admin"))
+            if (statusCode == 404 || ((statusCode == 401 || statusCode == 403) && originalPath.StartsWith("/Admin", StringComparison.OrdinalIgnoreCase)))
             {
                 Response.StatusCode = 404;
                 return View("Error404", new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
             }
 
-            // Return normal error page for other cases
             Response.StatusCode = statusCode;
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }

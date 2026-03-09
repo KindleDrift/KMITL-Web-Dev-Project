@@ -42,8 +42,7 @@ builder.Services.ConfigureApplicationCookie(options =>
             // Return 404 instead of redirecting to login for admin routes
             if (context.Request.Path.StartsWithSegments("/Admin"))
             {
-                context.Response.StatusCode = 404;
-                context.Response.ContentType = "text/html";
+                context.Response.Redirect("/Home/Error/404");
             }
             else
             {
@@ -56,8 +55,7 @@ builder.Services.ConfigureApplicationCookie(options =>
             // Return 404 instead of redirecting to access denied for admin routes
             if (context.Request.Path.StartsWithSegments("/Admin"))
             {
-                context.Response.StatusCode = 404;
-                context.Response.ContentType = "text/html";
+                context.Response.Redirect("/Home/Error/404");
             }
             else
             {
