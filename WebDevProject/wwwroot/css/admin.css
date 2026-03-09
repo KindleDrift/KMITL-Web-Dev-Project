@@ -75,7 +75,12 @@
 /* Admin Form Styles */
 .admin-form {
     max-width: 500px;
-    margin: 30px 0;
+    margin: 30px auto;
+}
+
+/* Center the header on edit pages */
+.main-container > h1.header-1 {
+    text-align: center;
 }
 
 .form-group {
