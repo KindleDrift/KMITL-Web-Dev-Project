@@ -23,18 +23,16 @@ namespace WebDevProject.Controllers
                 return Unauthorized();
             }
 
-            const int pageSize = 15;
-            var notifications = await _notificationsService.GetUserNotificationsAsync(userId, pageNumber, pageSize);
+            var notifications = await _notificationsService.GetUserNotificationsAsync(userId, 1, 1000);
             var unreadCount = await _notificationsService.GetUnreadNotificationCountAsync(userId);
 
             ViewData["UnreadCount"] = unreadCount;
-            ViewData["CurrentPage"] = pageNumber;
-            ViewData["PageSize"] = pageSize;
 
             return View(notifications);
         }
 
         [HttpPost]
+        [IgnoreAntiforgeryToken]
         public async Task<IActionResult> MarkAsRead(int notificationId)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -54,6 +52,7 @@ namespace WebDevProject.Controllers
         }
 
         [HttpPost]
+        [IgnoreAntiforgeryToken]
         public async Task<IActionResult> MarkAllAsRead()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -67,6 +66,7 @@ namespace WebDevProject.Controllers
         }
 
         [HttpPost]
+        [IgnoreAntiforgeryToken]
         public async Task<IActionResult> Delete(int notificationId)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -82,6 +82,20 @@ namespace WebDevProject.Controllers
             }
 
             await _notificationsService.DeleteNotificationAsync(notificationId);
+            return Ok();
+        }
+
+        [HttpPost]
+        [IgnoreAntiforgeryToken]
+        public async Task<IActionResult> DeleteAll()
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                return Unauthorized();
+            }
+
+            await _notificationsService.DeleteAllUserNotificationsAsync(userId);
             return Ok();
         }
 

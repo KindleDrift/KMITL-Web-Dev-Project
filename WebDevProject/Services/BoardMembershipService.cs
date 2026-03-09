@@ -95,7 +95,12 @@ namespace WebDevProject.Services
                 };
 
                 _context.BoardParticipants.Add(participant);
-                _boardService.UpdateBoardStatusByCapacity(board, currentOccupied + 1);
+                
+                var newOccupiedCount = currentOccupied + 1;
+                var wasFull = currentOccupied >= board.MaxParticipants;
+                var isNowFull = newOccupiedCount >= board.MaxParticipants;
+                
+                _boardService.UpdateBoardStatusByCapacity(board, newOccupiedCount);
                 await _context.SaveChangesAsync();
 
                 await _notificationsService.CreateNotificationAsync(
@@ -105,6 +110,17 @@ namespace WebDevProject.Services
                     NotificationType.NewRequest,
                     boardId: boardId,
                     relatedUserId: userId);
+
+                // Check if board just became full and author wants notification
+                if (!wasFull && isNowFull && board.NotifyAuthorOnFull)
+                {
+                    await _notificationsService.CreateNotificationAsync(
+                        board.AuthorId,
+                        $"Board Full: {board.Title}",
+                        $"Your board '{board.Title}' is now full!",
+                        NotificationType.BoardFull,
+                        boardId: boardId);
+                }
 
                 return BoardWorkflowResult.Success("You joined this board successfully.");
             }
@@ -206,7 +222,11 @@ namespace WebDevProject.Services
                 JoinedAt = DateTime.UtcNow
             });
 
-            _boardService.UpdateBoardStatusByCapacity(board, occupiedBeforeAdd + 1);
+            var newOccupiedCount = occupiedBeforeAdd + 1;
+            var wasFull = occupiedBeforeAdd >= board.MaxParticipants;
+            var isNowFull = newOccupiedCount >= board.MaxParticipants;
+            
+            _boardService.UpdateBoardStatusByCapacity(board, newOccupiedCount);
             await _context.SaveChangesAsync();
 
             await _notificationsService.CreateNotificationAsync(
@@ -215,6 +235,17 @@ namespace WebDevProject.Services
                 $"Congratulations! You have been accepted to join '{board.Title}'.",
                 NotificationType.IsAccepted,
                 boardId: boardId);
+
+            // Check if board just became full and author wants notification
+            if (!wasFull && isNowFull && board.NotifyAuthorOnFull)
+            {
+                await _notificationsService.CreateNotificationAsync(
+                    board.AuthorId,
+                    $"Board Full: {board.Title}",
+                    $"Your board '{board.Title}' is now full!",
+                    NotificationType.BoardFull,
+                    boardId: boardId);
+            }
 
             return BoardWorkflowResult.Success("Applicant approved successfully.");
         }
