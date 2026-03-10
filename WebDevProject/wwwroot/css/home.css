@@ -1,0 +1,12 @@
+﻿.title{
+    font-size: 7vw;
+}
+.login-container{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+.large-button{
+    margin-top: 30px;
+}
