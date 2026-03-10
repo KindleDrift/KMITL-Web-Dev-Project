@@ -31,17 +31,17 @@
                 <label asp-for="UserGender">Gender</label>
                 <div class="gender-options">
                     <label>
-                        <input asp-for="UserGender" type="radio" id="male" value="0" />
+                        <input asp-for="UserGender" type="radio" id="male" value="@(WebDevProject.Models.Users.Gender.Male)" />
                         <span class="material-symbols-outlined">male</span>
                         <span>Male</span>
                     </label>
                     <label>
-                        <input asp-for="UserGender" type="radio" id="female" value="1" />
+                        <input asp-for="UserGender" type="radio" id="female" value="@(WebDevProject.Models.Users.Gender.Female)" />
                         <span class="material-symbols-outlined">female</span>
                         <span>Female</span>
                     </label>
                     <label>
-                        <input asp-for="UserGender" type="radio" id="other" value="2" />
+                        <input asp-for="UserGender" type="radio" id="other" value="@(WebDevProject.Models.Users.Gender.Other)" />
                         <span class="material-symbols-outlined">transgender</span>
                         <span>Other</span>
                     </label>
@@ -63,7 +63,7 @@
             
             <div class="button-group">
                 <button type="submit" class="large-button">Save Changes</button>
-                <a asp-action="ChangePassword" class="large-button btn-secondary">Change Password</a>
+                <a asp-action="Index" class="large-button btn-secondary">Cancel Changes</a>
             </div>
         </div>
     </form>
