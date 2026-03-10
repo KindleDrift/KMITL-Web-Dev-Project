@@ -34,6 +34,14 @@ input, textarea, select, button {
     font-family: "Inter", sans-serif;
 }
 
+.home-title {
+    font-size: 400%;
+    text-align: center;
+}
+
+.home-quote {
+    text-align: center;
+}
 /* === CONTAINER SYSTEM === */
 .container {
     max-width: 1440px;
@@ -50,10 +58,20 @@ input, textarea, select, button {
 }
 
 .login-container {
-    max-width: 540px;
+    max-width: 740px;
+    margin: 20px auto;
+    padding: 20px 20px;
+    box-sizing: border-box;
+}
+
+.inner-login-container {
+    text-align: center;
+    max-width: 640px;
     margin: 20px auto;
     padding: 0 20px;
     box-sizing: border-box;
+    display: flex;
+    gap: 30%;
 }
 
 /* === CARDS === */
@@ -345,6 +363,12 @@ footer {
 
 .btn:disabled:hover {
     background-color: #6c757d;
+}
+
+.btn-sharp {
+    border-radius: 0px;
+    border-top-left-radius: 16px;
+    border-bottom-right-radius: 16px;
 }
 
 /* Link Button - Looks like a link */

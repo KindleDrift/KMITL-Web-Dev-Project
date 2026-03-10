@@ -15,7 +15,7 @@
         <!-- show for yourself -->
         @if (Model.IsOwnProfile)
         {
-            <a class="profile-link" href="@Url.Action("Edit", "Profile")">Edit Profile</a>
+            <button> class="large-button" href="@Url.Action("Edit", "Profile")">Edit Profile</button>
         }
 
         <!-- show for everyone -->
@@ -91,10 +91,10 @@
         @if (Model.IsOwnProfile)
         {
             <div class="divider">
-                <a class="profile-link" href="@Url.Action("ChangePassword", "Account")">Reset Password</a>
+                <button> class="large-button" href="@Url.Action("ChangePassword", "Account")">Reset Password</button>
 
                 <form asp-action="SignOut" asp-controller="Account" method="post" style="display: inline;">
-                    <button type="submit" class="profile-link" style="border: none; background: none; padding: 0;">Sign Out</button>
+                    <button type="submit" class="large-button" style="border: none; background: none; padding: 0;">Sign Out</button>
                 </form>
             </div>
         }

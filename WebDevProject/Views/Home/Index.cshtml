@@ -3,9 +3,16 @@
 }
 
 <div class="login-container">
-    <h1 class="">TinyTender</h1>
-    <p>
-        Request Anything
-        Any Constraints.
+    <h1 class="home-title">TinyTender</h1>
+    <p class="home-quote">
+        " With tiny power comes tender responsibility. "
     </p>
+    <div class="inner-login-container">
+        <a class="btn large-button btn-sharp" href="@Url.Action("SignIn", "Account")">Sign-in</a>
+        <a class="btn large-button btn-sharp" href="@Url.Action("SignUp", "Account")">Sign-up</a>
+    </div>
+    </br>
+    <div class="inner-login-container">
+         <a class="btn large-button" href="@Url.Action("Board", "Search")">Board</a>
+    </div>
 </div>
