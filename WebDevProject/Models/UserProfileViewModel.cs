@@ -12,10 +12,10 @@ namespace WebDevProject.Models
         public int BoardsCreatedCount { get; set; }
         public int BoardParticipationsCount { get; set; }
 
-        // Indicates if the logged-in user is viewing their own profile
+        // if user is viewing their own profile
         public bool IsOwnProfile { get; set; }
         
-        // Sensitive data - only shown when viewing own profile
+        // only shown when viewing own profile
         public string? Email { get; set; }
         public DateTime? DateOfBirth { get; set; }
     }

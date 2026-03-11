@@ -1,8 +1,4 @@
-/* ===========================
-   TinyTender Global Styles
-   =========================== */
-
-/* === ROOT & LAYOUT === */
+/* Main */
 html {
     margin: 0;
 }
@@ -34,7 +30,7 @@ input, textarea, select, button {
     font-family: "Inter", sans-serif;
 }
 
-/* === CONTAINER SYSTEM === */
+/* Container */
 .container {
     max-width: 1440px;
     margin: 0 auto;
@@ -56,7 +52,7 @@ input, textarea, select, button {
     box-sizing: border-box;
 }
 
-/* === CARDS === */
+/* Cards */
 .card {
     background-color: #f8f9fa;
     border: 1px solid #ddd;
@@ -93,7 +89,7 @@ input, textarea, select, button {
     margin-top: 15px;
 }
 
-/* === NAVBAR === */
+/* Navbar */
 .navbar {
     background-color: #d1ecff;
     position: fixed;
@@ -210,7 +206,7 @@ input, textarea, select, button {
     object-fit: cover;
 }
 
-/* === FOOTER === */
+/* Footer */
 footer {
     background-color: #d1ecff;
     text-align: center;
@@ -220,9 +216,9 @@ footer {
     flex-shrink: 0;
 }
 
-/* === BUTTON SYSTEM === */
+/* Button */
 
-/* Primary Button - Dark background */
+/* Primary Button */
 .btn,
 .btn-primary,
 .large-button {
@@ -247,7 +243,7 @@ footer {
     background-color: #333333;
 }
 
-/* Stretch button - Full width */
+/* Stretch button */
 .btn-stretch,
 .large-button {
     width: 100%;
@@ -255,7 +251,7 @@ footer {
     margin: 10px auto 0 auto;
 }
 
-/* Success Button - Green */
+/* Success Button */
 .btn-success {
     background-color: #28a745;
     color: white;
@@ -265,7 +261,7 @@ footer {
     background-color: #1e7e34;
 }
 
-/* Danger Button - Red */
+/* Danger Button */
 .btn-danger {
     background-color: #dc3545;
     color: white;
@@ -275,7 +271,7 @@ footer {
     background-color: #bd2130;
 }
 
-/* Warning Button - Yellow/Orange */
+/* Warning Button */
 .btn-warning {
     background-color: #ffc107;
     color: #212529;
@@ -287,7 +283,7 @@ footer {
     border-color: #d39e00;
 }
 
-/* Secondary Button - Gray */
+/* Secondary Button */
 .btn-secondary {
     background-color: #6c757d;
     color: white;
@@ -297,7 +293,7 @@ footer {
     background-color: #5a6268;
 }
 
-/* Info Button - Blue */
+/* Info Button */
 .btn-info {
     background-color: #007bff;
     color: white;
@@ -307,7 +303,7 @@ footer {
     background-color: #0056b3;
 }
 
-/* Light Button - Light gray background */
+/* Light Button */
 .btn-light {
     background-color: #8ec4e9;
     color: white;
@@ -317,7 +313,7 @@ footer {
     background-color: #6baed6;
 }
 
-/* Accent Button - Yellow highlight */
+/* Accent Button */
 .btn-accent {
     background-color: #FFF697;
     color: #333;
@@ -347,7 +343,7 @@ footer {
     background-color: #6c757d;
 }
 
-/* Link Button - Looks like a link */
+/* Link Button */
 .link-button {
     background: none;
     border: none;
@@ -362,7 +358,7 @@ footer {
     color: #0056b3;
 }
 
-/* === FORM ELEMENTS === */
+/* Form */
 fieldset {
     border: none;
     padding: 0;
@@ -535,7 +531,7 @@ legend {
     font-size: 14px;
 }
 
-/* Gender Options (Custom Radio) */
+/* Gender Options */
 .gender-options {
     display: flex;
     gap: 5px;
@@ -576,10 +572,20 @@ legend {
 }
 
 /* Password Toggle */
+.password-input-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.password-input-wrapper input {
+    width: 100%;
+}
+
 .toggle-password {
     position: absolute;
     right: 10px;
     top: 50%;
+    transform: translateY(-50%);
     cursor: pointer;
     color: #666;
     font-size: 20px;
@@ -616,7 +622,7 @@ legend {
     display: block;
 }
 
-/* === ALERTS === */
+/* Alert */
 .alert {
     padding: 1rem;
     margin-bottom: 1rem;
@@ -636,7 +642,6 @@ legend {
     border: 1px solid #f5c6cb;
 }
 
-/* === AVATARS & PROFILE IMAGES === */
 .small-avatar,
 .user-avatar {
     border-radius: 50%;
@@ -664,7 +669,6 @@ legend {
     border: 1px solid black;
 }
 
-/* === UTILITY CLASSES === */
 .hidden {
     display: none;
 }
@@ -681,8 +685,6 @@ legend {
 .inline-form {
     display: inline;
 }
-
-/* === RESPONSIVE DESIGN === */
 
 /* Tablet */
 @media (max-width: 1024px) {

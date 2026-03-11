@@ -530,7 +530,6 @@ namespace WebDevProject.Services
                 });
             }
 
-            // Set board status to Cancelled
             board.CurrentStatus = BoardStatus.Cancelled;
 
             await _context.SaveChangesAsync();

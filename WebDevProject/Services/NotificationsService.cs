@@ -31,7 +31,6 @@ namespace WebDevProject.Services
             await _context.SaveChangesAsync();
         }
 
-        // Bulk create for multiple users
         public async Task CreateNotificationsForMultipleUsersAsync(List<string> userIds, string title, string? description, NotificationType type, int? boardId = null, string? relatedUserId = null)
         {
             var notifications = userIds.Select(userId => new Notification

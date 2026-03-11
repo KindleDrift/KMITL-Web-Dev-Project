@@ -3,7 +3,7 @@
 namespace WebDevProject.Models
 {
     // The whole thing can be skipped if the user doesn't want to provide their date of birth, so no required attribute is needed.
-    public class OnboardingViewModel
+    public class OnboardingViewModel : IValidatableObject
     {
         // Profile Image upload
         public IFormFile? ProfileImage { get; set; }
@@ -17,5 +17,13 @@ namespace WebDevProject.Models
         public string? Bio { get; set; }
 
         public bool SkipOnboarding { get; set; }
+
+        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+        {
+            if (DateOfBirth.HasValue && DateOfBirth.Value.Date > DateTime.Today)
+            {
+                yield return new ValidationResult("Birthdate cannot be later than today.", new[] { nameof(DateOfBirth) });
+            }
+        }
     }
 }

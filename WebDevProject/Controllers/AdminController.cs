@@ -247,8 +247,6 @@ namespace WebDevProject.Controllers
             board.JoinPolicy = model.JoinPolicy;
             board.CurrentStatus = model.CurrentStatus;
 
-            // Edge Case 1: Join Policy changed from Application to FirstComeFirstServe
-            // Auto-approve all pending applicants
             var approvedApplicantIds = _boardService.AutoApproveApplicantsOnJoinPolicyChange(board, id, oldJoinPolicy);
 
             // Notify all approved applicants
@@ -376,10 +374,10 @@ namespace WebDevProject.Controllers
                 // Recreate the database
                 await _context.Database.EnsureCreatedAsync();
 
-                // Run migrations to ensure schema is correct
+                // Run migrations
                 await _context.Database.MigrateAsync();
 
-                // Reseed the database
+                // Reseed
                 await DbSeeder.SeedAsync(_serviceProvider);
 
                 TempData["SuccessMessage"] = "Database reset and reseeded successfully.";

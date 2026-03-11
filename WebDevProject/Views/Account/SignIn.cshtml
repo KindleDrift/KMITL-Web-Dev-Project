@@ -14,13 +14,15 @@
                 <legend>Sign-in to your account</legend>
                 <div class="form-input">
                     <label asp-for="Email"></label>
-                    <input type="email" id="email" name="Email" asp-for="Email" required>
+                    <input type="email" id="email" name="Email" asp-for="Email" placeholder="Enter your email" required>
                     <span asp-validation-for="Email" class="text-danger"></span>
                 </div>
                 <div class="form-input">
                     <label asp-for="Password"></label>
-                    <input type="password" id="password" name="Password" asp-for="Password" required>
-                    <span class="toggle-password material-symbols-outlined" id="toggle-password" role="button" tabindex="0" data-target="password" aria-pressed="false" data-show-icon="visibility_off" data-hide-icon="visibility">visibility_off</span>
+                    <div class="password-input-wrapper">
+                        <input type="password" id="password" name="Password" asp-for="Password" placeholder="Enter your password" required>
+                        <span class="toggle-password material-symbols-outlined" id="toggle-password" role="button" tabindex="0" data-target="password" aria-pressed="false" data-show-icon="visibility_off" data-hide-icon="visibility">visibility_off</span>
+                    </div>
                     <span asp-validation-for="Password" class="text-danger"></span>
                 </div>
                 <div class="single-checkbox-input">

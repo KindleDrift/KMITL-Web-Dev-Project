@@ -2,7 +2,7 @@
 
 namespace WebDevProject.Models
 {
-    public class EditProfileViewModel
+    public class EditProfileViewModel : IValidatableObject
     {
         // Profile Image upload
         public IFormFile? ProfileImage { get; set; }
@@ -18,5 +18,13 @@ namespace WebDevProject.Models
         public Users.Gender? UserGender { get; set; }
 
         public string? Bio { get; set; }
+
+        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+        {
+            if (DateOfBirth.HasValue && DateOfBirth.Value.Date > DateTime.Today)
+            {
+                yield return new ValidationResult("Birthdate cannot be later than today.", new[] { nameof(DateOfBirth) });
+            }
+        }
     }
 }

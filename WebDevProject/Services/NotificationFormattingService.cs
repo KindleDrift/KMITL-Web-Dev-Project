@@ -50,13 +50,6 @@ namespace WebDevProject.Services
             };
         }
 
-        /// <summary>
-        /// Formats the notification description with links to profiles and boards.
-        /// </summary>
-        /// <param name="notification">The notification to format</param>
-        /// <param name="generateProfileUrl">Delegate to generate profile URLs. Receives displayName as parameter.</param>
-        /// <param name="generateBoardUrl">Delegate to generate board URLs. Receives boardId as parameter.</param>
-        /// <returns>HTML-formatted description string (already encoded, safe to use with Html.Raw)</returns>
         public string FormatNotificationDescription(
             Notification notification,
             Func<string, string> generateProfileUrl,
@@ -66,7 +59,6 @@ namespace WebDevProject.Services
             var boardTitle = notification.Board?.Title;
             var boardId = notification.BoardId;
 
-            // Build links - HTML encoding is done by the caller's delegates
             var userLink = !string.IsNullOrEmpty(relatedUserName) 
                 ? $"<a href=\"{generateProfileUrl(relatedUserName)}\" class=\"notification-link\">{HttpUtility.HtmlEncode(relatedUserName)}</a>"
                 : "A new user";
@@ -75,7 +67,7 @@ namespace WebDevProject.Services
                 ? $"<a href=\"{generateBoardUrl(boardId.Value)}\" class=\"notification-link\">{HttpUtility.HtmlEncode(boardTitle)}</a>"
                 : "your board";
 
-            // Generate description based on notification type
+            // Generate description based on type
             return notification.Type switch
             {
                 NotificationType.NewRequest when notification.Board != null => 

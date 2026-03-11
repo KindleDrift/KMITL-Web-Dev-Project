@@ -15,14 +15,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const selectedTags = [];
 
-    // Hide/Show more search option
     hideOptionButton.addEventListener('click', function (e) {
         advancedSearchItems.forEach(item => {
             item.classList.toggle('hidden');
         });
     });
 
-    // Tag validation and formatting functions (reused from boardcreate.js)
     function isValidTag(tag) {
         if (tag.startsWith('-') || tag.endsWith('-')) {
             return false;
@@ -112,7 +110,7 @@ document.addEventListener('DOMContentLoaded', function () {
         tagInput.value = '';
     });
 
-    // Add tag on Enter key
+    // tag on Enter key
     tagInput.addEventListener('keypress', function (e) {
         if (e.key === 'Enter') {
             e.preventDefault();
@@ -122,7 +120,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    // Get selected statuses
     function getSelectedStatuses() {
         const selected = [];
         statusFilters.forEach(checkbox => {
@@ -133,7 +130,6 @@ document.addEventListener('DOMContentLoaded', function () {
         return selected.join(',');
     }
 
-    // Get selected join policies
     function getSelectedPolicies() {
         const selected = [];
         policyFilters.forEach(checkbox => {
@@ -144,13 +140,11 @@ document.addEventListener('DOMContentLoaded', function () {
         return selected.join(',');
     }
 
-    // Helper function to get text content from XML element
     function getXmlText(element, tagName) {
         const node = element.getElementsByTagName(tagName)[0];
         return node ? node.textContent : '';
     }
 
-    // Helper function to parse participant elements
     function parseParticipants(participantsElement) {
         const participants = [];
         if (participantsElement) {
@@ -165,7 +159,6 @@ document.addEventListener('DOMContentLoaded', function () {
         return participants;
     }
 
-    // Helper function to parse tag elements
     function parseTags(tagsElement) {
         const tags = [];
         if (tagsElement) {
@@ -228,7 +221,6 @@ document.addEventListener('DOMContentLoaded', function () {
         return boards;
     }
 
-    // Date formatting function
     function formatUtcDate(utcValue, mode = 'datetime') {
         if (!utcValue) {
             return '';
@@ -263,7 +255,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }).format(date);
     }
 
-    // Search function using XMLHttpRequest
     function performSearch() {
         const searchName = searchNameInput.value.trim();
         const tags = selectedTags.join(',');
@@ -273,7 +264,6 @@ document.addEventListener('DOMContentLoaded', function () {
         const joinPolicies = getSelectedPolicies();
         const clientTimeZoneOffsetMinutes = new Date().getTimezoneOffset();
 
-        // Build query parameters
         const params = new URLSearchParams();
         if (searchName) params.append('searchName', searchName);
         if (tags) params.append('tags', tags);
@@ -283,10 +273,8 @@ document.addEventListener('DOMContentLoaded', function () {
         if (joinPolicies) params.append('joinPolicies', joinPolicies);
         params.append('clientTimeZoneOffsetMinutes', clientTimeZoneOffsetMinutes.toString());
 
-        // Show loading state
         searchResults.innerHTML = '<p class="loading-message">Searching...</p>';
 
-        // Make XML HTTP request
         const xhr = new XMLHttpRequest();
         const url = `/Board/SearchBoards?${params.toString()}`;
         
@@ -320,7 +308,6 @@ document.addEventListener('DOMContentLoaded', function () {
         xhr.send();
     }
 
-    // Display results using card design from Board/Index
     function displayResults(boards) {
         if (!boards || boards.length === 0) {
             searchResults.innerHTML = '<p>No boards found. Try adjusting your search criteria or <a href="/Board/Create">create a board</a>.</p>';
@@ -404,17 +391,14 @@ document.addEventListener('DOMContentLoaded', function () {
         searchResults.innerHTML = html;
     }
 
-    // Helper function to escape HTML
     function escapeHtml(text) {
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
     }
 
-    // Search on button click
     searchButton.addEventListener('click', performSearch);
 
-    // Search on Enter key in search name input
     searchNameInput.addEventListener('keypress', function (e) {
         if (e.key === 'Enter') {
             e.preventDefault();
@@ -422,7 +406,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    // Clear all filters
     clearButton.addEventListener('click', function () {
         searchNameInput.value = '';
         tagInput.value = '';
@@ -431,12 +414,10 @@ document.addEventListener('DOMContentLoaded', function () {
         selectedTags.length = 0;
         tagContainer.innerHTML = '';
         
-        // Reset status filters to default (all Open)
         statusFilters.forEach(checkbox => {
             checkbox.checked = checkbox.value === 'Open';
         });
         
-        // Reset policy filters to default (all checked)
         policyFilters.forEach(checkbox => {
             checkbox.checked = true;
         });
@@ -444,7 +425,6 @@ document.addEventListener('DOMContentLoaded', function () {
         searchResults.innerHTML = '<p class="loading-message">Use the filters above to search for boards.</p>';
     });
 
-    // Perform initial search if there are URL parameters
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.has('name') || urlParams.has('tags') || urlParams.has('eventDateFrom') || urlParams.has('eventDateTo')) {
         if (urlParams.has('name')) {

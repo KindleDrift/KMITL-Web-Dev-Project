@@ -32,17 +32,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Tag validation and formatting functions
     function isValidTag(tag) {
-        // Check if tag starts or ends with hyphen
         if (tag.startsWith('-') || tag.endsWith('-')) {
             return false;
         }
 
-        // Check if tag contains numbers
+        // if tag contain numbers
         if (/\d/.test(tag)) {
             return false;
         }
 
-        // Check if tag contains only letters and single hyphens
+        // if tag contains only letters and single hyphens
         for (let i = 0; i < tag.length; i++) {
             const c = tag[i];
             
@@ -54,7 +53,7 @@ document.addEventListener('DOMContentLoaded', function () {
             // Allow single hyphen (not consecutive)
             if (c === '-') {
                 if (i > 0 && tag[i - 1] === '-') {
-                    return false; // Consecutive hyphens not allowed
+                    return false;
                 }
                 continue;
             }

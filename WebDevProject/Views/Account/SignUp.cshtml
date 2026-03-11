@@ -14,27 +14,31 @@
                 <legend>Create your account</legend>
                 <div class="form-input">
                     <label asp-for="DisplayName"></label>
-                    <input asp-for="DisplayName" id="signup-name" required>
+                    <input asp-for="DisplayName" id="signup-name" placeholder="Choose a username" required>
                     <span asp-validation-for="DisplayName" class="text-danger"></span>
                     <span id="nameError" class="text-danger"></span>
                 </div>
                 <div class="form-input">
                     <label asp-for="Email"></label>
-                    <input asp-for="Email" id="signup-email" required>
+                    <input asp-for="Email" id="signup-email" placeholder="Enter your email" required>
                     <span asp-validation-for="Email" class="text-danger"></span>
                     <span id="emailError" class="text-danger"></span>
                 </div>
                 <div class="form-input">
                     <label asp-for="Password"></label>
-                    <input asp-for="Password" id="password" required>
-                    <span class="toggle-password material-symbols-outlined" id="toggle-password" role="button" tabindex="0" data-target="password" aria-pressed="false" data-show-icon="visibility_off" data-hide-icon="visibility">visibility_off</span>
+                    <div class="password-input-wrapper">
+                        <input asp-for="Password" id="password" placeholder="Create a password" required>
+                        <span class="toggle-password material-symbols-outlined" id="toggle-password" role="button" tabindex="0" data-target="password" aria-pressed="false" data-show-icon="visibility_off" data-hide-icon="visibility">visibility_off</span>
+                    </div>
                     <span asp-validation-for="Password" class="text-danger"></span>
                     <span id="passwordError" class="text-danger"></span>
                 </div>
                 <div class="form-input">
                     <label asp-for="ConfirmPassword"></label>
-                    <input asp-for="ConfirmPassword" id="confirm-password" required>
-                    <span class="toggle-password material-symbols-outlined" id="toggle-confirm-password" role="button" tabindex="0" data-target="confirm-password" aria-pressed="false" data-show-icon="visibility_off" data-hide-icon="visibility">visibility_off</span>
+                    <div class="password-input-wrapper">
+                        <input asp-for="ConfirmPassword" id="confirm-password" placeholder="Confirm your password" required>
+                        <span class="toggle-password material-symbols-outlined" id="toggle-confirm-password" role="button" tabindex="0" data-target="confirm-password" aria-pressed="false" data-show-icon="visibility_off" data-hide-icon="visibility">visibility_off</span>
+                    </div>
                     <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
                     <span id="confirmPasswordError" class="text-danger"></span>
                 </div>

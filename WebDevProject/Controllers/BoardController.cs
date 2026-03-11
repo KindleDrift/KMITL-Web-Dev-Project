@@ -77,7 +77,7 @@ namespace WebDevProject.Controllers
         }
 
         [AllowAnonymous]
-        public async Task<IActionResult> Search(string name)
+        public IActionResult Search(string name)
         {
             return View();
         }
@@ -90,6 +90,7 @@ namespace WebDevProject.Controllers
             
             var boardQuery = _context.Boards
                 .AsNoTracking()
+                .AsSplitQuery()
                 .Include(b => b.Author)
                 .Include(b => b.Participants)
                     .ThenInclude(bp => bp.User)
@@ -97,7 +98,7 @@ namespace WebDevProject.Controllers
                 .Include(b => b.Tags)
                 .Where(b => b.CurrentStatus != BoardStatus.Archived);
 
-            // Exclude user's own posts if logged in
+            // Exclude user's own posts
             if (!string.IsNullOrWhiteSpace(userId))
             {
                 boardQuery = boardQuery.Where(b => b.AuthorId != userId);
@@ -437,8 +438,6 @@ namespace WebDevProject.Controllers
                 return View(model);
             }
 
-            // Edge Case 1: Join Policy changed from Application to FirstComeFirstServe
-            // Auto-approve all pending applicants
             _boardService.AutoApproveApplicantsOnJoinPolicyChange(board, id, oldJoinPolicy);
 
             _boardService.RecalculateStatusAfterBoardSettingChanges(board, oldGroupManagement, oldMaxParticipants);
