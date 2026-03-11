@@ -1,4 +1,4 @@
-﻿// AJAX for signup auto dupe name and email
+// AJAX for signup auto dupe name and email
 let nameCheckTimeout;
 let emailCheckTimeout;
 
@@ -13,20 +13,20 @@ function checkDuplicateName() {
         return;
     }
 
-    nameCheckTimeout = setTimeout(function () {
-        var xhr = new XMLHttpRequest();
-        xhr.open("GET", "/Account/CheckDisplayNameExist?displayname=" + encodeURIComponent(name), true);
-        xhr.onreadystatechange = function () {
-            if (xhr.readyState === 4 && xhr.status === 200) {
-                var isDuplicate = JSON.parse(xhr.responseText);
+    nameCheckTimeout = setTimeout(async function () {
+        try {
+            const response = await fetch("/Account/CheckDisplayNameExist?displayname=" + encodeURIComponent(name));
+            if (response.ok) {
+                const isDuplicate = await response.json();
                 if (isDuplicate) {
                     nameError.textContent = "This username is already taken.";
                 } else {
                     nameError.textContent = "";
                 }
             }
-        };
-        xhr.send();
+        } catch (error) {
+            console.error("Error checking username:", error);
+        }
     }, 500);
 }
 
@@ -41,20 +41,20 @@ function checkDuplicateEmail() {
         return;
     }
 
-    emailCheckTimeout = setTimeout(function () {
-        var xhr = new XMLHttpRequest();
-        xhr.open("GET", "/Account/CheckEmailExist?email=" + encodeURIComponent(email), true);
-        xhr.onreadystatechange = function () {
-            if (xhr.readyState === 4 && xhr.status === 200) {
-                var isDuplicate = JSON.parse(xhr.responseText);
+    emailCheckTimeout = setTimeout(async function () {
+        try {
+            const response = await fetch("/Account/CheckEmailExist?email=" + encodeURIComponent(email));
+            if (response.ok) {
+                const isDuplicate = await response.json();
                 if (isDuplicate) {
                     emailError.textContent = "This email is already taken.";
                 } else {
                     emailError.textContent = "";
                 }
             }
-        };
-        xhr.send();
+        } catch (error) {
+            console.error("Error checking email:", error);
+        }
     }, 500);
 }
 

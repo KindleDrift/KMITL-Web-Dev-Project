@@ -1,5 +1,4 @@
 using System.Text;
-using System.Xml;
 using Microsoft.EntityFrameworkCore;
 using WebDevProject.Data;
 using WebDevProject.Models;
@@ -17,94 +16,59 @@ namespace WebDevProject.Services
             _environment = environment;
         }
 
-        public string BuildBoardsXml(List<Board> boards)
+        public object GetBoardSearchDtos(List<Board> boards)
         {
-            var sb = new StringBuilder();
-            var settings = new XmlWriterSettings
+            return boards.Select(b =>
             {
-                Indent = true,
-                OmitXmlDeclaration = false,
-                Encoding = Encoding.UTF8
-            };
+                var visibleParticipants = b.Participants.Where(p => p.UserId != b.AuthorId).ToList();
+                var participantCount = visibleParticipants.Count + b.ExternalParticipants.Count;
+                var spotsLeft = Math.Max(b.MaxParticipants - participantCount, 0);
+                var isOpenPastDeadline = b.CurrentStatus == BoardStatus.Open && b.Deadline <= DateTimeOffset.UtcNow.UtcDateTime;
 
-            using (var writer = XmlWriter.Create(sb, settings))
-            {
-                writer.WriteStartDocument();
-                writer.WriteStartElement("Boards");
-
-                foreach (var b in boards)
+                var statusClass = b.CurrentStatus switch
                 {
-                    var visibleParticipants = b.Participants.Where(p => p.UserId != b.AuthorId).ToList();
-                    var participantCount = visibleParticipants.Count + b.ExternalParticipants.Count;
-                    var spotsLeft = Math.Max(b.MaxParticipants - participantCount, 0);
-                    var isOpenPastDeadline = b.CurrentStatus == BoardStatus.Open && b.Deadline <= DateTimeOffset.UtcNow.UtcDateTime;
+                    BoardStatus.Open => isOpenPastDeadline ? "status-closed" : "status-open",
+                    BoardStatus.Full => "status-full",
+                    BoardStatus.Closed => "status-closed",
+                    BoardStatus.Cancelled => "status-cancelled",
+                    BoardStatus.Archived => "status-archived",
+                    _ => "status-open"
+                };
 
-                    writer.WriteStartElement("Board");
-
-                    writer.WriteElementString("Id", b.Id.ToString());
-                    writer.WriteElementString("Title", b.Title);
-                    writer.WriteElementString("Description", b.Description);
-                    writer.WriteElementString("ImageUrl", string.IsNullOrWhiteSpace(b.ImageUrl) ? "/images/default-board.png" : b.ImageUrl);
-                    writer.WriteElementString("Status", b.CurrentStatus.ToString());
-                    writer.WriteElementString("DisplayStatus", isOpenPastDeadline ? "Open (Deadline Passed)" : b.CurrentStatus.ToString());
-
-                    var statusClass = b.CurrentStatus switch
+                return new
+                {
+                    id = b.Id,
+                    title = b.Title,
+                    description = b.Description,
+                    imageUrl = string.IsNullOrWhiteSpace(b.ImageUrl) ? "/images/default-board.png" : b.ImageUrl,
+                    status = b.CurrentStatus.ToString(),
+                    displayStatus = isOpenPastDeadline ? "Open (Deadline Passed)" : b.CurrentStatus.ToString(),
+                    statusClass = statusClass,
+                    eventDate = b.EventDate.ToString("dd MMM yyyy"),
+                    eventTime = b.EventDate.ToString("HH:mm"),
+                    eventDateUtc = b.EventDate.ToString("o"),
+                    deadline = b.Deadline.ToString("dd MMM yyyy, HH:mm"),
+                    deadlineUtc = b.Deadline.ToString("o"),
+                    location = b.Location,
+                    tags = b.Tags.Select(t => t.Name).ToList(),
+                    joinPolicy = b.JoinPolicy.ToString(),
+                    joinPolicyDisplay = b.JoinPolicy == BoardJoinPolicy.FirstComeFirstServe ? "First Come First Serve" : "Application",
+                    currentParticipants = participantCount,
+                    maxParticipants = b.MaxParticipants,
+                    spotsLeft = spotsLeft,
+                    author = new
                     {
-                        BoardStatus.Open => isOpenPastDeadline ? "status-closed" : "status-open",
-                        BoardStatus.Full => "status-full",
-                        BoardStatus.Closed => "status-closed",
-                        BoardStatus.Cancelled => "status-cancelled",
-                        BoardStatus.Archived => "status-archived",
-                        _ => "status-open"
-                    };
-                    writer.WriteElementString("StatusClass", statusClass);
-
-                    writer.WriteElementString("EventDate", b.EventDate.ToString("dd MMM yyyy"));
-                    writer.WriteElementString("EventTime", b.EventDate.ToString("HH:mm"));
-                    writer.WriteElementString("EventDateUtc", b.EventDate.ToString("o"));
-                    writer.WriteElementString("Deadline", b.Deadline.ToString("dd MMM yyyy, HH:mm"));
-                    writer.WriteElementString("DeadlineUtc", b.Deadline.ToString("o"));
-                    writer.WriteElementString("Location", b.Location);
-
-                    writer.WriteStartElement("Tags");
-                    foreach (var tag in b.Tags)
+                        displayName = b.Author?.DisplayName ?? "Unknown",
+                        profilePictureUrl = b.Author?.ProfilePictureUrl ?? "/images/default-profile.png"
+                    },
+                    previewParticipants = visibleParticipants.Take(5).Select(p => new
                     {
-                        writer.WriteElementString("Tag", tag.Name);
-                    }
-                    writer.WriteEndElement();
-
-                    writer.WriteElementString("JoinPolicy", b.JoinPolicy.ToString());
-                    writer.WriteElementString("JoinPolicyDisplay", b.JoinPolicy == BoardJoinPolicy.FirstComeFirstServe ? "First Come First Serve" : "Application");
-                    writer.WriteElementString("CurrentParticipants", participantCount.ToString());
-                    writer.WriteElementString("MaxParticipants", b.MaxParticipants.ToString());
-                    writer.WriteElementString("SpotsLeft", spotsLeft.ToString());
-
-                    writer.WriteStartElement("Author");
-                    writer.WriteElementString("DisplayName", b.Author?.DisplayName ?? "Unknown");
-                    writer.WriteElementString("ProfilePictureUrl", b.Author?.ProfilePictureUrl ?? "/images/default-profile.png");
-                    writer.WriteEndElement();
-
-                    writer.WriteStartElement("PreviewParticipants");
-                    var previewParticipants = visibleParticipants.Take(5);
-                    foreach (var participant in previewParticipants)
-                    {
-                        writer.WriteStartElement("Participant");
-                        writer.WriteElementString("ProfilePictureUrl", participant.User?.ProfilePictureUrl ?? "/images/default-profile.png");
-                        writer.WriteElementString("DisplayName", participant.User?.DisplayName ?? "Participant");
-                        writer.WriteEndElement();
-                    }
-                    writer.WriteEndElement();
-
-                    writer.WriteElementString("TotalVisibleParticipants", visibleParticipants.Count.ToString());
-
-                    writer.WriteEndElement();
-                }
-
-                writer.WriteEndElement();
-                writer.WriteEndDocument();
-            }
-
-            return sb.ToString();
+                        displayName = p.User?.DisplayName ?? "Participant",
+                        profilePictureUrl = p.User?.ProfilePictureUrl ?? "/images/default-profile.png"
+                    }).ToList(),
+                    totalVisibleParticipants = visibleParticipants.Count
+                };
+            }).ToList();
         }
 
         public async Task<(bool Success, string? ImageUrl, string? ErrorMessage)> SaveBoardImageAsync(IFormFile? boardImage, string userId, string? existingImageUrl)

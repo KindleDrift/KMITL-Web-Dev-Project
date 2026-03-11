@@ -13,10 +13,8 @@ namespace WebDevProject.Filters
             var userManager = context.HttpContext.RequestServices.GetRequiredService<UserManager<Users>>();
             var user = await userManager.GetUserAsync(context.HttpContext.User);
 
-            // Allow unauthenticated users or users who have completed onboarding
             if (user != null && !user.HasCompletedOnboarding)
             {
-                // Check if the current action is already the onboarding page
                 var controller = context.RouteData.Values["controller"]?.ToString();
                 var action = context.RouteData.Values["action"]?.ToString();
 

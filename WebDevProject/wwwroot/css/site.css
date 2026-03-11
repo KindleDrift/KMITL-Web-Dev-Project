@@ -767,15 +767,6 @@ legend {
     .login-container {
         padding: 20px 12px;
     }
-
-    .admin-table {
-        font-size: 12px;
-    }
-
-    .admin-table th,
-    .admin-table td {
-        padding: 8px;
-    }
 }
 
 /* Small Mobile */

@@ -193,8 +193,8 @@ namespace WebDevProject.Controllers
                 .OrderByDescending(b => b.CreatedAt)
                 .ToListAsync();
 
-            var xml = _boardService.BuildBoardsXml(boards);
-            return Content(xml, "application/xml");
+            var dtos = _boardService.GetBoardSearchDtos(boards);
+            return Json(dtos);
         }
 
         [HttpGet]

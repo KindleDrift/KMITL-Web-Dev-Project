@@ -138,86 +138,7 @@ document.addEventListener('DOMContentLoaded', function () {
         return selected.join(',');
     }
 
-    function getXmlText(element, tagName) {
-        const node = element.getElementsByTagName(tagName)[0];
-        return node ? node.textContent : '';
-    }
 
-    function parseParticipants(participantsElement) {
-        const participants = [];
-        if (participantsElement) {
-            const participantNodes = participantsElement.getElementsByTagName('Participant');
-            for (let i = 0; i < participantNodes.length; i++) {
-                participants.push({
-                    profilePictureUrl: getXmlText(participantNodes[i], 'ProfilePictureUrl'),
-                    displayName: getXmlText(participantNodes[i], 'DisplayName')
-                });
-            }
-        }
-        return participants;
-    }
-
-    function parseTags(tagsElement) {
-        const tags = [];
-        if (tagsElement) {
-            const tagNodes = tagsElement.getElementsByTagName('Tag');
-            for (let i = 0; i < tagNodes.length; i++) {
-                tags.push(tagNodes[i].textContent);
-            }
-        }
-        return tags;
-    }
-
-    // XML to board objects
-    function parseXmlResponse(xmlDoc) {
-        const boards = [];
-        const boardElements = xmlDoc.getElementsByTagName('Board');
-
-        for (let i = 0; i < boardElements.length; i++) {
-            const boardElement = boardElements[i];
-
-            const authorElement = boardElement.getElementsByTagName('Author')[0];
-            const author = {
-                displayName: getXmlText(authorElement, 'DisplayName'),
-                profilePictureUrl: getXmlText(authorElement, 'ProfilePictureUrl')
-            };
-
-            const previewParticipantsElement = boardElement.getElementsByTagName('PreviewParticipants')[0];
-            const previewParticipants = parseParticipants(previewParticipantsElement);
-
-            const tagsElement = boardElement.getElementsByTagName('Tags')[0];
-            const tags = parseTags(tagsElement);
-
-            const board = {
-                id: parseInt(getXmlText(boardElement, 'Id')),
-                title: getXmlText(boardElement, 'Title'),
-                description: getXmlText(boardElement, 'Description'),
-                imageUrl: getXmlText(boardElement, 'ImageUrl'),
-                status: getXmlText(boardElement, 'Status'),
-                displayStatus: getXmlText(boardElement, 'DisplayStatus'),
-                statusClass: getXmlText(boardElement, 'StatusClass'),
-                eventDate: getXmlText(boardElement, 'EventDate'),
-                eventTime: getXmlText(boardElement, 'EventTime'),
-                eventDateUtc: getXmlText(boardElement, 'EventDateUtc'),
-                deadline: getXmlText(boardElement, 'Deadline'),
-                deadlineUtc: getXmlText(boardElement, 'DeadlineUtc'),
-                location: getXmlText(boardElement, 'Location'),
-                tags: tags,
-                joinPolicy: getXmlText(boardElement, 'JoinPolicy'),
-                joinPolicyDisplay: getXmlText(boardElement, 'JoinPolicyDisplay'),
-                currentParticipants: parseInt(getXmlText(boardElement, 'CurrentParticipants')),
-                maxParticipants: parseInt(getXmlText(boardElement, 'MaxParticipants')),
-                spotsLeft: parseInt(getXmlText(boardElement, 'SpotsLeft')),
-                author: author,
-                previewParticipants: previewParticipants,
-                totalVisibleParticipants: parseInt(getXmlText(boardElement, 'TotalVisibleParticipants'))
-            };
-
-            boards.push(board);
-        }
-
-        return boards;
-    }
 
     function formatUtcDate(utcValue, mode = 'datetime') {
         if (!utcValue) {
@@ -253,7 +174,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }).format(date);
     }
 
-    function performSearch() {
+    async function performSearch() {
         const searchName = searchNameInput.value.trim();
         const tags = selectedTags.join(',');
         const eventDateFrom = eventDateFromInput.value;
@@ -273,37 +194,24 @@ document.addEventListener('DOMContentLoaded', function () {
 
         searchResults.innerHTML = '<p class="loading-message">Searching...</p>';
 
-        const xhr = new XMLHttpRequest();
-        const url = `/Board/SearchBoards?${params.toString()}`;
-
-        xhr.open('GET', url, true);
-        xhr.setRequestHeader('Accept', 'application/xml');
-
-        xhr.onload = function () {
-            if (xhr.status >= 200 && xhr.status < 300) {
-                try {
-                    const xmlDoc = xhr.responseXML;
-                    if (!xmlDoc) {
-                        throw new Error('Invalid XML response');
-                    }
-                    const boards = parseXmlResponse(xmlDoc);
-                    displayResults(boards);
-                } catch (error) {
-                    console.error('Error parsing XML:', error);
-                    searchResults.innerHTML = '<p class="error-message">An error occurred while processing the search results. Please try again.</p>';
+        try {
+            const response = await fetch(`/Board/SearchBoards?${params.toString()}`, {
+                headers: {
+                    'Accept': 'application/json'
                 }
+            });
+
+            if (response.ok) {
+                const boards = await response.json();
+                displayResults(boards);
             } else {
-                console.error('Request failed with status:', xhr.status);
+                console.error('Request failed with status:', response.status);
                 searchResults.innerHTML = '<p class="error-message">An error occurred while searching. Please try again.</p>';
             }
-        };
-
-        xhr.onerror = function () {
-            console.error('Network error occurred');
-            searchResults.innerHTML = '<p class="error-message">A network error occurred. Please try again.</p>';
-        };
-
-        xhr.send();
+        } catch (error) {
+            console.error('Network or parsing error occurred:', error);
+            searchResults.innerHTML = '<p class="error-message">An error occurred while processing the search results. Please try again.</p>';
+        }
     }
 
     function displayResults(boards) {

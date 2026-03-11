@@ -105,10 +105,8 @@ namespace WebDevProject.Controllers
                     return RedirectToAction("SignIn", "Account");
                 }
 
-                // Trim whitespace from DisplayName
                 model.UserName = model.UserName?.Trim() ?? string.Empty;
 
-                // Validate DisplayName is not empty after trimming
                 if (string.IsNullOrWhiteSpace(model.UserName))
                 {
                     ModelState.AddModelError(nameof(model.UserName), "Username cannot be empty or contain only spaces.");
@@ -124,14 +122,12 @@ namespace WebDevProject.Controllers
                     return View(model);
                 }
 
-                // Update user fields
                 user.DisplayName = model.UserName;
                 user.NormalizedDisplayName = model.UserName.ToUpper();
                 user.DateOfBirth = model.DateOfBirth;
                 user.UserGender = model.UserGender;
                 user.Bio = model.Bio;
 
-                // Update user profile picture
                 var profileImageResult = await _profileImageService.SaveProfileImageAsync(model.ProfileImage, user.Id, user.ProfilePictureUrl);
                 user.ProfilePictureUrl = profileImageResult.ImageUrl;
                 if (!profileImageResult.Success)
@@ -150,7 +146,6 @@ namespace WebDevProject.Controllers
                 {
                     foreach (var error in result.Errors)
                     {
-                        // if the email is in use it will return both "Email '...' is already taken." and "Username '...' is already taken.", so if-else catches is needed.
                         if (error.Code == "DuplicateUserName" && error.Description.Contains("is already taken."))
                         {
                             // skip

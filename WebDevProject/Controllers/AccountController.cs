@@ -78,10 +78,8 @@ namespace WebDevProject.Controllers
         {
             if (ModelState.IsValid)
             {
-                // Trim whitespace from DisplayName
                 model.DisplayName = model.DisplayName?.Trim() ?? string.Empty;
 
-                // Validate DisplayName is not empty after trimming
                 if (string.IsNullOrWhiteSpace(model.DisplayName))
                 {
                     ModelState.AddModelError(nameof(model.DisplayName), "Username cannot be empty or contain only spaces.");
@@ -125,7 +123,6 @@ namespace WebDevProject.Controllers
                 {
                     foreach (var error in result.Errors)
                     {
-                        // if the email is in use it will return both "Email '...' is already taken." and "Username '...' is already taken.", so if-else catches is needed.
                         if (error.Code == "DuplicateUserName" && error.Description.Contains("is already taken."))
                         {
                             // skip
@@ -244,7 +241,7 @@ namespace WebDevProject.Controllers
             return RedirectToAction("SignIn");
         }
 
-        // API endpoint to check if a display name already exists for AJAX calls
+        // API for AJAX calls
         [HttpGet]
         public async Task<IActionResult> CheckDisplayNameExist(string displayname)
         {

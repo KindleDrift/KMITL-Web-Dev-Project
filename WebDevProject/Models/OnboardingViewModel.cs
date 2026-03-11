@@ -2,10 +2,8 @@
 
 namespace WebDevProject.Models
 {
-    // The whole thing can be skipped if the user doesn't want to provide their date of birth, so no required attribute is needed.
     public class OnboardingViewModel : IValidatableObject
     {
-        // Profile Image upload
         public IFormFile? ProfileImage { get; set; }
 
         [DataType(DataType.Date)]

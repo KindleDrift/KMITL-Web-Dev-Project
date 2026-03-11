@@ -7,11 +7,9 @@ using WebDevProject.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
 builder.Services.AddControllersWithViews();
 builder.Services.AddHttpContextAccessor();
 
-// Configure Entity Framework with SQL Server
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
@@ -23,14 +21,13 @@ builder.Services.AddIdentity<Users, IdentityRole>(options =>
     options.Password.RequireUppercase = true;
     options.Password.RequiredLength = 8;
     options.User.RequireUniqueEmail = true;
-    options.SignIn.RequireConfirmedEmail = false; // Set to true if production
-    options.SignIn.RequireConfirmedPhoneNumber = false; // Set to true if production
+    options.SignIn.RequireConfirmedEmail = false;
+    options.SignIn.RequireConfirmedPhoneNumber = false;
 }
 )
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
 
-// Configure Identity cookie and login path
 builder.Services.ConfigureApplicationCookie(options =>
 {
     options.LoginPath = "/Account/SignIn";
@@ -39,7 +36,6 @@ builder.Services.ConfigureApplicationCookie(options =>
     {
         OnRedirectToLogin = context =>
         {
-            // Return 404 instead of redirecting to login for admin routes
             if (context.Request.Path.StartsWithSegments("/Admin"))
             {
                 context.Response.Redirect("/Home/Error/404");
@@ -52,7 +48,6 @@ builder.Services.ConfigureApplicationCookie(options =>
         },
         OnRedirectToAccessDenied = context =>
         {
-            // Return 404 instead of redirecting to access denied for admin routes
             if (context.Request.Path.StartsWithSegments("/Admin"))
             {
                 context.Response.Redirect("/Home/Error/404");
@@ -66,14 +61,12 @@ builder.Services.ConfigureApplicationCookie(options =>
     };
 });
 
-// Add custom authorization policy for admin
 builder.Services.AddAuthorizationBuilder()
     .AddPolicy("AdminOnly", policy =>
     {
         policy.RequireRole("Admin");
     });
 
-// Add custom services
 builder.Services.AddScoped<NotificationsService>();
 builder.Services.AddScoped<BoardService>();
 builder.Services.AddScoped<BoardMembershipService>();
@@ -83,10 +76,8 @@ builder.Services.AddScoped<BoardDisplayService>();
 
 var app = builder.Build();
 
-// Seed database if needed
 await DbSeeder.SeedAsync(app.Services);
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
@@ -99,7 +90,6 @@ else
 
 app.UseHttpsRedirection();
 
-// Status code pages middleware MUST come before routing
 app.UseStatusCodePagesWithReExecute("/Home/Error/{0}");
 
 app.UseRouting();

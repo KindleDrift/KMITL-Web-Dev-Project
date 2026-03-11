@@ -40,14 +40,12 @@ namespace WebDevProject.Controllers
             return View();
         }
 
-        // Admin/Users - View all users
         public async Task<ActionResult> Users()
         {
             var users = await _context.Users.ToListAsync();
             return View(users);
         }
 
-        // Admin/Boards
         public async Task<ActionResult> Boards()
         {
             var boards = await _context.Boards
@@ -57,7 +55,6 @@ namespace WebDevProject.Controllers
             return View(boards);
         }
 
-        // Admin/EditUser/{id} - GET: Show edit form
         public async Task<ActionResult> EditUser(string id)
         {
             if (string.IsNullOrEmpty(id))
@@ -74,7 +71,6 @@ namespace WebDevProject.Controllers
             return View(user);
         }
 
-        // Admin/EditUser/{id} - POST: Update user
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> EditUser(string id, [Bind("Id,DisplayName,DateOfBirth,UserGender,Bio,HasCompletedOnboarding")] Users model, IFormFile? ProfileImage)
@@ -97,7 +93,6 @@ namespace WebDevProject.Controllers
                 return View(model);
             }
 
-            // Handle profile image upload
             var profileImageResult = await _profileImageService.SaveProfileImageAsync(ProfileImage, id, user.ProfilePictureUrl);
             user.ProfilePictureUrl = profileImageResult.ImageUrl;
             if (!profileImageResult.Success)
@@ -129,7 +124,6 @@ namespace WebDevProject.Controllers
             return RedirectToAction(nameof(Users));
         }
 
-        // Admin/Ban/{id} - POST: Ban user
         [HttpPost]
         public async Task<ActionResult> Ban(string id)
         {
@@ -156,7 +150,6 @@ namespace WebDevProject.Controllers
             return RedirectToAction(nameof(Users));
         }
 
-        // Admin/Unban/{id} - POST: Unban user
         [HttpPost]
         public async Task<ActionResult> Unban(string id)
         {
@@ -174,7 +167,6 @@ namespace WebDevProject.Controllers
             return RedirectToAction(nameof(Users));
         }
 
-        // Admin/EditBoard/{id} - GET: Show edit form for board
         public async Task<ActionResult> EditBoard(int id)
         {
             var board = await _context.Boards
@@ -191,7 +183,6 @@ namespace WebDevProject.Controllers
             return View(board);
         }
 
-        // Admin/EditBoard/{id} - POST: Update board
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> EditBoard(int id, [Bind("Id,Title,Description,MaxParticipants,Location,EventDate,Deadline,NotifyAuthorOnFull,GroupManagementOption,JoinPolicy,CurrentStatus")] Board model, IFormFile? BoardImage, List<string>? Tags, int? clientTimeZoneOffsetMinutes)
@@ -235,7 +226,6 @@ namespace WebDevProject.Controllers
             var eventDateUtc = TimeZoneHelper.FromClientLocalToUtc(model.EventDate, clientTimeZoneOffsetMinutes);
             var deadlineUtc = TimeZoneHelper.FromClientLocalToUtc(model.Deadline, clientTimeZoneOffsetMinutes);
 
-            // Update only the allowed properties
             board.Title = model.Title;
             board.Description = model.Description;
             board.MaxParticipants = model.MaxParticipants;
@@ -249,7 +239,7 @@ namespace WebDevProject.Controllers
 
             var approvedApplicantIds = _boardService.AutoApproveApplicantsOnJoinPolicyChange(board, id, oldJoinPolicy);
 
-            // Notify all approved applicants
+            // Notify
             if (approvedApplicantIds.Any())
             {
                 await _notificationsService.CreateNotificationsForMultipleUsersAsync(
@@ -275,10 +265,8 @@ namespace WebDevProject.Controllers
                 throw;
             }
 
-            // Notify participants and author if board status changed significantly
             if (model.CurrentStatus == BoardStatus.Cancelled)
             {
-                // Notify all participants
                 var participantIds = board.Participants.Select(p => p.UserId).ToList();
                 if (participantIds.Any())
                 {
@@ -289,7 +277,6 @@ namespace WebDevProject.Controllers
                         NotificationType.IsRejected);
                 }
 
-                // Notify all applicants
                 var applicantIds = board.Applicants.Select(a => a.UserId).ToList();
                 if (applicantIds.Any())
                 {
@@ -304,7 +291,6 @@ namespace WebDevProject.Controllers
             return RedirectToAction(nameof(Boards));
         }
 
-        // Admin/ClearDatabase - POST: Delete all data except admin user
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> ClearDatabase()
@@ -317,35 +303,27 @@ namespace WebDevProject.Controllers
                     return Unauthorized();
                 }
 
-                // Delete all boards and related data
                 var boards = await _context.Boards.Include(b => b.Tags).ToListAsync();
                 _context.Boards.RemoveRange(boards);
 
-                // Delete all notifications
                 var notifications = await _context.Notifications.ToListAsync();
                 _context.Notifications.RemoveRange(notifications);
 
-                // Delete all tags
                 var tags = await _context.Tags.ToListAsync();
                 _context.Tags.RemoveRange(tags);
 
-                // Delete all participants
                 var participants = await _context.BoardParticipants.ToListAsync();
                 _context.BoardParticipants.RemoveRange(participants);
 
-                // Delete all external participants
                 var externalParticipants = await _context.BoardExternalParticipants.ToListAsync();
                 _context.BoardExternalParticipants.RemoveRange(externalParticipants);
 
-                // Delete all applicants
                 var applicants = await _context.BoardApplicants.ToListAsync();
                 _context.BoardApplicants.RemoveRange(applicants);
 
-                // Delete all denied users
                 var deniedUsers = await _context.BoardDenied.ToListAsync();
                 _context.BoardDenied.RemoveRange(deniedUsers);
 
-                // Delete all users except current admin
                 var usersToDelete = await _context.Users.Where(u => u.Id != currentUser.Id).ToListAsync();
                 _context.Users.RemoveRange(usersToDelete);
 
@@ -361,23 +339,18 @@ namespace WebDevProject.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        // Admin/ResetAndReseed - POST: Drop database and reseed
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> ResetAndReseed()
         {
             try
             {
-                // Delete the database
                 await _context.Database.EnsureDeletedAsync();
 
-                // Recreate the database
                 await _context.Database.EnsureCreatedAsync();
 
-                // Run migrations
                 await _context.Database.MigrateAsync();
 
-                // Reseed
                 await DbSeeder.SeedAsync(_serviceProvider);
 
                 TempData["SuccessMessage"] = "Database reset and reseeded successfully.";

@@ -45,9 +45,9 @@ namespace WebDevProject.Services
                     {
                         System.IO.File.Delete(oldImagePath);
                     }
-                    catch (Exception)
+                    catch (Exception ex)
                     {
-                        // Ignore file deletion errors to prevent crashing the upload process
+                        Console.WriteLine($"Failed to delete old profile image {oldImagePath}: {ex.Message}");
                     }
                 }
             }

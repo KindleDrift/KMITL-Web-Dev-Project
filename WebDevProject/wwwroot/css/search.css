@@ -1,4 +1,4 @@
-/* Search Area Styles */
+/* search area */
 .search-div {
     max-width: 1400px;
     margin: 0 auto;
@@ -135,7 +135,6 @@
     background-color: #fff454;
 }
 
-/* Tag Input Row - Input and Button Side by Side */
 .tag-input-row {
     display: flex;
     gap: 8px;
@@ -163,7 +162,6 @@
     white-space: nowrap;
 }
 
-/* Tag Container Styles */
 .tag-container {
     display: flex;
     flex-wrap: wrap;
@@ -193,7 +191,6 @@
     color: #e02424;
 }
 
-/* Results Container */
 .search-results-container {
     min-height: 300px;
 }
@@ -211,7 +208,7 @@
     color: #ef4444;
 }
 
-/* Override board.css tag styles for search filter tags */
+/* for override */
 .tag-container .tag {
     display: inline-flex !important;
     background-color: #e8f1f8;
@@ -224,7 +221,7 @@
     flex-wrap: nowrap;
 }
 
-/* Responsive Design */
+/* responsive */
 @media (max-width: 768px) {
     .search-area {
         padding: 15px;
@@ -268,7 +265,7 @@
     }
 }
 
-/* Old styles preserved for compatibility */
+/* old styles */
 #postarea {
     margin: 20px;
 }

@@ -241,7 +241,6 @@ namespace WebDevProject.Services
                 NotificationType.IsAccepted,
                 boardId: boardId);
 
-            // Check if board just became full and author wants notification
             if (!wasFull && isNowFull && board.NotifyAuthorOnFull)
             {
                 await _notificationsService.CreateNotificationAsync(

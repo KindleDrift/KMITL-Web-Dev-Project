@@ -56,7 +56,6 @@ async function deleteNotification(notificationId) {
             element.remove();
             updateUnreadCount();
             
-            // Check if there are no more notifications
             const notificationsList = document.querySelector('.notifications-list');
             if (notificationsList && notificationsList.children.length === 0) {
                 location.reload();
@@ -101,7 +100,6 @@ async function updateUnreadCount() {
             unreadCountElement.textContent = data.count;
         }
 
-        // Hide "Mark all as read" button if no unread notifications
         const markAllBtn = document.querySelector('.btn-mark-all');
         if (markAllBtn && data.count === 0) {
             markAllBtn.style.display = 'none';
@@ -129,6 +127,5 @@ function updateNotificationDots(count) {
 document.addEventListener('DOMContentLoaded', function() {
     updateUnreadCount();
     
-    // Get unread count updates every 30 seconds
     setInterval(updateUnreadCount, 30000);
 });

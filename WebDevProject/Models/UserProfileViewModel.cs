@@ -12,10 +12,9 @@ namespace WebDevProject.Models
         public int BoardsCreatedCount { get; set; }
         public int BoardParticipationsCount { get; set; }
 
-        // if user is viewing their own profile
         public bool IsOwnProfile { get; set; }
         
-        // only shown when viewing own profile
+        // no show if not own profile
         public string? Email { get; set; }
         public DateTime? DateOfBirth { get; set; }
     }
