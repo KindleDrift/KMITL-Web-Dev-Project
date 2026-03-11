@@ -96,7 +96,7 @@ function validatePassword() {
         passwordError.textContent = "";
     }
     
-    // Check confirm password match
+    // confirm password match
     if (confirmPassword && password !== confirmPassword) {
         confirmPasswordError.textContent = "Passwords do not match.";
     } else {

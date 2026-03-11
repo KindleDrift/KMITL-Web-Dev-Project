@@ -255,7 +255,6 @@ namespace WebDevProject.Controllers
         [HttpGet]
         public async Task<IActionResult> CheckEmailExist(string email)
         {
-            // Not a mistake here, because the email is also stored in username.
             var user = await _userManager.FindByNameAsync(email);
             return Json(user != null);
         }

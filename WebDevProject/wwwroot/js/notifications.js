@@ -1,6 +1,3 @@
-// Notification Management JavaScript
-// This file handles all notification interactions: mark as read, delete, and count updates
-
 async function markAsRead(notificationId) {
     try {
         const response = await fetch(`/Notifications/MarkAsRead?notificationId=${notificationId}`, {
@@ -129,10 +126,9 @@ function updateNotificationDots(count) {
     }
 }
 
-// Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
     updateUnreadCount();
     
-    // Poll for unread count updates every 30 seconds
+    // Get unread count updates every 30 seconds
     setInterval(updateUnreadCount, 30000);
 });
