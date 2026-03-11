@@ -1,5 +1,4 @@
-﻿// Guest navbar toggle
-document.addEventListener('DOMContentLoaded', function() {
+﻿document.addEventListener('DOMContentLoaded', function () {
     const guestMenuToggleButton = document.getElementById('guest-menu-toggle');
     const guestNavbarMenu = document.getElementById('guest-navbar-menu');
 
@@ -10,7 +9,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const openIcon = guestMenuToggleButton.getAttribute('data-open-icon') || 'menu_open';
     const closedIcon = guestMenuToggleButton.getAttribute('data-closed-icon') || 'menu';
 
-    const toggleGuestMenu = function() {
+    const toggleGuestMenu = function () {
         const isOpen = guestNavbarMenu.classList.toggle('show');
         guestMenuToggleButton.setAttribute('aria-expanded', String(isOpen));
         guestMenuToggleButton.textContent = isOpen ? openIcon : closedIcon;
@@ -18,7 +17,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     guestMenuToggleButton.addEventListener('click', toggleGuestMenu);
 
-    guestMenuToggleButton.addEventListener('keydown', function(event) {
+    guestMenuToggleButton.addEventListener('keydown', function (event) {
         if (event.key === 'Enter' || event.key === ' ') {
             event.preventDefault();
             toggleGuestMenu();
@@ -26,8 +25,8 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// Profile side panel toggle
-document.addEventListener('DOMContentLoaded', function() {
+// side panel modal thing
+document.addEventListener('DOMContentLoaded', function () {
     const profileToggleButton = document.getElementById('profile-panel-toggle');
     const profileSidePanel = document.getElementById('profile-side-panel');
     const profileSideOverlay = document.getElementById('profile-side-overlay');
@@ -37,7 +36,7 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
     }
 
-    const openProfilePanel = function() {
+    const openProfilePanel = function () {
         profileSidePanel.classList.add('open');
         profileSideOverlay.classList.add('show');
         profileToggleButton.setAttribute('aria-expanded', 'true');
@@ -46,7 +45,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.body.classList.add('profile-panel-open');
     };
 
-    const closeProfilePanel = function() {
+    const closeProfilePanel = function () {
         profileSidePanel.classList.remove('open');
         profileSideOverlay.classList.remove('show');
         profileToggleButton.setAttribute('aria-expanded', 'false');
@@ -55,7 +54,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.body.classList.remove('profile-panel-open');
     };
 
-    const toggleProfilePanel = function() {
+    const toggleProfilePanel = function () {
         if (profileSidePanel.classList.contains('open')) {
             closeProfilePanel();
             return;
@@ -66,7 +65,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     profileToggleButton.addEventListener('click', toggleProfilePanel);
 
-    profileToggleButton.addEventListener('keydown', function(event) {
+    profileToggleButton.addEventListener('keydown', function (event) {
         if (event.key === 'Enter' || event.key === ' ') {
             event.preventDefault();
             toggleProfilePanel();
@@ -79,23 +78,23 @@ document.addEventListener('DOMContentLoaded', function() {
 
     profileSideOverlay.addEventListener('click', closeProfilePanel);
 
-    document.addEventListener('keydown', function(event) {
+    document.addEventListener('keydown', function (event) {
         if (event.key === 'Escape' && profileSidePanel.classList.contains('open')) {
             closeProfilePanel();
         }
     });
 
     const panelLinks = profileSidePanel.querySelectorAll('a');
-    panelLinks.forEach(function(link) {
+    panelLinks.forEach(function (link) {
         link.addEventListener('click', closeProfilePanel);
     });
 });
 
-// Password visibility toggle
-document.addEventListener('DOMContentLoaded', function() {
+// password visibility toggle
+document.addEventListener('DOMContentLoaded', function () {
     const togglePasswordBtns = document.querySelectorAll('.toggle-password');
 
-    togglePasswordBtns.forEach(function(toggleBtn) {
+    togglePasswordBtns.forEach(function (toggleBtn) {
         const targetId = toggleBtn.getAttribute('data-target');
         const inputField = targetId ? document.getElementById(targetId) : null;
 
@@ -106,7 +105,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const showIcon = toggleBtn.getAttribute('data-show-icon') || 'visibility_off';
         const hideIcon = toggleBtn.getAttribute('data-hide-icon') || 'visibility';
 
-        const togglePassword = function() {
+        const togglePassword = function () {
             const isPassword = inputField.type === 'password';
             inputField.type = isPassword ? 'text' : 'password';
             toggleBtn.textContent = isPassword ? hideIcon : showIcon;
@@ -124,8 +123,8 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// UTC datetime localization
-document.addEventListener('DOMContentLoaded', function() {
+// utc datetime localization
+document.addEventListener('DOMContentLoaded', function () {
     const dateTimeElements = document.querySelectorAll('[data-utc-datetime]');
     if (!dateTimeElements.length) {
         return;
@@ -150,7 +149,7 @@ document.addEventListener('DOMContentLoaded', function() {
         })
     };
 
-    dateTimeElements.forEach(function(element) {
+    dateTimeElements.forEach(function (element) {
         const rawUtc = element.getAttribute('data-utc-datetime');
         if (!rawUtc) {
             return;

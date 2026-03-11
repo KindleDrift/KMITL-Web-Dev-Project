@@ -30,7 +30,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     applyClientTimezoneToForm();
 
-    // Tag validation and formatting functions
     function isValidTag(tag) {
         if (tag.startsWith('-') || tag.endsWith('-')) {
             return false;
@@ -44,13 +43,12 @@ document.addEventListener('DOMContentLoaded', function () {
         // if tag contains only letters and single hyphens
         for (let i = 0; i < tag.length; i++) {
             const c = tag[i];
-            
-            // Allow letters
+
             if (/[a-zA-Z]/.test(c)) {
                 continue;
             }
 
-            // Allow single hyphen (not consecutive)
+            // single hyphen in a row only
             if (c === '-') {
                 if (i > 0 && tag[i - 1] === '-') {
                     return false;
@@ -58,7 +56,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 continue;
             }
 
-            // Any other character is invalid
+            // other char is invalid
             return false;
         }
 
@@ -82,7 +80,7 @@ document.addEventListener('DOMContentLoaded', function () {
         tag.className = 'tag';
         tag.setAttribute('data-tag', tagText);
         tag.innerHTML = `${tagText} <button type="button" class="btn-remove" style="font-size: 0.75rem;">×</button>`;
-        
+
         const removeBtn = tag.querySelector('button');
         removeBtn.addEventListener('click', function (e) {
             e.preventDefault();
@@ -93,15 +91,14 @@ document.addEventListener('DOMContentLoaded', function () {
             tag.remove();
             updateTagsInput();
         });
-        
+
         return tag;
     }
 
     function updateTagsInput() {
-        // Create individual hidden inputs for each tag
         const existingInputs = document.querySelectorAll('input[name="Tags"]');
         existingInputs.forEach(input => input.remove());
-        
+
         const boardForm = document.getElementById('boardForm');
         if (!boardForm) {
             return;
@@ -118,21 +115,18 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function addTag(tagText) {
         tagText = tagText.trim();
-        
+
         if (!tagText) {
             return;
         }
 
-        // Validate tag
         if (!isValidTag(tagText)) {
             alert('Invalid tag! Tags must contain only letters and single hyphens (not at start or end, no numbers).');
             return;
         }
 
-        // Format tag
         const formattedTag = formatTag(tagText);
 
-        // Check if tag already exists (case-insensitive)
         if (tags.some(t => t.toLowerCase() === formattedTag.toLowerCase())) {
             alert('Tag already added!');
             return;
@@ -168,7 +162,6 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     if (tagInput && addTagButton) {
-        // Add tag on button click
         addTagButton.addEventListener('click', function (e) {
             e.preventDefault();
             const tagText = tagInput.value;
@@ -176,7 +169,6 @@ document.addEventListener('DOMContentLoaded', function () {
             tagInput.value = '';
         });
 
-        // Add tag on Enter key
         tagInput.addEventListener('keypress', function (e) {
             if (e.key === 'Enter') {
                 e.preventDefault();
@@ -187,7 +179,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Form submission validation
     const boardForm = document.getElementById('boardForm');
     if (boardForm) {
         boardForm.addEventListener('submit', function (e) {
@@ -198,7 +189,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
 
-            // Ensure group management option is selected
             const groupOption = document.querySelector('input[name="GroupManagementOption"]:checked');
             if (!groupOption) {
                 e.preventDefault();

@@ -7,7 +7,8 @@
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.admin-table th, .admin-table td {
+.admin-table th,
+.admin-table td {
     padding: 12px;
     text-align: left;
     border-bottom: 1px solid #ddd;
@@ -79,7 +80,7 @@
 }
 
 /* Center the header on edit pages */
-.main-container > h1.header-1 {
+.main-container>h1.header-1 {
     text-align: center;
 }
 
@@ -270,17 +271,19 @@
     .admin-table {
         font-size: 12px;
     }
-    
-    .admin-table th, .admin-table td {
+
+    .admin-table th,
+    .admin-table td {
         padding: 8px;
     }
-    
-    .btn, .btn-sm {
+
+    .btn,
+    .btn-sm {
         padding: 4px 6px;
         font-size: 11px;
         margin-right: 3px;
     }
-    
+
     .admin-dashboard {
         grid-template-columns: 1fr;
     }

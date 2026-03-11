@@ -1,9 +1,4 @@
-/* ===========================
-   Board-Specific Styles
-   Complex components for board features
-   =========================== */
-
-/* === STATUS BADGES === */
+/* Badge */
 .status-badge {
     padding: 0.25rem 0.75rem;
     border-radius: 12px;
@@ -11,44 +6,43 @@
     font-weight: 600;
 }
 
-.status-open { 
-    background-color: #d4edda; 
-    color: #155724; 
+.status-open {
+    background-color: #d4edda;
+    color: #155724;
 }
 
-.status-full { 
-    background-color: #fff3cd; 
-    color: #856404; 
+.status-full {
+    background-color: #fff3cd;
+    color: #856404;
 }
 
-.status-closed { 
-    background-color: #f8d7da; 
-    color: #721c24; 
+.status-closed {
+    background-color: #f8d7da;
+    color: #721c24;
 }
 
-.status-cancelled { 
-    background-color: #e2e3e5; 
-    color: #383d41; 
+.status-cancelled {
+    background-color: #e2e3e5;
+    color: #383d41;
 }
 
-.status-archived { 
-    background-color: #d6d8db; 
-    color: #1b1e21; 
+.status-archived {
+    background-color: #d6d8db;
+    color: #1b1e21;
 }
 
-.status-pending { 
-    color: #856404; 
+.status-pending {
+    color: #856404;
 }
 
-.status-approved { 
-    color: #155724; 
+.status-approved {
+    color: #155724;
 }
 
-.status-denied { 
-    color: #721c24; 
+.status-denied {
+    color: #721c24;
 }
 
-/* Status badge inside board-meta should be inline without extra padding */
 .board-meta .status-badge {
     padding: 0;
     border-radius: 0;
@@ -56,7 +50,7 @@
     display: inline;
 }
 
-/* === STATUS DOTS === */
+/* Status dots */
 .status-dot {
     width: 11px;
     height: 11px;
@@ -88,7 +82,7 @@
     display: inline-block;
 }
 
-/* === TAGS === */
+/* Tags */
 .tag {
     background-color: #e0e0e0;
     border-radius: 999px;
@@ -98,13 +92,12 @@
     display: inline-block;
 }
 
-/* Prevent tags from stretching in grid layout */
 .board-meta .tag {
     width: fit-content;
     max-width: max-content;
 }
 
-/* === BOARD CARD COMPONENT === */
+/* Board card */
 .board-grid {
     display: grid;
     grid-template-columns: 1fr;
@@ -197,7 +190,7 @@
     overflow: hidden;
 }
 
-.board-meta > div {
+.board-meta>div {
     display: grid;
     grid-template-columns: auto 1fr;
     gap: 8px;
@@ -212,7 +205,6 @@
     white-space: nowrap;
 }
 
-/* Container for inline tags */
 .board-meta .tags-container {
     display: inline-flex;
     flex-wrap: wrap;
@@ -220,7 +212,6 @@
     align-items: center;
 }
 
-/* Reduce tag padding in board-meta */
 .board-meta .tag {
     padding: 2px 8px;
     font-size: 0.75rem;
@@ -234,7 +225,7 @@
     font-family: "Inter", sans-serif;
 }
 
-.board-meta-grid > div {
+.board-meta-grid>div {
     line-height: 1.6;
     word-break: break-word;
 }
@@ -249,6 +240,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     display: -webkit-box;
+    line-clamp: 2;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     line-height: 1.5;
@@ -286,7 +278,7 @@
     background-color: #333333;
 }
 
-/* === BOARD AUTHOR === */
+/* Author and users */
 .author {
     display: inline-flex;
     align-items: center;
@@ -302,7 +294,6 @@
     border: 1px solid black;
 }
 
-/* === BOARD PARTICIPANTS === */
 .participant-row {
     display: flex;
     align-items: center;
@@ -312,7 +303,7 @@
 
 .participant-bubbles {
     display: flex;
-    align-items: center;   
+    align-items: center;
 }
 
 .participant-bubbles img {
@@ -336,7 +327,7 @@
     color: #555;
 }
 
-/* === BOARD DETAILS PAGE === */
+/* Details */
 .board-details-header {
     display: flex;
     justify-content: space-between;
@@ -418,7 +409,7 @@
     color: #0056b3;
 }
 
-/* === USER SECTIONS (Applicants, Participants, etc.) === */
+/* Users */
 .status-sections-container {
     display: flex;
     gap: 1.5rem;
@@ -491,7 +482,7 @@
     text-overflow: ellipsis;
 }
 
-/* === BOARD CREATE FORM === */
+/* Board create form */
 #boardCreateContainer {
     max-width: 800px;
     margin: 40px auto;
@@ -587,7 +578,7 @@
     color: #333;
 }
 
-/* === SEARCH FEATURE === */
+/* Search */
 .search-div {
     max-width: 1440px;
     margin: 0 auto;
@@ -820,8 +811,7 @@
     flex-wrap: nowrap;
 }
 
-/* === RESPONSIVE DESIGN === */
-
+/* Responsive */
 @media (min-width: 1080px) {
     .board-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -899,20 +889,20 @@
     .application-section {
         padding: 1rem;
     }
-    
+
     .search-form {
         padding: 15px;
     }
-    
+
     .search-row {
         grid-template-columns: 1fr;
     }
-    
+
     .checkbox-group {
         flex-direction: column;
         gap: 10px;
     }
-    
+
     .search-actions {
         flex-direction: column;
     }

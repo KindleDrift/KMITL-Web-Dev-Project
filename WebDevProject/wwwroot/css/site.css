@@ -17,7 +17,7 @@ body.profile-panel-open {
     overflow: hidden;
 }
 
-body > .container {
+body>.container {
     flex: 1 0 auto;
     width: 100%;
 }
@@ -26,7 +26,10 @@ body > .container {
     font-family: inherit;
 }
 
-input, textarea, select, button {
+input,
+textarea,
+select,
+button {
     font-family: "Inter", sans-serif;
 }
 
@@ -63,16 +66,16 @@ input, textarea, select, button {
     max-width: 1440px;
 }
 
-.card > p {
+.card>p {
     margin: 10px 0;
     text-align: center;
 }
 
-.card > p:last-child {
+.card>p:last-child {
     margin-bottom: 0;
 }
 
-.card > form + p:first-of-type {
+.card>form+p:first-of-type {
     margin-top: 20px;
 }
 
@@ -474,7 +477,6 @@ legend {
     gap: 15px;
 }
 
-/* Checkbox Styling */
 .form-input .single-checkbox-input,
 .checkbox-group {
     display: inline-flex;
@@ -688,6 +690,7 @@ legend {
 
 /* Tablet */
 @media (max-width: 1024px) {
+
     .container,
     .main-container {
         max-width: 100%;
@@ -768,8 +771,8 @@ legend {
     .admin-table {
         font-size: 12px;
     }
-    
-    .admin-table th, 
+
+    .admin-table th,
     .admin-table td {
         padding: 8px;
     }
@@ -777,6 +780,7 @@ legend {
 
 /* Small Mobile */
 @media (max-width: 480px) {
+
     .container,
     .main-container {
         padding: 16px 8px;

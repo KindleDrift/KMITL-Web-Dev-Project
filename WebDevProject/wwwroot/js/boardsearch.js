@@ -32,7 +32,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         for (let i = 0; i < tag.length; i++) {
             const c = tag[i];
-            
+
             if (/[a-zA-Z]/.test(c)) {
                 continue;
             }
@@ -65,7 +65,7 @@ document.addEventListener('DOMContentLoaded', function () {
         tag.className = 'tag';
         tag.setAttribute('data-tag', tagText);
         tag.innerHTML = `${tagText} <button type="button" class="btn-remove" style="font-size: 0.75rem;">×</button>`;
-        
+
         const removeBtn = tag.querySelector('button');
         removeBtn.addEventListener('click', function (e) {
             e.preventDefault();
@@ -75,13 +75,13 @@ document.addEventListener('DOMContentLoaded', function () {
             }
             tag.remove();
         });
-        
+
         return tag;
     }
 
     function addTag(tagText) {
         tagText = tagText.trim();
-        
+
         if (!tagText) {
             return;
         }
@@ -102,7 +102,6 @@ document.addEventListener('DOMContentLoaded', function () {
         tagContainer.appendChild(createTagElement(formattedTag));
     }
 
-    // Add tag on button click
     addTagButton.addEventListener('click', function (e) {
         e.preventDefault();
         const tagText = tagInput.value;
@@ -110,7 +109,6 @@ document.addEventListener('DOMContentLoaded', function () {
         tagInput.value = '';
     });
 
-    // tag on Enter key
     tagInput.addEventListener('keypress', function (e) {
         if (e.key === 'Enter') {
             e.preventDefault();
@@ -170,26 +168,26 @@ document.addEventListener('DOMContentLoaded', function () {
         return tags;
     }
 
-    // Parse XML response and convert to board objects
+    // XML to board objects
     function parseXmlResponse(xmlDoc) {
         const boards = [];
         const boardElements = xmlDoc.getElementsByTagName('Board');
-        
+
         for (let i = 0; i < boardElements.length; i++) {
             const boardElement = boardElements[i];
-            
+
             const authorElement = boardElement.getElementsByTagName('Author')[0];
             const author = {
                 displayName: getXmlText(authorElement, 'DisplayName'),
                 profilePictureUrl: getXmlText(authorElement, 'ProfilePictureUrl')
             };
-            
+
             const previewParticipantsElement = boardElement.getElementsByTagName('PreviewParticipants')[0];
             const previewParticipants = parseParticipants(previewParticipantsElement);
-            
+
             const tagsElement = boardElement.getElementsByTagName('Tags')[0];
             const tags = parseTags(tagsElement);
-            
+
             const board = {
                 id: parseInt(getXmlText(boardElement, 'Id')),
                 title: getXmlText(boardElement, 'Title'),
@@ -214,10 +212,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 previewParticipants: previewParticipants,
                 totalVisibleParticipants: parseInt(getXmlText(boardElement, 'TotalVisibleParticipants'))
             };
-            
+
             boards.push(board);
         }
-        
+
         return boards;
     }
 
@@ -277,11 +275,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const xhr = new XMLHttpRequest();
         const url = `/Board/SearchBoards?${params.toString()}`;
-        
+
         xhr.open('GET', url, true);
         xhr.setRequestHeader('Accept', 'application/xml');
-        
-        xhr.onload = function() {
+
+        xhr.onload = function () {
             if (xhr.status >= 200 && xhr.status < 300) {
                 try {
                     const xmlDoc = xhr.responseXML;
@@ -299,12 +297,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 searchResults.innerHTML = '<p class="error-message">An error occurred while searching. Please try again.</p>';
             }
         };
-        
-        xhr.onerror = function() {
+
+        xhr.onerror = function () {
             console.error('Network error occurred');
             searchResults.innerHTML = '<p class="error-message">A network error occurred. Please try again.</p>';
         };
-        
+
         xhr.send();
     }
 
@@ -316,22 +314,22 @@ document.addEventListener('DOMContentLoaded', function () {
 
         let html = '';
         boards.forEach(board => {
-            const tagsHtml = board.tags.length > 0 
+            const tagsHtml = board.tags.length > 0
                 ? `<span class="tags-container">${board.tags.map(tag => `<span class="tag">${escapeHtml(tag)}</span>`).join('')}</span>`
                 : '<span>None</span>';
 
             const participantsHtml = board.previewParticipants.length > 0
                 ? `<div class="participant-bubbles">
-                    ${board.previewParticipants.map(p => 
-                        `<img src="${p.profilePictureUrl || '/images/default-profile.png'}" 
+                    ${board.previewParticipants.map(p =>
+                    `<img src="${p.profilePictureUrl || '/images/default-profile.png'}" 
                               alt="${escapeHtml(p.displayName)}" 
                               title="${escapeHtml(p.displayName)}"
                               onerror="this.src='/images/default-profile.png'" />`
-                    ).join('')}
+                ).join('')}
                    </div>
-                   ${board.currentParticipants > board.previewParticipants.length 
-                       ? `<span class="participant-more">+${board.currentParticipants - board.previewParticipants.length}</span>` 
-                       : ''}`
+                   ${board.currentParticipants > board.previewParticipants.length
+                    ? `<span class="participant-more">+${board.currentParticipants - board.previewParticipants.length}</span>`
+                    : ''}`
                 : '';
 
             const eventDateText = formatUtcDate(board.eventDateUtc, 'date') || board.eventDate;
@@ -413,15 +411,15 @@ document.addEventListener('DOMContentLoaded', function () {
         eventDateToInput.value = '';
         selectedTags.length = 0;
         tagContainer.innerHTML = '';
-        
+
         statusFilters.forEach(checkbox => {
             checkbox.checked = checkbox.value === 'Open';
         });
-        
+
         policyFilters.forEach(checkbox => {
             checkbox.checked = true;
         });
-        
+
         searchResults.innerHTML = '<p class="loading-message">Use the filters above to search for boards.</p>';
     });
 

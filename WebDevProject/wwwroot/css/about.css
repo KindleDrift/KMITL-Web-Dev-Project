@@ -60,11 +60,6 @@
     text-align: center;
 }
 
-.goal-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
-}
-
 .goal-icon {
     font-size: 3rem;
     color: var(--primary-color, #007bff);
@@ -111,7 +106,6 @@
     color: var(--primary-color, #007bff);
 }
 
-/* Team Members Section */
 .team-grid {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
@@ -125,11 +119,6 @@
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     text-align: center;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.team-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
 }
 
 .team-avatar {
@@ -169,16 +158,10 @@
     transition: color 0.3s ease;
 }
 
-.github-link:hover {
-    color: var(--primary-hover, #0056b3);
-    text-decoration: underline;
-}
-
 .github-link .material-symbols-outlined {
     font-size: 1rem;
 }
 
-/* Project Info Section */
 .project-info {
     text-align: center;
     padding: 2rem;
@@ -204,11 +187,7 @@
     transition: background-color 0.3s ease;
 }
 
-.repository-link a:hover {
-    background: var(--primary-hover, #0056b3);
-}
-
-/* Responsive Design */
+/* responsive */
 @media (max-width: 768px) {
     .about-header h1 {
         font-size: 2rem;

@@ -9,7 +9,7 @@
     min-height: 80vh;
 }*/
 
-/* Board Create Form Styles */
+/* Board Create Form */
 #boardCreateContainer {
     max-width: 800px;
     margin: 40px auto;
@@ -206,18 +206,18 @@
     transform: scale(0.98);
 }
 
-/* Original styles for old form structure */
 #postbox {
     background-color: #eaeaea;
     border-radius: 10px;
     padding: 30px;
 }
+
 #options {
     display: flex;
     flex-direction: column;
-    gap: 10px;          
+    gap: 10px;
     padding-bottom: 10px;
-}   
+}
 
 #title {
     width: 100%;
@@ -225,7 +225,7 @@
     border: 1px solid #ccc;
     font-size: 16px;
     box-sizing: border-box;
-    line-height: 1.4;       
+    line-height: 1.4;
     vertical-align: top;
     resize: none;
 }
@@ -237,7 +237,7 @@
     border: 1px solid #ccc;
     font-size: 16px;
     box-sizing: border-box;
-    line-height: 1.4;       
+    line-height: 1.4;
     vertical-align: top;
     resize: none;
 }
@@ -246,7 +246,7 @@
     width: 200px;
     height: 50px;
     background-color: #8ec4e9;
-    font-size: 20px; 
+    font-size: 20px;
     padding: 0;
     border-radius: 10px;
 }
@@ -256,7 +256,7 @@
     background-color: #eaeaea;
     border-radius: 10px;
     display: flex;
-    align-items: center;  
+    align-items: center;
     justify-content: center;
     gap: 10px;
     padding: 0 10px;
@@ -267,7 +267,7 @@
     background-color: #eaeaea;
     border-radius: 10px;
     display: flex;
-    align-items: center;  
+    align-items: center;
     justify-content: center;
     gap: 10px;
     padding: 0 10px;
@@ -275,8 +275,8 @@
 
 #participants input {
     width: 150px;
-    height: 20px;         
-    flex: 0 0 auto;       
+    height: 20px;
+    flex: 0 0 auto;
 }
 
 .selector {
@@ -307,20 +307,24 @@
 
 @media (max-width: 768px) {
     .container {
-        grid-template-columns: 1fr; 
+        grid-template-columns: 1fr;
         grid-template-rows: auto auto;
     }
+
     #postbox {
         height: 500px
     }
+
     #title {
         height: 10%;
     }
+
     #imgbutton {
         width: 150px;
         height: 30px;
         font-size: 16px;
     }
+
     .form-row {
         grid-template-columns: 1fr;
     }

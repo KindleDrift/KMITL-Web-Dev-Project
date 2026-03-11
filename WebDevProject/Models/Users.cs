@@ -20,7 +20,6 @@ namespace WebDevProject.Models
 
         public Gender? UserGender { get; set; }
 
-        // Profile picture URL
         public string? ProfilePictureUrl { get; set; }
 
         public string? Bio { get; set; }
