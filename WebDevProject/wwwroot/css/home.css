@@ -1,0 +1,14 @@
+﻿
+.login-container{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+.title{
+    font-size: 7vw;
+}
+.large-button{
+    margin-top: 30px;
+    width: 50%;
+}
