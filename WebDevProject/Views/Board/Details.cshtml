@@ -73,7 +73,7 @@
                     <div><strong>Participants:</strong> @visibleOccupiedSlots / @Model.Board.MaxParticipants</div>
                     <div><strong>Join System:</strong> @(Model.Board.JoinPolicy == BoardJoinPolicy.FirstComeFirstServe ? "First-Come-First-Serve" : "Application System")</div>
                     <div><strong>Author:</strong> 
-                        <a href="/Profile/u/@Uri.EscapeDataString(Model.Board.Author?.DisplayName ?? "Unknown")" style="display: inline-flex; align-items: center; gap: 5px; text-decoration: none; color: inherit;">
+                        <a href="/Profile/u/@Uri.EscapeDataString(Model.Board.Author?.DisplayName ?? "Unknown")" style="text-decoration: none; color: inherit;">
                             <img src="@(Model.Board.Author?.ProfilePictureUrl ?? Url.Content("~/images/default-profile.png"))" alt="@(Model.Board.Author?.DisplayName ?? "Author")" class="small-avatar" />
                             <span>@(Model.Board.Author?.DisplayName ?? "Unknown")</span>
                         </a>

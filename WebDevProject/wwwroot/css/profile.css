@@ -165,3 +165,6 @@
         display: block;
     }
 }
+.bio-text-other {
+    max-width: 80%;
+}
