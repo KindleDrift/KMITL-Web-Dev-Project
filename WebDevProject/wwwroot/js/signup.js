@@ -1,4 +1,4 @@
-// AJAX for signup auto dupe name and email
+
 let nameCheckTimeout;
 let emailCheckTimeout;
 
