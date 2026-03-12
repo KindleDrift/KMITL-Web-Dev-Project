@@ -131,19 +131,19 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     const formatters = {
-        datetime: new Intl.DateTimeFormat(undefined, {
+        datetime: new Intl.DateTimeFormat('en-GB', {
             year: 'numeric',
             month: 'short',
             day: '2-digit',
             hour: '2-digit',
             minute: '2-digit'
         }),
-        date: new Intl.DateTimeFormat(undefined, {
+        date: new Intl.DateTimeFormat('en-GB', {
             year: 'numeric',
             month: 'short',
             day: '2-digit'
         }),
-        time: new Intl.DateTimeFormat(undefined, {
+        time: new Intl.DateTimeFormat('en-GB', {
             hour: '2-digit',
             minute: '2-digit'
         })
