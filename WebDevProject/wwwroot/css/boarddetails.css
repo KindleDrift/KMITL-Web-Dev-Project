@@ -284,7 +284,6 @@
     text-decoration: underline;
 }
 
-/* responsive */
 @media (max-width: 768px) {
     .status-sections-container {
         flex-direction: column;
@@ -356,7 +355,6 @@
     }
 }
 
-/* even more smaller screens */
 @media (max-width: 480px) {
     .status-section-column {
         padding: 0.75rem;
