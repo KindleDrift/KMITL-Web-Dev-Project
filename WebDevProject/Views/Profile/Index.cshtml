@@ -64,7 +64,7 @@
                 <span class="label">Bio :</span>
                 @if (!string.IsNullOrWhiteSpace(Model.Bio))
                 {
-                    <span class="bio-text">@Model.Bio</span>
+                    <span class="@(Model.IsOwnProfile ? "bio-text" : "bio-text-other")">@Model.Bio</span>
                 }
                 else
                 {
