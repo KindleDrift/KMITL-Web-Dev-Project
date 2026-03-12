@@ -110,8 +110,7 @@ namespace WebDevProject.Services
                     NotificationType.NewRequest,
                     boardId: boardId,
                     relatedUserId: userId);
-
-                // Check if board just became full and author wants notification
+                
                 if (!wasFull && isNowFull && board.NotifyAuthorOnFull)
                 {
                     await _notificationsService.CreateNotificationAsync(
@@ -503,21 +502,16 @@ namespace WebDevProject.Services
             }
 
             var affectedUserIds = new List<string>();
-
-            // Collect all participant IDs (excluding author)
+            
             affectedUserIds.AddRange(board.Participants.Where(p => p.UserId != board.AuthorId).Select(p => p.UserId));
-
-            // Collect all applicant IDs
+            
             affectedUserIds.AddRange(board.Applicants.Select(a => a.UserId));
-
-            // Remove all participants (excluding author)
+            
             var participantsToRemove = board.Participants.Where(p => p.UserId != board.AuthorId).ToList();
             _context.BoardParticipants.RemoveRange(participantsToRemove);
-
-            // Remove all external participants
+            
             _context.BoardExternalParticipants.RemoveRange(board.ExternalParticipants);
-
-            // Deny all applicants
+            
             foreach (var applicant in board.Applicants.ToList())
             {
                 _context.BoardApplicants.Remove(applicant);

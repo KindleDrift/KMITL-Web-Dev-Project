@@ -23,10 +23,10 @@
 
     public enum NotificationType
     {
-        NewRequest, // For new application or user joins board
-        IsAccepted, // user is accepted to a board after applying
-        IsRejected, // user is rejected from a board after applying or removed from a board and when cancelled.
-        AdminAction, // admin edits something that affects the user
-        BoardFull // board the author created becomes full
+        NewRequest, 
+        IsAccepted, 
+        IsRejected, 
+        AdminAction, 
+        BoardFull
     }
 }

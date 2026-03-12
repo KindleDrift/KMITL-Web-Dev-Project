@@ -66,8 +66,7 @@ namespace WebDevProject.Services
             var boardLink = !string.IsNullOrEmpty(boardTitle) && boardId.HasValue
                 ? $"<a href=\"{generateBoardUrl(boardId.Value)}\" class=\"notification-link\">{HttpUtility.HtmlEncode(boardTitle)}</a>"
                 : "your board";
-
-            // Generate description based on type
+            
             return notification.Type switch
             {
                 NotificationType.NewRequest when notification.Board != null => 

@@ -173,36 +173,29 @@
 
             const tags = [];
             
-            // Tag validation and formatting functions
             function isValidTag(tag) {
-                // Check if tag starts or ends with hyphen
                 if (tag.startsWith('-') || tag.endsWith('-')) {
                     return false;
                 }
 
-                // Check if tag contains numbers
                 if (/\d/.test(tag)) {
                     return false;
                 }
 
-                // Check if tag contains only letters and single hyphens
                 for (let i = 0; i < tag.length; i++) {
                     const c = tag[i];
                     
-                    // Allow letters
                     if (/[a-zA-Z]/.test(c)) {
                         continue;
                     }
 
-                    // Allow single hyphen (not consecutive)
                     if (c === '-') {
                         if (i > 0 && tag[i - 1] === '-') {
-                            return false; // Consecutive hyphens not allowed
+                            return false;
                         }
                         continue;
                     }
 
-                    // Any other character is invalid
                     return false;
                 }
 
@@ -210,10 +203,8 @@
             }
 
             function formatTag(tag) {
-                // Convert to lowercase first
                 tag = tag.toLowerCase();
 
-                // Capitalize first letter
                 if (tag.length > 0) {
                     tag = tag.charAt(0).toUpperCase() + tag.slice(1);
                 }
@@ -221,12 +212,10 @@
                 return tag;
             }
             
-            // Initialize tags from existing data and format them
             document.querySelectorAll('#tagContainer .tag').forEach(tagElement => {
                 const tagName = tagElement.getAttribute('data-tag');
                 const formattedTag = formatTag(tagName);
                 tags.push(formattedTag);
-                // Update the displayed tag text
                 tagElement.innerHTML = `${formattedTag} <button type="button" class="btn-remove">×</button>`;
                 tagElement.setAttribute('data-tag', formattedTag);
             });
@@ -252,11 +241,9 @@
             }
 
             function updateTagsInput() {
-                // Remove existing hidden inputs
                 const existingInputs = document.querySelectorAll('input[name="Tags"]');
                 existingInputs.forEach(input => input.remove());
                 
-                // Create new hidden inputs for each tag
                 const form = document.getElementById('editBoardForm');
                 tags.forEach(tag => {
                     const input = document.createElement('input');
@@ -274,16 +261,13 @@
                     return;
                 }
 
-                // Validate tag
                 if (!isValidTag(tagText)) {
                     alert('Invalid tag! Tags must contain only letters and single hyphens (not at start or end, no numbers).');
                     return;
                 }
 
-                // Format tag
                 const formattedTag = formatTag(tagText);
 
-                // Check if tag already exists (case-insensitive)
                 if (tags.some(t => t.toLowerCase() === formattedTag.toLowerCase())) {
                     alert('Tag already added!');
                     return;
@@ -294,10 +278,8 @@
                 updateTagsInput();
             }
 
-            // Initialize hidden inputs for existing tags
             updateTagsInput();
 
-            // Set up remove buttons for existing tags
             document.querySelectorAll('#tagContainer .tag .btn-remove').forEach(btn => {
                 btn.addEventListener('click', function(e) {
                     e.preventDefault();
@@ -317,7 +299,6 @@
             const tagContainer = document.getElementById('tagContainer');
 
             if (tagInput && addTagButton) {
-                // Add tag on button click
                 addTagButton.addEventListener('click', function (e) {
                     e.preventDefault();
                     const tagText = tagInput.value;
@@ -325,7 +306,6 @@
                     tagInput.value = '';
                 });
 
-                // Add tag on Enter key
                 tagInput.addEventListener('keypress', function (e) {
                     if (e.key === 'Enter') {
                         e.preventDefault();

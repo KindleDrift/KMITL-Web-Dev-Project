@@ -98,19 +98,16 @@ namespace WebDevProject.Controllers
                 .Include(b => b.Tags)
                 .Where(b => b.CurrentStatus != BoardStatus.Archived);
 
-            // Exclude user's own posts
             if (!string.IsNullOrWhiteSpace(userId))
             {
                 boardQuery = boardQuery.Where(b => b.AuthorId != userId);
             }
 
-            // Filter by name
             if (!string.IsNullOrWhiteSpace(searchName))
             {
                 boardQuery = boardQuery.Where(b => EF.Functions.Like(b.Title, $"%{searchName}%"));
             }
 
-            // Filter by tags
             if (!string.IsNullOrWhiteSpace(tags))
             {
                 var tagList = tags.Split(',', StringSplitOptions.RemoveEmptyEntries)
@@ -124,7 +121,6 @@ namespace WebDevProject.Controllers
                 }
             }
 
-            // Filter by event date range
             if (eventDateFrom.HasValue)
             {
                 var eventDateFromUtc = TimeZoneHelper.FromClientLocalToUtc(eventDateFrom.Value.Date, clientTimeZoneOffsetMinutes);
@@ -137,7 +133,6 @@ namespace WebDevProject.Controllers
                 boardQuery = boardQuery.Where(b => b.EventDate < eventDateToInclusiveUtc);
             }
 
-            // Filter by status
             if (!string.IsNullOrWhiteSpace(statuses))
             {
                 var statusList = statuses.Split(',', StringSplitOptions.RemoveEmptyEntries)
@@ -163,7 +158,6 @@ namespace WebDevProject.Controllers
                 }
             }
 
-            // Filter by join policy
             if (!string.IsNullOrWhiteSpace(joinPolicies))
             {
                 var policyList = joinPolicies.Split(',', StringSplitOptions.RemoveEmptyEntries)
@@ -351,11 +345,9 @@ namespace WebDevProject.Controllers
                 return Forbid();
             }
 
-            // Check if board is Cancelled or Archived - only allow status change
             var isCancelledOrArchived = board.CurrentStatus == BoardStatus.Cancelled || board.CurrentStatus == BoardStatus.Archived;
             if (isCancelledOrArchived)
             {
-                // Only allow status update for Cancelled/Archived boards
                 if (model.CurrentStatus.HasValue && model.CurrentStatus.Value != board.CurrentStatus)
                 {
                     board.CurrentStatus = model.CurrentStatus.Value;
@@ -405,7 +397,6 @@ namespace WebDevProject.Controllers
             board.GroupManagementOption = _boardService.ParseGroupManagementOption(model.GroupManagementOption);
             board.JoinPolicy = _boardService.ParseJoinPolicyOption(model.JoinPolicyOption);
             
-            // Allow manual status override (unless automatic status will be applied)
             if (model.CurrentStatus.HasValue)
             {
                 board.CurrentStatus = model.CurrentStatus.Value;
@@ -635,7 +626,6 @@ namespace WebDevProject.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            // Allow archiving if board is Cancelled OR if event date has passed
             if (board.CurrentStatus != BoardStatus.Cancelled && board.EventDate > TimeZoneHelper.UtcNow.UtcDateTime)
             {
                 TempData["Error"] = "You can only archive boards after the event date has passed or if the board has been cancelled.";
@@ -677,7 +667,6 @@ namespace WebDevProject.Controllers
                 return RedirectToAction(nameof(Details), new { id });
             }
 
-            // Send notifications to all affected users
             var board = await _context.Boards
                 .AsNoTracking()
                 .FirstOrDefaultAsync(b => b.Id == id);
