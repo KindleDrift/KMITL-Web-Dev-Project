@@ -4,6 +4,8 @@ using Microsoft.EntityFrameworkCore;
 using WebDevProject.Data;
 using WebDevProject.Models;
 using WebDevProject.Services;
+using System.Globalization;
+using Microsoft.AspNetCore.Localization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -75,6 +77,15 @@ builder.Services.AddScoped<NotificationFormattingService>();
 builder.Services.AddScoped<BoardDisplayService>();
 
 var app = builder.Build();
+
+var defaultCulture = new CultureInfo("en-US");
+var localizationOptions = new RequestLocalizationOptions
+{
+    DefaultRequestCulture = new RequestCulture(defaultCulture),
+    SupportedCultures = new List<CultureInfo> { defaultCulture },
+    SupportedUICultures = new List<CultureInfo> { defaultCulture }
+};
+app.UseRequestLocalization(localizationOptions);
 
 await DbSeeder.SeedAsync(app.Services);
 
