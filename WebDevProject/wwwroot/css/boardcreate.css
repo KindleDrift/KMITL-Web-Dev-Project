@@ -2,14 +2,6 @@
     margin: 20px;
 }
 
-/*.container {
-    display: grid;
-    grid-template-columns: 6fr 3fr;
-    gap: 10px;
-    min-height: 80vh;
-}*/
-
-/* Board Create Form */
 #boardCreateContainer {
     max-width: 800px;
     margin: 40px auto;

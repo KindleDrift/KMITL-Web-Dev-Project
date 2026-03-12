@@ -1,4 +1,4 @@
-/* notif dot */
+
 .notification-dot {
     width: 8px;
     height: 8px;
@@ -17,7 +17,6 @@
     margin-left: 8px;
 }
 
-/* side panel modal */
 .profile-side-overlay {
     position: fixed;
     inset: 0;
