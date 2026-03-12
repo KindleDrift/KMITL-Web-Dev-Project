@@ -151,7 +151,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         if (mode === 'date') {
-            return new Intl.DateTimeFormat(undefined, {
+            return new Intl.DateTimeFormat('en-GB', {
                 year: 'numeric',
                 month: 'short',
                 day: '2-digit'
@@ -159,13 +159,13 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         if (mode === 'time') {
-            return new Intl.DateTimeFormat(undefined, {
+            return new Intl.DateTimeFormat('en-GB', {
                 hour: '2-digit',
                 minute: '2-digit'
             }).format(date);
         }
 
-        return new Intl.DateTimeFormat(undefined, {
+        return new Intl.DateTimeFormat('en-GB', {
             year: 'numeric',
             month: 'short',
             day: '2-digit',
