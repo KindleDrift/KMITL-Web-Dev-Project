@@ -34,29 +34,25 @@ document.addEventListener('DOMContentLoaded', function () {
         if (tag.startsWith('-') || tag.endsWith('-')) {
             return false;
         }
-
-        // if tag contain numbers
+        
         if (/\d/.test(tag)) {
             return false;
         }
-
-        // if tag contains only letters and single hyphens
+        
         for (let i = 0; i < tag.length; i++) {
             const c = tag[i];
 
             if (/[a-zA-Z]/.test(c)) {
                 continue;
             }
-
-            // single hyphen in a row only
+            
             if (c === '-') {
                 if (i > 0 && tag[i - 1] === '-') {
                     return false;
                 }
                 continue;
             }
-
-            // other char is invalid
+            
             return false;
         }
 
@@ -64,10 +60,8 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function formatTag(tag) {
-        // Convert to lowercase first
         tag = tag.toLowerCase();
-
-        // Capitalize first letter
+        
         if (tag.length > 0) {
             tag = tag.charAt(0).toUpperCase() + tag.slice(1);
         }

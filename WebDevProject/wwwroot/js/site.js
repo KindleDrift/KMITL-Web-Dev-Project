@@ -25,7 +25,6 @@
     });
 });
 
-// side panel modal thing
 document.addEventListener('DOMContentLoaded', function () {
     const profileToggleButton = document.getElementById('profile-panel-toggle');
     const profileSidePanel = document.getElementById('profile-side-panel');
@@ -90,7 +89,6 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 
-// password visibility toggle
 document.addEventListener('DOMContentLoaded', function () {
     const togglePasswordBtns = document.querySelectorAll('.toggle-password');
 
@@ -123,7 +121,6 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 
-// utc datetime localization
 document.addEventListener('DOMContentLoaded', function () {
     const dateTimeElements = document.querySelectorAll('[data-utc-datetime]');
     if (!dateTimeElements.length) {
