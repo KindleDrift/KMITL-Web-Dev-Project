@@ -148,7 +148,7 @@ namespace WebDevProject.Controllers
                     {
                         if (error.Code == "DuplicateUserName" && error.Description.Contains("is already taken."))
                         {
-                            // skip
+                            continue;
                         }
                         else if (error.Code != "DuplicateUserName")
                         {

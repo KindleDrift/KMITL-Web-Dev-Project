@@ -86,7 +86,6 @@ namespace WebDevProject.Controllers
                 return NotFound();
             }
 
-            // Can't change display name to an existing one except changing capitalization
             if (await _context.Users.AnyAsync(u => u.NormalizedDisplayName == model.DisplayName.ToUpperInvariant() && u.Id != id))
             {
                 ModelState.AddModelError("DisplayName", "Display name is already taken.");
@@ -129,7 +128,6 @@ namespace WebDevProject.Controllers
         {
             var currentUser = await _userManager.GetUserAsync(User);
             
-            // Prevent admins from banning themselves
             if (currentUser?.Id == id)
             {
                 return BadRequest("You cannot ban yourself.");
@@ -239,7 +237,6 @@ namespace WebDevProject.Controllers
 
             var approvedApplicantIds = _boardService.AutoApproveApplicantsOnJoinPolicyChange(board, id, oldJoinPolicy);
 
-            // Notify
             if (approvedApplicantIds.Any())
             {
                 await _notificationsService.CreateNotificationsForMultipleUsersAsync(

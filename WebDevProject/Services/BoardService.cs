@@ -1,4 +1,3 @@
-using System.Text;
 using Microsoft.EntityFrameworkCore;
 using WebDevProject.Data;
 using WebDevProject.Models;
@@ -109,7 +108,7 @@ namespace WebDevProject.Services
                     }
                     catch (Exception)
                     {
-                        // Ignore file deletion errors to prevent crashing the upload process
+                        
                     }
                 }
             }

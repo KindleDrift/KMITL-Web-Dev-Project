@@ -14,7 +14,7 @@ namespace WebDevProject.Models
 
         public bool IsOwnProfile { get; set; }
         
-        // no show if not own profile
+       
         public string? Email { get; set; }
         public DateTime? DateOfBirth { get; set; }
     }

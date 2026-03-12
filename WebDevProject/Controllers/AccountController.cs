@@ -125,7 +125,7 @@ namespace WebDevProject.Controllers
                     {
                         if (error.Code == "DuplicateUserName" && error.Description.Contains("is already taken."))
                         {
-                            // skip
+                            continue;
                         }
                         else if (error.Code != "DuplicateUserName")
                         {
@@ -227,7 +227,6 @@ namespace WebDevProject.Controllers
             return View(model);
         }
 
-        // Placeholder for forgot password functionality, if needed in the future.
         public IActionResult ForgotPassword()
         {
             return View();
@@ -241,7 +240,6 @@ namespace WebDevProject.Controllers
             return RedirectToAction("SignIn");
         }
 
-        // API for AJAX calls
         [HttpGet]
         public async Task<IActionResult> CheckDisplayNameExist(string displayname)
         {

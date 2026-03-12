@@ -20,8 +20,7 @@ namespace WebDevProject.Data
             {
                 logger.LogInformation("Starting database seeding...");
                 await context.Database.EnsureCreatedAsync();
-
-                // Check if data already exists
+                
                 if (await context.Users.AnyAsync() || await context.Boards.AnyAsync())
                 {
                     logger.LogInformation("Database already contains data. Skipping seed.");
@@ -153,11 +152,9 @@ namespace WebDevProject.Data
 
                 logger.LogInformation("Seeding sample boards...");
                 
-                // Helper to check if board exists
                 async Task<bool> BoardExists(string title) => 
                     await context.Boards.AsNoTracking().AnyAsync(b => b.Title == title);
-
-                // Scenario 1: Open board with some participants (sports event)
+                
                 if (!await BoardExists("Saturday Football Match")
                     && regularUsersByEmail.TryGetValue("alice@example.com", out var alice)
                     && regularUsersByEmail.TryGetValue("bob@example.com", out var bob)
@@ -189,8 +186,7 @@ namespace WebDevProject.Data
                     );
                     await context.SaveChangesAsync();
                 }
-
-                // Scenario 2: Study group with moderate participation
+                
                 if (!await BoardExists("Sunday Study Group")
                     && regularUsersByEmail.TryGetValue("charlie@example.com", out var charlie)
                     && regularUsersByEmail.TryGetValue("david@example.com", out var david)
@@ -222,8 +218,7 @@ namespace WebDevProject.Data
                     );
                     await context.SaveChangesAsync();
                 }
-
-                // Scenario 3: Full board (music concert)
+                
                 if (!await BoardExists("Live Jazz Night")
                     && regularUsersByEmail.TryGetValue("grace@example.com", out var grace)
                     && regularUsersByEmail.TryGetValue("heidi@example.com", out var heidi)
@@ -264,8 +259,7 @@ namespace WebDevProject.Data
                     );
                     await context.SaveChangesAsync();
                 }
-
-                // Scenario 4: Closed board
+                
                 if (!await BoardExists("Weekend Hiking Trip")
                     && regularUsersByEmail.TryGetValue("leo@example.com", out var leo)
                     && regularUsersByEmail.TryGetValue("mallory@example.com", out var mallory)
@@ -295,8 +289,7 @@ namespace WebDevProject.Data
                     );
                     await context.SaveChangesAsync();
                 }
-
-                // Scenario 5: Empty board (no participants yet)
+                
                 if (!await BoardExists("Thursday Food Tour")
                     && regularUsersByEmail.TryGetValue("nina@example.com", out var nina)
                     && foodTag != null)
@@ -320,8 +313,7 @@ namespace WebDevProject.Data
                     context.Boards.Add(board);
                     await context.SaveChangesAsync();
                 }
-
-                // Scenario 6: Board with past deadline but still open
+                
                 if (!await BoardExists("Monday Basketball Practice")
                     && regularUsersByEmail.TryGetValue("oscar@example.com", out var oscar)
                     && regularUsersByEmail.TryGetValue("peggy@example.com", out var peggy)
@@ -353,8 +345,7 @@ namespace WebDevProject.Data
                     );
                     await context.SaveChangesAsync();
                 }
-
-                // Scenario 7: Board with past event date (should be completed or cancelled)
+                
                 if (!await BoardExists("Last Week Movie Night")
                     && regularUsersByEmail.TryGetValue("rupert@example.com", out var rupert)
                     && regularUsersByEmail.TryGetValue("sybil@example.com", out var sybil)
@@ -387,8 +378,7 @@ namespace WebDevProject.Data
                     );
                     await context.SaveChangesAsync();
                 }
-
-                // Scenario 8: Large capacity event with many participants
+                
                 if (!await BoardExists("Friday Night Campus Party")
                     && regularUsersByEmail.TryGetValue("victor@example.com", out var victor)
                     && regularUsersByEmail.TryGetValue("wendy@example.com", out var wendy)
@@ -440,8 +430,7 @@ namespace WebDevProject.Data
                     );
                     await context.SaveChangesAsync();
                 }
-
-                // Scenario 9: Small study session with specific configuration
+                
                 if (!await BoardExists("Calculus Study Session")
                     && regularUsersByEmail.TryGetValue("frank@example.com", out var frank2)
                     && regularUsersByEmail.TryGetValue("grace@example.com", out var grace2)
@@ -471,8 +460,7 @@ namespace WebDevProject.Data
                     );
                     await context.SaveChangesAsync();
                 }
-
-                // Scenario 10: Travel event with multiple tags
+                
                 if (!await BoardExists("Beach Trip Next Month")
                     && regularUsersByEmail.TryGetValue("heidi@example.com", out var heidi2)
                     && regularUsersByEmail.TryGetValue("ivan@example.com", out var ivan2)
@@ -508,8 +496,7 @@ namespace WebDevProject.Data
                     );
                     await context.SaveChangesAsync();
                 }
-
-                // Scenario 11: Cancelled event
+                
                 if (!await BoardExists("Postponed Workshop")
                     && regularUsersByEmail.TryGetValue("mallory@example.com", out var mallory2)
                     && studyTag != null)
@@ -533,8 +520,7 @@ namespace WebDevProject.Data
                     context.Boards.Add(board);
                     await context.SaveChangesAsync();
                 }
-
-                // Scenario 12: Board near capacity
+                
                 if (!await BoardExists("Wednesday Badminton")
                     && regularUsersByEmail.TryGetValue("nina@example.com", out var nina2)
                     && regularUsersByEmail.TryGetValue("oscar@example.com", out var oscar2)
@@ -573,18 +559,15 @@ namespace WebDevProject.Data
                     );
                     await context.SaveChangesAsync();
                 }
-
-                // Add sample applicants and denied users to demonstrate the new application system
+                
                 logger.LogInformation("Seeding board applicants and denied users...");
                 
-                // Add applicants to "Saturday Football Match"
                 var footballBoard = await context.Boards.FirstOrDefaultAsync(b => b.Title == "Saturday Football Match");
                 if (footballBoard != null 
                     && regularUsersByEmail.TryGetValue("charlie@example.com", out var charlieApplicant)
                     && regularUsersByEmail.TryGetValue("david@example.com", out var davidApplicant)
                     && regularUsersByEmail.TryGetValue("frank@example.com", out var frankApplicant))
                 {
-                    // Add pending applicants
                     if (!await context.BoardApplicants.AnyAsync(ba => ba.BoardId == footballBoard.Id && ba.UserId == charlieApplicant.Id))
                     {
                         context.BoardApplicants.Add(new BoardApplicant 
@@ -605,7 +588,6 @@ namespace WebDevProject.Data
                         });
                     }
                     
-                    // Add denied user
                     if (!await context.BoardDenied.AnyAsync(bd => bd.BoardId == footballBoard.Id && bd.UserId == frankApplicant.Id))
                     {
                         context.BoardDenied.Add(new BoardDenied 
@@ -618,8 +600,7 @@ namespace WebDevProject.Data
                     
                     await context.SaveChangesAsync();
                 }
-
-                // Add applicants to "Sunday Study Group"
+                
                 var studyBoard = await context.Boards.FirstOrDefaultAsync(b => b.Title == "Sunday Study Group");
                 if (studyBoard != null 
                     && regularUsersByEmail.TryGetValue("grace@example.com", out var graceApplicant)
@@ -647,8 +628,7 @@ namespace WebDevProject.Data
                     
                     await context.SaveChangesAsync();
                 }
-
-                // Add applicants to "Thursday Food Tour"
+                
                 var foodBoard = await context.Boards.FirstOrDefaultAsync(b => b.Title == "Thursday Food Tour");
                 if (foodBoard != null 
                     && regularUsersByEmail.TryGetValue("ivan@example.com", out var ivanApplicant)
@@ -676,7 +656,6 @@ namespace WebDevProject.Data
                         });
                     }
                     
-                    // Add denied users
                     if (!await context.BoardDenied.AnyAsync(bd => bd.BoardId == foodBoard.Id && bd.UserId == karlApplicant.Id))
                     {
                         context.BoardDenied.Add(new BoardDenied 
